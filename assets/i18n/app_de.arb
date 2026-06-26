@@ -1,0 +1,17 @@
+{
+  "@@locale": "de",
+  "appTitle": "Void Trader",
+  "@appTitle": { "description": "Anwendungstitel" },
+  "docking": "Andocken",
+  "@docking": { "description": "Aktion: an Planet/Station andocken" },
+  "market": "Markt",
+  "@market": { "description": "Navigation: Marktscreen" },
+  "fleet": "Flotte",
+  "@fleet": { "description": "Navigation: Flottenübersicht" },
+  "base": "Basis",
+  "@base": { "description": "Navigation: Heimatbasis" },
+  "research": "Forschung",
+  "@research": { "description": "Navigation: Techtree" },
+  "credits": "Credits",
+  "@credits": { "description": "Ingame-Währung" }
+}

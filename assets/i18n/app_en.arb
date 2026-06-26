@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appTitle": "Void Trader",
+  "docking": "Dock",
+  "market": "Market",
+  "fleet": "Fleet",
+  "base": "Base",
+  "research": "Research",
+  "credits": "Credits"
+}
