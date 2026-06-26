@@ -1,0 +1,31 @@
+when:
+  - event: [push, pull_request]
+
+steps:
+  analyze:
+    image: ghcr.io/cirruslabs/flutter:stable
+    commands:
+      - flutter pub get
+      - flutter gen-l10n
+      - flutter analyze
+
+  test:
+    image: ghcr.io/cirruslabs/flutter:stable
+    commands:
+      - flutter test
+
+  build_android:
+    image: ghcr.io/cirruslabs/flutter:stable
+    when:
+      - branch: main
+        event: push
+    commands:
+      - flutter build apk --release
+
+  build_linux:
+    image: ghcr.io/cirruslabs/flutter:stable
+    when:
+      - branch: main
+        event: push
+    commands:
+      - flutter build linux --release
