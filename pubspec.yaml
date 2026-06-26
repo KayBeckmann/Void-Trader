@@ -1,0 +1,44 @@
+name: void_trader
+description: "Void Trader — Weltraum-Sandbox-Trader/Shooter/Builder mit Fraktionsruf, Forschung und programmierbarer Flotte."
+repository: https://codeberg.org/kaybeckmann/void-trader
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Game Engine
+  flame: ^1.30.0
+  flame_forge2d: any
+
+  # State Management
+  flutter_riverpod: ^2.6.0
+  riverpod_annotation: ^2.6.0
+
+  # Localization
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.0
+  riverpod_generator: ^2.6.0
+  flutter_lints: ^6.0.0
+
+# Storage (Isar) wird in M2/M3 ergänzt wenn benötigt
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/audio/
+    - assets/data/
+    - assets/i18n/
