@@ -5,11 +5,14 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/data/system_repository.dart';
+import '../../../core/domain/ship_stats.dart';
 import '../../../core/domain/star_system.dart';
+import 'effects/explosion_particles.dart';
 import 'components/asteroid_field_component.dart';
 import 'components/enemy_ship_component.dart';
 import 'components/jump_gate_component.dart';
 import 'components/planet_component.dart';
+import 'components/projectile_component.dart';
 import 'components/sun_component.dart';
 import 'player_ship.dart';
 
@@ -25,9 +28,13 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents, HasCol
 
   VoidCallback? onDockRequested;
   VoidCallback? onJumpRequested;
+  VoidCallback? onHudUpdate;
 
   StarSystem? currentSystem;
   final playerPosition = ValueNotifier<Vector2>(Vector2.zero());
+  double _hudTimer = 0;
+
+  ShipStats get playerStats => _player.stats;
 
   @override
   Color backgroundColor() => const Color(0xFF050A14);
@@ -133,6 +140,12 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents, HasCol
     for (final g in _gates) {
       g.updatePlayerProximity(playerPos);
     }
+
+    _hudTimer += dt;
+    if (_hudTimer > 0.1) {
+      _hudTimer = 0;
+      onHudUpdate?.call();
+    }
   }
 
   // F key triggers nearest interaction
@@ -151,6 +164,33 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents, HasCol
     }
     for (final p in _planets) {
       p.tryDock();
+    }
+  }
+
+  // Called by ProjectileComponent when it hits something
+  void handleProjectileHit({
+    required PositionComponent target,
+    required double damage,
+    required ProjectileOwner owner,
+    required Vector2 hitPos,
+  }) {
+    add(ExplosionParticles(
+      position: hitPos,
+      color: owner == ProjectileOwner.player
+          ? const Color(0xFFFF6D00)
+          : const Color(0xFF69FF47),
+      count: 10,
+    ));
+
+    if (owner == ProjectileOwner.player && target is EnemyShipComponent) {
+      target.applyDamage(damage);
+    } else if (owner == ProjectileOwner.enemy && target is PlayerShip) {
+      target.stats.applyDamage(damage);
+      // Screen shake via camera
+      camera.viewfinder.position += Vector2(
+        (math.Random().nextDouble() - 0.5) * 8,
+        (math.Random().nextDouble() - 0.5) * 8,
+      );
     }
   }
 }

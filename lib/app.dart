@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:void_trader/l10n/app_localizations.dart';
 import 'features/space/game/void_trader_game.dart';
 import 'features/space/ui/docking_overlay.dart';
+import 'features/space/ui/hud_overlay.dart';
 import 'features/space/ui/jump_overlay.dart';
 import 'features/space/ui/mini_map.dart';
 
@@ -42,13 +43,53 @@ class _SpaceScreenState extends State<_SpaceScreen> {
   final VoidTraderGame _game = VoidTraderGame();
   bool _showJump = false;
   bool _showDocking = false;
+  int _hudTick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _game.onDockRequested = () => setState(() => _showDocking = true);
+    _game.onJumpRequested = () => setState(() => _showJump = true);
+    _game.onHudUpdate = () {
+      if (mounted) setState(() => _hudTick++);
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
+    final sys = _game.currentSystem;
     return Scaffold(
       body: Stack(
         children: [
           GameWidget<VoidTraderGame>(game: _game),
+
+          // HUD oben links
+          if (!_showJump && !_showDocking && sys != null)
+            HudOverlay(stats: _game.playerStats, systemName: sys.name),
+
+          // Mini-Map oben rechts
+          if (!_showJump && !_showDocking)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: ValueListenableBuilder<Vector2>(
+                valueListenable: _game.playerPosition,
+                builder: (context, pos, child) {
+                  if (sys == null) return const SizedBox.shrink();
+                  return MiniMap(system: sys, playerPosition: pos);
+                },
+              ),
+            ),
+
+          // HUD hint unten rechts
+          if (!_showJump && !_showDocking)
+            const Positioned(
+              bottom: 16,
+              right: 16,
+              child: _HudHint(),
+            ),
+
+          // Overlays
           if (_showJump && _game.pendingJump != null)
             JumpOverlay(
               targetSystem: _game.pendingJump!.targetSystemId,
@@ -60,34 +101,13 @@ class _SpaceScreenState extends State<_SpaceScreen> {
               planet: _game.pendingDock!,
               onUndock: _dismissOverlay,
             ),
-          // Mini-Map oben rechts
-          if (!_showJump && !_showDocking)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: ValueListenableBuilder<Vector2>(
-                valueListenable: _game.playerPosition,
-                builder: (context, pos, child) {
-                  final sys = _game.currentSystem;
-                  if (sys == null) return const SizedBox.shrink();
-                  return MiniMap(system: sys, playerPosition: pos);
-                },
-              ),
-            ),
-          // HUD interaction hint
-          if (!_showJump && !_showDocking)
-            const Positioned(
-              bottom: 16,
-              right: 16,
-              child: _HudHint(),
-            ),
         ],
       ),
     );
   }
 
   void _handleJump() {
-    // TODO M2: transition to new system
+    // TODO M2: system transition
     _dismissOverlay();
   }
 
@@ -98,14 +118,6 @@ class _SpaceScreenState extends State<_SpaceScreen> {
       _game.pendingJump = null;
       _game.pendingDock = null;
     });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // Poll game for pending interactions
-    _game.onDockRequested = () => setState(() => _showDocking = true);
-    _game.onJumpRequested = () => setState(() => _showJump = true);
   }
 }
 
@@ -121,7 +133,7 @@ class _HudHint extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: const Text(
-        'WASD / Joystick — Nähern → F / Tap zum Andocken',
+        'WASD / ☞  Joystick — Nähern → F  — Space → Feuer',
         style: TextStyle(color: Colors.white54, fontSize: 11),
       ),
     );
