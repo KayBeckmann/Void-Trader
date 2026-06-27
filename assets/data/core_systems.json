@@ -1,0 +1,355 @@
+{
+  "systems": [
+    {
+      "id": "helion",
+      "name": "Helion",
+      "tier": "core",
+      "procedural": false,
+      "owner_faction": "npc.consortium",
+      "planets": [
+        {
+          "id": "helion.prime",
+          "name": "Helion Prime",
+          "type": "industrial",
+          "x": 600,
+          "y": 0,
+          "radius": 80,
+          "owner_faction": "npc.consortium",
+          "is_player_base": false
+        },
+        {
+          "id": "helion.forge",
+          "name": "Schmiede-Station",
+          "type": "industrial",
+          "x": -400,
+          "y": 500,
+          "radius": 50,
+          "owner_faction": "npc.consortium",
+          "is_player_base": false
+        },
+        {
+          "id": "helion.haven",
+          "name": "Haven",
+          "type": "habitat",
+          "x": 900,
+          "y": -600,
+          "radius": 65,
+          "owner_faction": "npc.free",
+          "is_player_base": true
+        }
+      ],
+      "asteroid_fields": [
+        {
+          "id": "helion.belt_a",
+          "x": -700,
+          "y": -200,
+          "radius": 350,
+          "richness": 0.6
+        }
+      ],
+      "jump_gates": [
+        {
+          "id": "helion.gate_vega",
+          "target_system": "vega",
+          "owner": "npc.consortium",
+          "x": 0,
+          "y": -1200
+        },
+        {
+          "id": "helion.gate_auros",
+          "target_system": "auros",
+          "owner": "npc.consortium",
+          "x": 1400,
+          "y": 800
+        }
+      ]
+    },
+    {
+      "id": "vega",
+      "name": "Vega",
+      "tier": "core",
+      "procedural": false,
+      "owner_faction": "npc.guild",
+      "planets": [
+        {
+          "id": "vega.exchange",
+          "name": "Vega Exchange",
+          "type": "trade",
+          "x": 500,
+          "y": 200,
+          "radius": 90,
+          "owner_faction": "npc.guild",
+          "is_player_base": false
+        },
+        {
+          "id": "vega.depot",
+          "name": "Depot-7",
+          "type": "trade",
+          "x": -600,
+          "y": -300,
+          "radius": 55,
+          "owner_faction": "npc.guild",
+          "is_player_base": false
+        },
+        {
+          "id": "vega.colony_b",
+          "name": "Vega-Kolonie B",
+          "type": "colony",
+          "x": 200,
+          "y": 900,
+          "radius": 60,
+          "owner_faction": "npc.guild",
+          "is_player_base": false
+        }
+      ],
+      "asteroid_fields": [
+        {
+          "id": "vega.ring",
+          "x": -900,
+          "y": 400,
+          "radius": 400,
+          "richness": 0.4
+        },
+        {
+          "id": "vega.dustcloud",
+          "x": 800,
+          "y": -700,
+          "radius": 250,
+          "richness": 0.2
+        }
+      ],
+      "jump_gates": [
+        {
+          "id": "vega.gate_helion",
+          "target_system": "helion",
+          "owner": "npc.guild",
+          "x": 0,
+          "y": 1200
+        },
+        {
+          "id": "vega.gate_nexara",
+          "target_system": "nexara",
+          "owner": "npc.guild",
+          "x": -1400,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "auros",
+      "name": "Auros",
+      "tier": "core",
+      "procedural": false,
+      "owner_faction": "npc.militia",
+      "planets": [
+        {
+          "id": "auros.command",
+          "name": "Auros Command",
+          "type": "habitat",
+          "x": 0,
+          "y": 400,
+          "radius": 100,
+          "owner_faction": "npc.militia",
+          "is_player_base": false
+        },
+        {
+          "id": "auros.mining_alpha",
+          "name": "Mining Alpha",
+          "type": "mining",
+          "x": 700,
+          "y": -300,
+          "radius": 55,
+          "owner_faction": "npc.militia",
+          "is_player_base": false
+        },
+        {
+          "id": "auros.outer_post",
+          "name": "Außenposten Auros",
+          "type": "colony",
+          "x": -500,
+          "y": 800,
+          "radius": 45,
+          "owner_faction": "npc.free",
+          "is_player_base": false
+        }
+      ],
+      "asteroid_fields": [
+        {
+          "id": "auros.iron_belt",
+          "x": -800,
+          "y": -500,
+          "radius": 500,
+          "richness": 0.85
+        },
+        {
+          "id": "auros.debris",
+          "x": 1000,
+          "y": 600,
+          "radius": 200,
+          "richness": 0.3
+        }
+      ],
+      "jump_gates": [
+        {
+          "id": "auros.gate_helion",
+          "target_system": "helion",
+          "owner": "npc.militia",
+          "x": -1400,
+          "y": -800
+        },
+        {
+          "id": "auros.gate_skarrath",
+          "target_system": "skarrath",
+          "owner": "npc.militia",
+          "x": 1400,
+          "y": -400
+        }
+      ]
+    },
+    {
+      "id": "nexara",
+      "name": "Nexara",
+      "tier": "core",
+      "procedural": false,
+      "owner_faction": "npc.research",
+      "planets": [
+        {
+          "id": "nexara.hub",
+          "name": "Nexara Hub",
+          "type": "trade",
+          "x": -300,
+          "y": -500,
+          "radius": 75,
+          "owner_faction": "npc.research",
+          "is_player_base": false
+        },
+        {
+          "id": "nexara.lab",
+          "name": "Nexara Lab",
+          "type": "habitat",
+          "x": 500,
+          "y": 600,
+          "radius": 65,
+          "owner_faction": "npc.research",
+          "is_player_base": false
+        },
+        {
+          "id": "nexara.relay",
+          "name": "Relay Nexara",
+          "type": "industrial",
+          "x": -800,
+          "y": 200,
+          "radius": 50,
+          "owner_faction": "npc.research",
+          "is_player_base": false
+        },
+        {
+          "id": "nexara.colony_d",
+          "name": "Kolonie D",
+          "type": "colony",
+          "x": 900,
+          "y": -400,
+          "radius": 55,
+          "owner_faction": "npc.free",
+          "is_player_base": false
+        }
+      ],
+      "asteroid_fields": [
+        {
+          "id": "nexara.crystal",
+          "x": -1000,
+          "y": -700,
+          "radius": 300,
+          "richness": 0.75
+        }
+      ],
+      "jump_gates": [
+        {
+          "id": "nexara.gate_vega",
+          "target_system": "vega",
+          "owner": "npc.research",
+          "x": 1400,
+          "y": 800
+        },
+        {
+          "id": "nexara.gate_skarrath",
+          "target_system": "skarrath",
+          "owner": "npc.research",
+          "x": 0,
+          "y": -1400
+        }
+      ]
+    },
+    {
+      "id": "skarrath",
+      "name": "Skarrath",
+      "tier": "core",
+      "procedural": false,
+      "owner_faction": "npc.pirates",
+      "planets": [
+        {
+          "id": "skarrath.den",
+          "name": "Skarrath's Den",
+          "type": "colony",
+          "x": -200,
+          "y": 300,
+          "radius": 85,
+          "owner_faction": "npc.pirates",
+          "is_player_base": false
+        },
+        {
+          "id": "skarrath.wreck",
+          "name": "Wreckfield Station",
+          "type": "mining",
+          "x": 700,
+          "y": -600,
+          "radius": 45,
+          "owner_faction": "npc.pirates",
+          "is_player_base": false
+        },
+        {
+          "id": "skarrath.neutral",
+          "name": "Neutralzone Q",
+          "type": "trade",
+          "x": -600,
+          "y": -700,
+          "radius": 60,
+          "owner_faction": "npc.free",
+          "is_player_base": false
+        }
+      ],
+      "asteroid_fields": [
+        {
+          "id": "skarrath.belt_x",
+          "x": 400,
+          "y": 800,
+          "radius": 600,
+          "richness": 0.55
+        },
+        {
+          "id": "skarrath.drift",
+          "x": -1100,
+          "y": 400,
+          "radius": 350,
+          "richness": 0.45
+        }
+      ],
+      "jump_gates": [
+        {
+          "id": "skarrath.gate_auros",
+          "target_system": "auros",
+          "owner": "npc.pirates",
+          "x": -1400,
+          "y": 1000
+        },
+        {
+          "id": "skarrath.gate_nexara",
+          "target_system": "nexara",
+          "owner": "npc.pirates",
+          "x": 1400,
+          "y": -800
+        }
+      ]
+    }
+  ]
+}
