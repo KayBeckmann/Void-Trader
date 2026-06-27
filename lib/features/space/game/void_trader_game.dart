@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
@@ -6,12 +7,13 @@ import 'package:flutter/services.dart';
 import '../../../core/data/system_repository.dart';
 import '../../../core/domain/star_system.dart';
 import 'components/asteroid_field_component.dart';
+import 'components/enemy_ship_component.dart';
 import 'components/jump_gate_component.dart';
 import 'components/planet_component.dart';
 import 'components/sun_component.dart';
 import 'player_ship.dart';
 
-class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
+class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents, HasCollisionDetection {
   late PlayerShip _player;
   late JoystickComponent _joystick;
 
@@ -34,10 +36,10 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    await _loadSystem('helion');
-
     _player = PlayerShip();
     await add(_player);
+
+    await _loadSystem('helion');
 
     camera.viewfinder.visibleGameSize = Vector2(800, 600);
     camera.follow(_player, maxSpeed: 600);
@@ -81,6 +83,23 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       );
       _gates.add(comp);
       await add(comp);
+    }
+
+    // Spawn a few pirate enemies in Skarrath-tier or always for testing
+    await _spawnPirates(3);
+  }
+
+  Future<void> _spawnPirates(int count) async {
+    final rng = math.Random();
+    for (var i = 0; i < count; i++) {
+      final angle = rng.nextDouble() * 2 * math.pi;
+      final dist = 500.0 + rng.nextDouble() * 600.0;
+      final pos = Vector2(dist * math.cos(angle), dist * math.sin(angle));
+      await add(EnemyShipComponent(
+        position: pos,
+        player: _player,
+        onDestroyed: () {/* TODO M2: drop loot */},
+      ));
     }
   }
 
