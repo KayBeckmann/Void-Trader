@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/data/system_repository.dart';
 import '../../../core/domain/star_system.dart';
 import 'components/asteroid_field_component.dart';
@@ -19,6 +20,9 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
 
   Planet? pendingDock;
   JumpGate? pendingJump;
+
+  VoidCallback? onDockRequested;
+  VoidCallback? onJumpRequested;
 
   @override
   Color backgroundColor() => const Color(0xFF050A14);
@@ -44,32 +48,32 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     _planets.clear();
     _gates.clear();
 
-    // Starfield background
     await add(_StarfieldComponent());
-
-    // Sun at center
     await add(SunComponent(position: Vector2.zero()));
 
-    // Planets
     for (final planet in system.planets) {
       final comp = PlanetComponent(
         planet: planet,
-        onDockRequest: (p) => pendingDock = p,
+        onDockRequest: (p) {
+          pendingDock = p;
+          onDockRequested?.call();
+        },
       );
       _planets.add(comp);
       await add(comp);
     }
 
-    // Asteroid fields
     for (final field in system.asteroidFields) {
       await add(AsteroidFieldComponent(field: field));
     }
 
-    // Jump gates
     for (final gate in system.jumpGates) {
       final comp = JumpGateComponent(
         gate: gate,
-        onJump: (g) => pendingJump = g,
+        onJump: (g) {
+          pendingJump = g;
+          onJumpRequested?.call();
+        },
       );
       _gates.add(comp);
       await add(comp);
@@ -106,16 +110,33 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       g.updatePlayerProximity(playerPos);
     }
   }
+
+  // F key triggers nearest interaction
+  @override
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyF) {
+      _triggerNearestInteraction();
+      return KeyEventResult.handled;
+    }
+    return super.onKeyEvent(event, keysPressed);
+  }
+
+  void _triggerNearestInteraction() {
+    for (final g in _gates) {
+      g.tryJump();
+    }
+    for (final p in _planets) {
+      p.tryDock();
+    }
+  }
 }
 
-// Simple procedural starfield
 class _StarfieldComponent extends Component {
   static const int _count = 200;
   final _stars = <_Star>[];
 
   @override
   Future<void> onLoad() async {
-    // LCG seeded starfield for deterministic layout
     var seed = 0xDEADBEEF;
     double nextRand() {
       seed = (seed * 1664525 + 1013904223) & 0xFFFFFFFF;
