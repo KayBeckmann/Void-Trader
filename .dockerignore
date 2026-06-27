@@ -1,0 +1,12 @@
+.git
+.dart_tool
+build
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache
+.env
+*.md
+test
+integration_test
+.woodpecker
+.idea
