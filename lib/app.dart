@@ -5,6 +5,7 @@ import 'package:void_trader/l10n/app_localizations.dart';
 import 'features/space/game/void_trader_game.dart';
 import 'features/space/ui/docking_overlay.dart';
 import 'features/space/ui/jump_overlay.dart';
+import 'features/space/ui/mini_map.dart';
 
 class VoidTraderApp extends StatelessWidget {
   const VoidTraderApp({super.key});
@@ -58,6 +59,20 @@ class _SpaceScreenState extends State<_SpaceScreen> {
             DockingOverlay(
               planet: _game.pendingDock!,
               onUndock: _dismissOverlay,
+            ),
+          // Mini-Map oben rechts
+          if (!_showJump && !_showDocking)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: ValueListenableBuilder<Vector2>(
+                valueListenable: _game.playerPosition,
+                builder: (context, pos, child) {
+                  final sys = _game.currentSystem;
+                  if (sys == null) return const SizedBox.shrink();
+                  return MiniMap(system: sys, playerPosition: pos);
+                },
+              ),
             ),
           // HUD interaction hint
           if (!_showJump && !_showDocking)

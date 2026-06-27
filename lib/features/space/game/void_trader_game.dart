@@ -24,6 +24,9 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   VoidCallback? onDockRequested;
   VoidCallback? onJumpRequested;
 
+  StarSystem? currentSystem;
+  final playerPosition = ValueNotifier<Vector2>(Vector2.zero());
+
   @override
   Color backgroundColor() => const Color(0xFF050A14);
 
@@ -45,6 +48,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   Future<void> _loadSystem(String id) async {
     final system = await SystemRepository.findById(id) ??
         (await SystemRepository.loadAll()).first;
+    currentSystem = system;
     _planets.clear();
     _gates.clear();
 
@@ -103,6 +107,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     _player.applyJoystick(_joystick.relativeDelta);
 
     final playerPos = _player.position;
+    playerPosition.value = playerPos.clone();
     for (final p in _planets) {
       p.updatePlayerProximity(playerPos);
     }
