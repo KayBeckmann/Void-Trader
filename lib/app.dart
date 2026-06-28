@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:void_trader/l10n/app_localizations.dart';
+import 'core/providers/game_state_provider.dart';
 import 'features/space/game/void_trader_game.dart';
 import 'features/space/ui/docking_overlay.dart';
 import 'features/space/ui/hud_overlay.dart';
@@ -41,6 +42,7 @@ class _SpaceScreen extends StatefulWidget {
 
 class _SpaceScreenState extends State<_SpaceScreen> {
   final VoidTraderGame _game = VoidTraderGame();
+  final GameState _gameState = GameState();
   bool _showJump = false;
   bool _showDocking = false;
   int _hudTick = 0;
@@ -52,6 +54,10 @@ class _SpaceScreenState extends State<_SpaceScreen> {
     _game.onJumpRequested = () => setState(() => _showJump = true);
     _game.onHudUpdate = () {
       if (mounted) setState(() => _hudTick++);
+    };
+    _game.onSystemLoaded = (sys) async {
+      await _gameState.enterSystem(sys);
+      if (mounted) setState(() {});
     };
   }
 
@@ -100,6 +106,8 @@ class _SpaceScreenState extends State<_SpaceScreen> {
             DockingOverlay(
               planet: _game.pendingDock!,
               onUndock: _dismissOverlay,
+              market: _gameState.currentMarket,
+              player: _gameState.player,
             ),
         ],
       ),

@@ -29,6 +29,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents, HasCol
   VoidCallback? onDockRequested;
   VoidCallback? onJumpRequested;
   VoidCallback? onHudUpdate;
+  void Function(StarSystem)? onSystemLoaded;
 
   StarSystem? currentSystem;
   final playerPosition = ValueNotifier<Vector2>(Vector2.zero());
@@ -58,6 +59,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents, HasCol
     final system = await SystemRepository.findById(id) ??
         (await SystemRepository.loadAll()).first;
     currentSystem = system;
+    onSystemLoaded?.call(system);
     _planets.clear();
     _gates.clear();
 

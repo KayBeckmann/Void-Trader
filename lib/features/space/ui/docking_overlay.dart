@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import '../../../core/domain/market.dart';
+import '../../../core/domain/player_state.dart';
 import '../../../core/domain/star_system.dart';
+import 'market_screen.dart';
 
 class DockingOverlay extends StatelessWidget {
   final Planet planet;
   final VoidCallback onUndock;
+  final SystemMarket? market;
+  final PlayerState? player;
 
   const DockingOverlay({
     super.key,
     required this.planet,
     required this.onUndock,
+    this.market,
+    this.player,
   });
 
   @override
@@ -20,13 +27,28 @@ class DockingOverlay extends StatelessWidget {
           children: [
             _Header(planet: planet),
             Expanded(
-              child: _ServiceGrid(planetType: planet.type),
+              child: _ServiceGrid(
+                planetType: planet.type,
+                onMarketOpen: (market != null && player != null)
+                    ? () => _openMarket(context)
+                    : null,
+              ),
             ),
             _Footer(onUndock: onUndock),
           ],
         ),
       ),
     );
+  }
+
+  void _openMarket(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => MarketScreen(
+        market: market!,
+        player: player!,
+        onClose: () => Navigator.of(context).pop(),
+      ),
+    ));
   }
 }
 
@@ -113,7 +135,8 @@ class _Tag extends StatelessWidget {
 
 class _ServiceGrid extends StatelessWidget {
   final String planetType;
-  const _ServiceGrid({required this.planetType});
+  final VoidCallback? onMarketOpen;
+  const _ServiceGrid({required this.planetType, this.onMarketOpen});
 
   @override
   Widget build(BuildContext context) {
@@ -125,9 +148,12 @@ class _ServiceGrid extends StatelessWidget {
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
         childAspectRatio: 2.2,
-        children: services
-            .map((s) => _ServiceTile(label: s.label, icon: s.icon, available: s.available))
-            .toList(),
+        children: services.map((s) => _ServiceTile(
+          label: s.label,
+          icon: s.icon,
+          available: s.available,
+          onTap: s.label == 'Markt' ? onMarketOpen : null,
+        )).toList(),
       ),
     );
   }
@@ -153,11 +179,13 @@ class _ServiceTile extends StatelessWidget {
   final String label;
   final IconData icon;
   final bool available;
+  final VoidCallback? onTap;
 
   const _ServiceTile({
     required this.label,
     required this.icon,
     required this.available,
+    this.onTap,
   });
 
   @override
@@ -167,7 +195,7 @@ class _ServiceTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: available ? () {} : null,
+        onTap: available ? onTap : null,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
