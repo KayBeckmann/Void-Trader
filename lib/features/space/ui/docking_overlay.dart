@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/domain/base_state.dart';
 import '../../../core/domain/market.dart';
 import '../../../core/domain/player_state.dart';
 import '../../../core/domain/star_system.dart';
+import '../../base/ui/base_overview_screen.dart';
+import '../../base/ui/planet_scan_screen.dart';
 import 'market_screen.dart';
 
 class DockingOverlay extends StatelessWidget {
@@ -9,6 +12,8 @@ class DockingOverlay extends StatelessWidget {
   final VoidCallback onUndock;
   final SystemMarket? market;
   final PlayerState? player;
+  final BaseState? base;
+  final VoidCallback? onFoundBase;
 
   const DockingOverlay({
     super.key,
@@ -16,6 +21,8 @@ class DockingOverlay extends StatelessWidget {
     required this.onUndock,
     this.market,
     this.player,
+    this.base,
+    this.onFoundBase,
   });
 
   @override
@@ -29,9 +36,10 @@ class DockingOverlay extends StatelessWidget {
             Expanded(
               child: _ServiceGrid(
                 planetType: planet.type,
-                onMarketOpen: (market != null && player != null)
-                    ? () => _openMarket(context)
-                    : null,
+                isPlayerBase: planet.isPlayerBase || base?.planetId == planet.id,
+                onMarketOpen: (market != null && player != null) ? () => _openMarket(context) : null,
+                onScanOpen: player != null ? () => _openScan(context) : null,
+                onBaseOpen: (base != null) ? () => _openBase(context) : null,
               ),
             ),
             _Footer(onUndock: onUndock),
@@ -46,6 +54,32 @@ class DockingOverlay extends StatelessWidget {
       builder: (_) => MarketScreen(
         market: market!,
         player: player!,
+        onClose: () => Navigator.of(context).pop(),
+      ),
+    ));
+  }
+
+  void _openScan(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PlanetScanScreen(
+        planet: planet,
+        player: player!,
+        onClaim: () {
+          onFoundBase?.call();
+          Navigator.of(context).pop();
+        },
+        onClose: () => Navigator.of(context).pop(),
+      ),
+    ));
+  }
+
+  void _openBase(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => BaseOverviewScreen(
+        base: base!,
+        playerInventory: player!.inventory,
+        playerCredits: player!.credits,
+        onCreditsChanged: () {},
         onClose: () => Navigator.of(context).pop(),
       ),
     ));
@@ -135,8 +169,17 @@ class _Tag extends StatelessWidget {
 
 class _ServiceGrid extends StatelessWidget {
   final String planetType;
+  final bool isPlayerBase;
   final VoidCallback? onMarketOpen;
-  const _ServiceGrid({required this.planetType, this.onMarketOpen});
+  final VoidCallback? onScanOpen;
+  final VoidCallback? onBaseOpen;
+  const _ServiceGrid({
+    required this.planetType,
+    required this.isPlayerBase,
+    this.onMarketOpen,
+    this.onScanOpen,
+    this.onBaseOpen,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +195,12 @@ class _ServiceGrid extends StatelessWidget {
           label: s.label,
           icon: s.icon,
           available: s.available,
-          onTap: s.label == 'Markt' ? onMarketOpen : null,
+          onTap: switch (s.label) {
+            'Markt' => onMarketOpen,
+            'Scan' => onScanOpen,
+            'Heimatbasis' => onBaseOpen,
+            _ => null,
+          },
         )).toList(),
       ),
     );
@@ -160,11 +208,11 @@ class _ServiceGrid extends StatelessWidget {
 
   List<_ServiceDef> _servicesFor(String type) => [
         _ServiceDef('Markt', Icons.store, true),
-        _ServiceDef('Werft', Icons.build, type == 'industrial'),
+        _ServiceDef('Scan', Icons.radar, !isPlayerBase),
+        _ServiceDef('Heimatbasis', Icons.home_work, isPlayerBase),
         _ServiceDef('Reparatur', Icons.healing, true),
-        _ServiceDef('Forschung', Icons.science, type == 'habitat'),
         _ServiceDef('Mission', Icons.assignment, true),
-        _ServiceDef('Fracht', Icons.inventory_2, type == 'trade' || type == 'industrial'),
+        _ServiceDef('Werft', Icons.build, type == 'industrial'),
       ];
 }
 

@@ -108,6 +108,11 @@ class _SpaceScreenState extends State<_SpaceScreen> {
               onUndock: _dismissOverlay,
               market: _gameState.currentMarket,
               player: _gameState.player,
+              base: _gameState.base,
+              onFoundBase: () {
+                _gameState.foundBase(_game.pendingDock!);
+                setState(() {});
+              },
             ),
         ],
       ),
