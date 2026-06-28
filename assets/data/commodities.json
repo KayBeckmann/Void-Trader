@@ -1,0 +1,170 @@
+{
+  "commodities": [
+    {
+      "id": "ore_iron",
+      "name": "Eisenerz",
+      "category": "raw",
+      "base_price": 45,
+      "volume": 2.0,
+      "description": "Gewöhnliches Eisenerz — Grundlage der Schiffskonstruktion."
+    },
+    {
+      "id": "ore_crystal",
+      "name": "Resonanzkristalle",
+      "category": "raw",
+      "base_price": 210,
+      "volume": 0.5,
+      "description": "Seltene Kristalle aus Asteroidenkernen — benötigt für Energieleiter."
+    },
+    {
+      "id": "ore_ice",
+      "name": "Wassereis",
+      "category": "raw",
+      "base_price": 30,
+      "volume": 3.0,
+      "description": "Gefrorenes H₂O — Treibstoffvorläufer und Lebenserhaltung."
+    },
+    {
+      "id": "ore_organic",
+      "name": "Organische Verbindungen",
+      "category": "raw",
+      "base_price": 80,
+      "volume": 1.5,
+      "description": "Gesammeltes Bio-Material von Kolonieplaneten — Grundlage für Nahrungssynthese."
+    },
+    {
+      "id": "ind_modules",
+      "name": "Schiffsmodule",
+      "category": "industrial",
+      "base_price": 850,
+      "volume": 4.0,
+      "description": "Vorgefertigte Schiffsmodule — universelle Ausrüstungsupgrades."
+    },
+    {
+      "id": "ind_ammo",
+      "name": "Munition",
+      "category": "industrial",
+      "base_price": 120,
+      "volume": 0.5,
+      "description": "Standardmunition für kinetische Waffen."
+    },
+    {
+      "id": "ind_energy_cells",
+      "name": "Energiezellen",
+      "category": "industrial",
+      "base_price": 280,
+      "volume": 1.0,
+      "description": "Hochdichte Akkumulatoren — Schild- und Antriebsenergie."
+    },
+    {
+      "id": "ind_repair_kits",
+      "name": "Reparatursätze",
+      "category": "industrial",
+      "base_price": 340,
+      "volume": 1.5,
+      "description": "Naniten-gestützte Reparaturkits für Schiffshülle."
+    },
+    {
+      "id": "lux_synth_alcohol",
+      "name": "Synth-Alkohol",
+      "category": "luxury",
+      "base_price": 480,
+      "volume": 1.0,
+      "description": "Weit gereiste Besatzungen zahlen viel für ein gutes Glas."
+    },
+    {
+      "id": "lux_alien_art",
+      "name": "Alien-Artefakte",
+      "category": "luxury",
+      "base_price": 2400,
+      "volume": 0.3,
+      "description": "Kunstgegenstände unbekannter Herkunft — Sammlerstücke auf Kernwelten."
+    },
+    {
+      "id": "lux_precious",
+      "name": "Edelmetalle",
+      "category": "luxury",
+      "base_price": 680,
+      "volume": 0.8,
+      "description": "Gold, Platin, Iridium — Wertaufbewahrung und High-Tech-Kontakte."
+    },
+    {
+      "id": "ill_biotech",
+      "name": "Verbotene Biotech",
+      "category": "illegal",
+      "base_price": 3200,
+      "volume": 0.5,
+      "description": "Genmanipulierte Organismen und Forschungsmaterial — in Kernwelten illegal.",
+      "is_illegal": true
+    },
+    {
+      "id": "ill_weapons",
+      "name": "Waffenschmuggel",
+      "category": "illegal",
+      "base_price": 1800,
+      "volume": 3.0,
+      "description": "Nicht registrierte Waffen und Sprengmittel.",
+      "is_illegal": true
+    },
+    {
+      "id": "ill_neustoff",
+      "name": "Neu-Stoff",
+      "category": "illegal",
+      "base_price": 950,
+      "volume": 0.2,
+      "description": "Psychoaktive Verbindung — in allen Kernwelten verboten, auf Außenposten toleriert.",
+      "is_illegal": true
+    },
+    {
+      "id": "res_datacrystal",
+      "name": "Datenkristalle",
+      "category": "research",
+      "base_price": 1200,
+      "volume": 0.1,
+      "description": "Kristalline Datenspeicher mit vor-galaktischen Aufzeichnungen.",
+      "is_research": true
+    },
+    {
+      "id": "res_prototype",
+      "name": "Prototypen-Komponenten",
+      "category": "research",
+      "base_price": 2800,
+      "volume": 1.0,
+      "description": "Experimentelle Bauteile — für den Techtree unersetzlich.",
+      "is_research": true
+    },
+    {
+      "id": "res_alien_tech",
+      "name": "Alien-Techfragmente",
+      "category": "research",
+      "base_price": 5500,
+      "volume": 0.2,
+      "description": "Fragmente unbekannter Technologie — nur mit Kult-Ruf ≥40 handelbar.",
+      "is_research": true
+    },
+    {
+      "id": "con_fuel",
+      "name": "Treibstoff",
+      "category": "consumable",
+      "base_price": 65,
+      "volume": 2.0,
+      "description": "Deuterium-Pellets für Fusionsantriebe."
+    },
+    {
+      "id": "con_food",
+      "name": "Nahrung",
+      "category": "consumable",
+      "base_price": 90,
+      "volume": 1.0,
+      "description": "Synthetische Nahrungsrationen — Grundversorgung für Kolonien."
+    },
+    {
+      "id": "con_clone_base",
+      "name": "Klon-Rohstoff",
+      "category": "consumable",
+      "base_price": 1600,
+      "volume": 2.0,
+      "description": "Bio-Matrix für Klon-Produktion — handelbar wenn Klon-Tech erforscht."
+    }
+  ]
+}
