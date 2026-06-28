@@ -1,0 +1,193 @@
+{
+  "buildings": [
+    {
+      "id": "solar_panel",
+      "name": "Solarpanel",
+      "category": "energy",
+      "tier": "tier1",
+      "energy_balance": 10.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_crystal", "qty": 2},
+        {"id": "ind_modules", "qty": 1}
+      ],
+      "outputs": [],
+      "description": "Grundlegende Energieversorgung. Jede Basis braucht mindestens eines."
+    },
+    {
+      "id": "drill_tower",
+      "name": "Bohrturm",
+      "category": "extraction",
+      "tier": "tier1",
+      "energy_balance": -4.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 20},
+        {"id": "ind_modules", "qty": 2}
+      ],
+      "outputs": [
+        {"id": "ore_iron", "per_min": 3.0}
+      ],
+      "description": "Extrahiert Eisenerz aus Erzadern. Effizienz steigt mit zugewiesener Crew."
+    },
+    {
+      "id": "water_extractor",
+      "name": "Wasserextraktor",
+      "category": "extraction",
+      "tier": "tier1",
+      "energy_balance": -3.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 10},
+        {"id": "ind_modules", "qty": 1}
+      ],
+      "outputs": [
+        {"id": "ore_ice", "per_min": 2.0}
+      ],
+      "description": "Gewinnt Wassereis aus Untergrundspeichern. Basis für Treibstoffproduktion."
+    },
+    {
+      "id": "smelter",
+      "name": "Schmelze",
+      "category": "production",
+      "tier": "tier1",
+      "energy_balance": -8.0,
+      "grid_size": 2,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 40},
+        {"id": "ind_energy_cells", "qty": 5},
+        {"id": "ind_modules", "qty": 3}
+      ],
+      "outputs": [
+        {"id": "ind_modules", "per_min": 0.5}
+      ],
+      "description": "Verarbeitet Roherz zu Schiffsmodulen. Benötigt viel Energie und Crew."
+    },
+    {
+      "id": "munitions_plant",
+      "name": "Munitionsfabrik",
+      "category": "production",
+      "tier": "tier1",
+      "energy_balance": -5.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 25},
+        {"id": "ind_modules", "qty": 2}
+      ],
+      "outputs": [
+        {"id": "ind_ammo", "per_min": 4.0}
+      ],
+      "description": "Produziert Standardmunition für die eigene Flotte und den Verkauf."
+    },
+    {
+      "id": "warehouse",
+      "name": "Lagerhaus",
+      "category": "storage",
+      "tier": "tier1",
+      "energy_balance": -1.0,
+      "grid_size": 2,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 30},
+        {"id": "ind_modules", "qty": 2}
+      ],
+      "outputs": [],
+      "description": "Erhöht die Lagerkapazität der Basis um 500 Einheiten."
+    },
+    {
+      "id": "defense_turret",
+      "name": "Verteidigungsturm",
+      "category": "defense",
+      "tier": "tier1",
+      "energy_balance": -3.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 15},
+        {"id": "ind_ammo", "qty": 20},
+        {"id": "ind_modules", "qty": 1}
+      ],
+      "outputs": [],
+      "description": "Automatische Verteidigung gegen Marauder-Events. Je mehr Türme, desto besser."
+    },
+    {
+      "id": "repair_bay",
+      "name": "Reparaturbucht",
+      "category": "production",
+      "tier": "tier1",
+      "energy_balance": -4.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 20},
+        {"id": "ind_modules", "qty": 3}
+      ],
+      "outputs": [
+        {"id": "ind_repair_kits", "per_min": 0.8}
+      ],
+      "description": "Produziert Naniten-Reparatursätze für Schiffe und Infrastruktur."
+    },
+    {
+      "id": "research_center",
+      "name": "Forschungszentrum",
+      "category": "special",
+      "tier": "tier2",
+      "energy_balance": -12.0,
+      "grid_size": 2,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 60},
+        {"id": "res_datacrystal", "qty": 5},
+        {"id": "ind_modules", "qty": 10},
+        {"id": "ind_energy_cells", "qty": 8}
+      ],
+      "outputs": [],
+      "description": "Schaltet den Tech-Tree frei. Forschungsslots skalieren mit Tier und Crew.",
+      "is_stub": true
+    },
+    {
+      "id": "shipyard",
+      "name": "Werft",
+      "category": "special",
+      "tier": "tier2",
+      "energy_balance": -15.0,
+      "grid_size": 2,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 80},
+        {"id": "ind_modules", "qty": 15},
+        {"id": "ind_energy_cells", "qty": 10}
+      ],
+      "outputs": [],
+      "description": "Erlaubt eigenen Schiffbau. Schiffsklassen durch Techtree erweiterbar.",
+      "is_stub": true
+    },
+    {
+      "id": "command_center",
+      "name": "Kommandozentrum",
+      "category": "special",
+      "tier": "tier2",
+      "energy_balance": -8.0,
+      "grid_size": 2,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 50},
+        {"id": "res_prototype", "qty": 2},
+        {"id": "ind_modules", "qty": 8}
+      ],
+      "outputs": [],
+      "description": "Zentrale für Flottenkommandos. Block-Editor in M8.",
+      "is_stub": true
+    },
+    {
+      "id": "clone_chamber",
+      "name": "Klon-Kammer",
+      "category": "special",
+      "tier": "tier3",
+      "energy_balance": -6.0,
+      "grid_size": 1,
+      "build_cost": [
+        {"id": "ore_iron", "qty": 30},
+        {"id": "con_clone_base", "qty": 5},
+        {"id": "res_prototype", "qty": 3}
+      ],
+      "outputs": [],
+      "description": "Eigene Clone-Produktion. Benötigt Klon-Technologie aus dem Tech-Tree.",
+      "is_stub": true
+    }
+  ]
+}
