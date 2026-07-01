@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Station</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#233144",
+                        "surface-container-low": "#161d1e",
+                        "error-container": "#93000a",
+                        "tertiary-fixed-dim": "#b9c7df",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#2f3638",
+                        "secondary-container": "#ee9800",
+                        "on-surface-variant": "#bbc9cd",
+                        "surface-variant": "#2f3638",
+                        "on-primary": "#00363e",
+                        "tertiary": "#cfdef6",
+                        "secondary": "#ffb95f",
+                        "inverse-surface": "#dde4e5",
+                        "on-background": "#dde4e5",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1a2122",
+                        "on-secondary-fixed": "#2a1700",
+                        "on-secondary": "#472a00",
+                        "surface-tint": "#2fd9f4",
+                        "on-primary-fixed": "#001f25",
+                        "surface-dim": "#0e1416",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#5b3800",
+                        "outline": "#859397",
+                        "primary-fixed": "#a2eeff",
+                        "tertiary-container": "#b3c2d9",
+                        "on-tertiary-fixed": "#0d1c2e",
+                        "on-tertiary-container": "#425063",
+                        "primary-container": "#22d3ee",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#006877",
+                        "primary": "#8aebff",
+                        "on-surface": "#dde4e5",
+                        "tertiary-fixed": "#d5e3fc",
+                        "surface-bright": "#343a3c",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "background": "#0e1416",
+                        "on-primary-container": "#005763",
+                        "secondary-fixed": "#ffddb8",
+                        "outline-variant": "#3c494c",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "surface": "#0e1416",
+                        "surface-container-lowest": "#090f11",
+                        "surface-container-high": "#242b2d",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-tertiary-fixed-variant": "#3a485b",
+                        "inverse-on-surface": "#2b3233"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "12px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "margin": "16px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["JetBrains Mono"],
+                        "body-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Archivo Narrow"],
+                        "headline-md": ["Archivo Narrow"],
+                        "headline-lg": ["Archivo Narrow"],
+                        "label-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["28px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .scanline { background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.2) 50%); background-size: 100% 4px; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #2fd9f4;
+            cursor: pointer;
+            border: 1px solid #a2eeff;
+            box-shadow: 0 0 8px rgba(34,211,238,0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md min-h-screen selection:bg-primary/30 selection:text-primary-fixed">
+<!-- TopAppBar Shared Component -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin py-base bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 text-primary dark:text-primary-fixed">
+<div class="flex items-center gap-2 hover:bg-primary/10 transition-colors duration-150 active:scale-95 px-2 py-1 rounded">
+<span class="material-symbols-outlined" data-icon="rocket_launch" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+<span class="text-headline-md font-headline-md text-primary-fixed drop-shadow-[0_0_4px_rgba(47,217,244,0.6)]">Aethelgard System</span>
+</div>
+<div class="hover:bg-primary/10 transition-colors duration-150 active:scale-95 p-1 rounded cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-[60px] pb-[100px]">
+<!-- Hero: Station Context -->
+<div class="mx-margin mt-4 h-40 border border-outline relative overflow-hidden group bg-surface-container-low">
+<div class="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-[3s] ease-out opacity-80" data-alt="Tactical cyber-industrial pixel art illustration of a massive deep-space trading station named The Spire. Dark void background contrasted by intense glowing cyan and amber utility lights. Isometric view highlighting geometric metal paneling, exposed technical conduits, and distant docking bays. Highly detailed, high contrast, retro-futuristic aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCT1j3XNrfOZzVP4WJ6Z1ndDwas5wjfIcsTOK-Yn31zfGrMC7RM_sDt2GXQE94WjING6ef30saWGrJtot3ogE3Q-mICPu3SYhcrtU8E823XT7L5dFYPpsVsM8_y79aeBLYrM3GplBrg5aVH0ddwmruPF53OAKCASYguogihaVJCaYYxEj2ofpnsikY1bSUwBOm1TWI7DuASZ0tF69ng-aFkDYwBs1OLcS240tw46ymdkmIF22cmxC1Z9Lf717AaM-CdYUHVH6sYLZRc')"></div>
+<div class="absolute inset-0 pointer-events-none scanline"></div>
+<div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-surface-container-highest/90 to-transparent p-4">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-wider uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">The Spire</h1>
+<p class="font-label-sm text-label-sm text-secondary tracking-widest uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">cell_tower</span> Trading Hub Alpha
+                </p>
+</div>
+<!-- Chromatic edge artifact -->
+<div class="absolute top-0 bottom-0 right-0 w-[2px] bg-error/50 mix-blend-screen translate-x-[1px]"></div>
+<div class="absolute top-0 bottom-0 left-0 w-[2px] bg-primary/50 mix-blend-screen -translate-x-[1px]"></div>
+</div>
+<!-- In-Page Navigation Tab Bar -->
+<div class="mx-margin mt-4 border-b border-outline-variant/50 overflow-x-auto no-scrollbar">
+<div class="flex gap-6 pb-[2px] w-max">
+<button class="font-label-sm text-label-sm uppercase tracking-widest text-primary border-b-2 border-primary pb-2 shadow-[0_2px_8px_-2px_rgba(34,211,238,0.5)]">Markt</button>
+<button class="font-label-sm text-label-sm uppercase tracking-widest text-outline hover:text-primary-fixed pb-2 transition-colors">Bar</button>
+<button class="font-label-sm text-label-sm uppercase tracking-widest text-outline hover:text-primary-fixed pb-2 transition-colors">Werft</button>
+<button class="font-label-sm text-label-sm uppercase tracking-widest text-outline hover:text-primary-fixed pb-2 transition-colors">Missionen</button>
+<button class="font-label-sm text-label-sm uppercase tracking-widest text-outline hover:text-primary-fixed pb-2 transition-colors">Klon-Klinik</button>
+</div>
+</div>
+<!-- Market List Grid -->
+<div class="mx-margin mt-4 flex flex-col">
+<!-- Header -->
+<div class="grid grid-cols-[2.5fr_1fr_1.5fr_1fr] gap-2 pb-2 border-b border-primary/30 font-label-sm text-label-sm text-outline-variant uppercase tracking-widest">
+<div>Ware</div>
+<div class="text-right">Bestand</div>
+<div class="text-right">Kauf/Verk</div>
+<div class="text-right">Trend</div>
+</div>
+<!-- List Items -->
+<!-- Item: Isotopes (Active/Selected visual state) -->
+<div class="grid grid-cols-[2.5fr_1fr_1.5fr_1fr] gap-2 py-3 border-b border-outline-variant/30 items-center cursor-pointer bg-primary/5 border-l-2 border-l-primary px-2 -ml-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-6 bg-secondary shadow-[0_0_4px_rgba(238,152,0,0.6)]"></div>
+<div class="font-body-md text-body-md text-primary font-bold uppercase tracking-wider">Isotopes</div>
+</div>
+<div class="font-body-md text-body-md text-outline text-right">450</div>
+<div class="font-body-md text-body-md text-primary text-right">120 / <span class="text-outline">98</span></div>
+<div class="font-body-md text-body-md text-secondary text-right flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>+12%
+               </div>
+</div>
+<!-- Item: Water -->
+<div class="grid grid-cols-[2.5fr_1fr_1.5fr_1fr] gap-2 py-3 border-b border-outline-variant/10 items-center cursor-pointer hover:bg-surface-container-low transition-colors px-2 -ml-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-6 bg-outline"></div>
+<div class="font-body-md text-body-md text-on-surface uppercase tracking-wider">Water</div>
+</div>
+<div class="font-body-md text-body-md text-outline text-right">1,200</div>
+<div class="font-body-md text-body-md text-primary text-right">15 / <span class="text-outline">12</span></div>
+<div class="font-body-md text-body-md text-outline text-right flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_flat</span>0%
+               </div>
+</div>
+<!-- Item: Iron -->
+<div class="grid grid-cols-[2.5fr_1fr_1.5fr_1fr] gap-2 py-3 border-b border-outline-variant/10 items-center cursor-pointer hover:bg-surface-container-low transition-colors px-2 -ml-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-6 bg-primary shadow-[0_0_4px_rgba(34,211,238,0.4)]"></div>
+<div class="font-body-md text-body-md text-on-surface uppercase tracking-wider">Iron</div>
+</div>
+<div class="font-body-md text-body-md text-outline text-right">85</div>
+<div class="font-body-md text-body-md text-primary text-right">45 / <span class="text-outline">38</span></div>
+<div class="font-body-md text-body-md text-error text-right flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_down</span>-5%
+               </div>
+</div>
+<!-- Item: Tech Parts -->
+<div class="grid grid-cols-[2.5fr_1fr_1.5fr_1fr] gap-2 py-3 border-b border-outline-variant/10 items-center cursor-pointer hover:bg-surface-container-low transition-colors px-2 -ml-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-6 bg-secondary shadow-[0_0_4px_rgba(238,152,0,0.6)]"></div>
+<div class="font-body-md text-body-md text-on-surface uppercase tracking-wider">Tech Parts</div>
+</div>
+<div class="font-body-md text-body-md text-outline text-right">12</div>
+<div class="font-body-md text-body-md text-primary text-right">850 / <span class="text-outline">700</span></div>
+<div class="font-body-md text-body-md text-secondary text-right flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>+8%
+               </div>
+</div>
+</div>
+<!-- Trade Action Panel -->
+<div class="mx-margin mt-8 border border-primary/30 bg-surface-container/80 p-4 relative overflow-hidden backdrop-blur-sm">
+<!-- Scanline & Terminal artifacts -->
+<div class="absolute inset-0 pointer-events-none scanline opacity-50"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div>
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1 flex items-center gap-2">
+<span class="w-2 h-2 bg-primary inline-block rounded-none animate-pulse"></span> Target: Isotopes
+                    </div>
+<div class="font-body-md text-body-md text-secondary bg-secondary/10 px-2 py-0.5 border border-secondary/20 inline-block mt-1">Expected Profit: +12%</div>
+</div>
+<div class="text-right">
+<div class="font-headline-md text-headline-md text-primary drop-shadow-[0_0_4px_rgba(34,211,238,0.4)]">120 CR</div>
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Per Unit</div>
+</div>
+</div>
+<!-- Quantity Selection -->
+<div class="mb-6 relative z-10">
+<input class="w-full h-1 bg-outline-variant rounded-none appearance-none cursor-pointer outline-none" max="100" min="1" type="range" value="50"/>
+<div class="flex justify-between mt-3">
+<span class="font-body-md text-body-md text-outline">1</span>
+<span class="font-body-md text-body-md text-primary font-bold px-3 py-1 border border-primary/50 bg-surface-container-lowest">50 UNITS</span>
+<span class="font-body-md text-body-md text-outline">Max</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-2 gap-4 relative z-10">
+<button class="border border-outline text-outline uppercase font-label-sm tracking-widest py-3 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2 bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[18px]">sell</span> Verkaufen
+                </button>
+<button class="border border-primary text-primary uppercase font-label-sm tracking-widest py-3 hover:bg-primary/10 shadow-[0_0_4px_rgba(34,211,238,0.2)] hover:shadow-[0_0_12px_rgba(34,211,238,0.4)] transition-all flex items-center justify-center gap-2 bg-primary/5">
+<span class="material-symbols-outlined text-[18px]">shopping_cart_checkout</span> Kaufen
+                </button>
+</div>
+</div>
+<!-- Bottom Status Indicators -->
+<div class="mx-margin mt-6 flex justify-between items-end">
+<!-- Credits -->
+<div>
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">account_balance_wallet</span> Credits
+                </div>
+<div class="font-body-lg text-body-lg text-primary-fixed drop-shadow-[0_0_2px_rgba(162,238,255,0.5)]">125,000 <span class="text-outline text-body-md">CR</span></div>
+</div>
+<!-- Cargo Bar (Segmented 10 blocks) -->
+<div class="w-[55%]">
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-widest mb-1 flex justify-between items-center">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">inventory_2</span> Cargo</span>
+<span class="text-primary-fixed">45/100</span>
+</div>
+<div class="flex gap-[2px] h-[10px]">
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(238,152,0,0.5)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(238,152,0,0.5)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(238,152,0,0.5)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(238,152,0,0.5)]"></div>
+<div class="flex-1 border border-secondary/50 relative overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-1/2 bg-secondary"></div>
+</div>
+<div class="flex-1 border border-outline-variant bg-surface-container-lowest"></div>
+<div class="flex-1 border border-outline-variant bg-surface-container-lowest"></div>
+<div class="flex-1 border border-outline-variant bg-surface-container-lowest"></div>
+<div class="flex-1 border border-outline-variant bg-surface-container-lowest"></div>
+<div class="flex-1 border border-outline-variant bg-surface-container-lowest"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Shared Component -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-lg border-t border-primary/20 shadow-[0_-4px_12px_rgba(34,211,238,0.15)] text-primary-fixed dark:text-primary-fixed-dim">
+<!-- HUD -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">HUD</span>
+</div>
+<!-- Map -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Map</span>
+</div>
+<!-- Base (ACTIVE - Represents current Station destination) -->
+<div class="flex flex-col items-center justify-center text-primary-fixed font-bold bg-primary-container/20 rounded-xl p-2 border border-primary/40 shadow-[0_0_8px_rgba(34,211,238,0.3)] scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="hub" style="font-variation-settings: 'FILL' 1;">hub</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Base</span>
+</div>
+<!-- Fleet -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="deployed_code">deployed_code</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Fleet</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Tech Tree</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: JetBrains Mono & Archivo Narrow -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400..700;1,400..700&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-tertiary": "#233144",
+                            "surface-container-low": "#161d1e",
+                            "error-container": "#93000a",
+                            "tertiary-fixed-dim": "#b9c7df",
+                            "on-secondary-fixed-variant": "#653e00",
+                            "surface-container-highest": "#2f3638",
+                            "secondary-container": "#ee9800",
+                            "on-surface-variant": "#bbc9cd",
+                            "surface-variant": "#2f3638",
+                            "on-primary": "#00363e",
+                            "tertiary": "#cfdef6",
+                            "secondary": "#ffb95f",
+                            "inverse-surface": "#dde4e5",
+                            "on-background": "#dde4e5",
+                            "on-error-container": "#ffdad6",
+                            "surface-container": "#1a2122",
+                            "on-secondary-fixed": "#2a1700",
+                            "on-secondary": "#472a00",
+                            "surface-tint": "#2fd9f4",
+                            "on-primary-fixed": "#001f25",
+                            "surface-dim": "#0e1416",
+                            "on-error": "#690005",
+                            "on-secondary-container": "#5b3800",
+                            "outline": "#859397",
+                            "primary-fixed": "#a2eeff",
+                            "tertiary-container": "#b3c2d9",
+                            "on-tertiary-fixed": "#0d1c2e",
+                            "on-tertiary-container": "#425063",
+                            "primary-container": "#22d3ee",
+                            "error": "#ffb4ab",
+                            "inverse-primary": "#006877",
+                            "primary": "#8aebff",
+                            "on-surface": "#dde4e5",
+                            "tertiary-fixed": "#d5e3fc",
+                            "surface-bright": "#343a3c",
+                            "on-primary-fixed-variant": "#004e5a",
+                            "background": "#0e1416",
+                            "on-primary-container": "#005763",
+                            "secondary-fixed": "#ffddb8",
+                            "outline-variant": "#3c494c",
+                            "primary-fixed-dim": "#2fd9f4",
+                            "surface": "#0e1416",
+                            "surface-container-lowest": "#090f11",
+                            "surface-container-high": "#242b2d",
+                            "secondary-fixed-dim": "#ffb95f",
+                            "on-tertiary-fixed-variant": "#3a485b",
+                            "inverse-on-surface": "#2b3233"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "gutter": "12px",
+                            "base": "4px",
+                            "xs": "4px",
+                            "lg": "24px",
+                            "md": "16px",
+                            "sm": "8px",
+                            "margin": "16px"
+                    },
+                    "fontFamily": {
+                            "body-lg": ["JetBrains Mono"],
+                            "body-md": ["JetBrains Mono"],
+                            "headline-lg-mobile": ["Archivo Narrow"],
+                            "headline-md": ["Archivo Narrow"],
+                            "headline-lg": ["Archivo Narrow"],
+                            "label-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                            "headline-lg-mobile": ["24px", {"lineHeight": "28px", "fontWeight": "700"}],
+                            "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                            "headline-lg": ["28px", {"lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                            "label-sm": ["11px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Digital artifacts & CRT scanlines */
+        body {
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 1px,
+                rgba(133, 147, 151, 0.03) 1px,
+                rgba(133, 147, 151, 0.03) 2px
+            );
+            background-attachment: fixed;
+        }
+        
+        .chromatic-aberration {
+            text-shadow: -1px 0 rgba(255, 0, 0, 0.5), 1px 0 rgba(0, 255, 255, 0.5);
+        }
+
+        .tech-line {
+            background-color: var(--color-outline-variant, #3c494c);
+        }
+        .tech-line.active {
+            background-color: var(--color-primary-fixed-dim, #2fd9f4);
+            box-shadow: 0 0 6px rgba(47, 217, 244, 0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased overflow-x-hidden min-h-screen pb-[180px]">
+<!-- TopAppBar JSON Exact Execution -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin py-base bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/10">
+<div class="hover:bg-primary/10 transition-colors p-2 rounded-full cursor-pointer flex items-center justify-center">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed hover:scale-95 duration-150 transition-transform">rocket_launch</span>
+</div>
+<h1 class="text-headline-md font-headline-md text-primary-fixed drop-shadow-[0_0_4px_rgba(47,217,244,0.6)] uppercase tracking-widest text-center">
+            Aethelgard System
+        </h1>
+<div class="hover:bg-primary/10 transition-colors p-2 rounded-full cursor-pointer flex items-center justify-center">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed hover:scale-95 duration-150 transition-transform">settings</span>
+</div>
+</nav>
+<!-- Resource Top Bar (HUD Overlay) -->
+<div class="fixed top-[60px] left-0 w-full z-40 bg-surface-container/90 backdrop-blur-sm border-b border-outline-variant/30 px-margin py-2 flex justify-between items-center font-label-sm text-label-sm uppercase">
+<div class="flex items-center gap-xs text-primary-fixed">
+<span class="material-symbols-outlined" style="font-size: 14px;">science</span>
+<span>2400 FP</span>
+</div>
+<div class="flex items-center gap-xs text-secondary-fixed">
+<span class="material-symbols-outlined" style="font-size: 14px;">diamond</span>
+<span>12 CRYS</span>
+</div>
+<div class="flex items-center gap-xs text-tertiary-fixed">
+<span class="material-symbols-outlined" style="font-size: 14px;">deployed_code</span>
+<span>2 ART</span>
+</div>
+</div>
+<!-- Main Tech Tree Canvas (Scrollable) -->
+<main class="mt-[120px] px-margin relative flex flex-col items-center w-full">
+<!-- Central Spine Connector -->
+<div class="absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 tech-line active z-0"></div>
+<!-- Tier 1: Researched (Solid Cyan) -->
+<div class="relative z-10 w-full max-w-[320px] mb-12">
+<div class="w-full border border-primary bg-primary/10 shadow-[0_0_8px_rgba(34,211,238,0.2)] flex flex-col">
+<div class="bg-primary px-2 py-1 flex justify-between items-center text-on-primary-fixed">
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Antrieb</span>
+<div class="w-2 h-2 bg-background border border-primary-fixed-dim"></div>
+</div>
+<div class="p-3 flex justify-between items-center bg-surface-dim/80 backdrop-blur-sm">
+<div>
+<div class="font-body-md text-body-md text-primary-fixed">Basic Thrusters</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mt-1">Lvl Max</div>
+</div>
+<span class="material-symbols-outlined text-primary-fixed" data-weight="fill">check_circle</span>
+</div>
+</div>
+<!-- Vertical Drop Line -->
+<div class="absolute -bottom-12 left-1/2 w-px h-12 tech-line active -translate-x-1/2"></div>
+</div>
+<!-- Tier 2: Split (Industrie & Logistik-KI) -->
+<div class="relative z-10 w-full max-w-[360px] mb-12 flex justify-between items-start">
+<!-- Horizontal Connector Line -->
+<div class="absolute top-6 left-1/2 w-[60%] h-px tech-line active -translate-x-1/2"></div>
+<!-- Left Branch: Industrie (Researched) -->
+<div class="w-[45%] border border-primary bg-primary/5 relative">
+<div class="bg-primary/80 border-b border-primary px-2 py-1 flex justify-between items-center text-on-primary">
+<div class="w-1.5 h-1.5 bg-primary-fixed"></div>
+<span class="font-label-sm text-label-sm uppercase text-right">Industrie</span>
+</div>
+<div class="p-2 bg-surface-container-low/90">
+<div class="font-body-md text-body-md text-primary-fixed">Refinery Mk I</div>
+</div>
+</div>
+<!-- Right Branch: Logistik-KI (Available - Cyan Outline) -->
+<div class="w-[45%] border border-primary bg-surface-dim relative shadow-[0_0_12px_rgba(34,211,238,0.15)]">
+<div class="border-b border-primary px-2 py-1 flex justify-between items-center text-primary-fixed">
+<span class="font-label-sm text-label-sm uppercase">Logistik-KI</span>
+<div class="w-1.5 h-1.5 bg-primary-fixed animate-pulse"></div>
+</div>
+<div class="p-2 bg-surface/50">
+<div class="font-body-md text-body-md text-primary-fixed">Route Opt.</div>
+<div class="font-label-sm text-label-sm text-outline mt-1">400 FP</div>
+</div>
+</div>
+</div>
+<!-- Tier 3: Central Focus (Schiffe - In Progress) -->
+<div class="relative z-10 w-full max-w-[320px] mb-12">
+<div class="w-full border border-secondary bg-surface-container relative">
+<div class="border-b border-secondary/50 px-2 py-1 flex justify-between items-center text-secondary">
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Schiffe</span>
+<span class="material-symbols-outlined text-[14px] animate-spin">sync</span>
+</div>
+<div class="p-3 bg-surface-dim">
+<div class="font-body-md text-body-md text-secondary-fixed">Corvette Hull</div>
+<div class="font-label-sm text-label-sm text-outline mt-2 flex justify-between">
+<span>Researching...</span>
+<span>45%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1 mt-1 bg-surface-variant border border-outline-variant flex">
+<div class="h-full bg-secondary w-[45%] border-r border-background shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tier 4: Branches (Waffen, Klone, Alien-Tech - Locked/Available) -->
+<div class="relative z-10 w-full max-w-[400px] mb-12 flex justify-between items-start gap-gutter">
+<!-- Left: Waffen (Locked) -->
+<div class="flex-1 border border-outline border-dashed bg-surface/50 opacity-60 grayscale">
+<div class="border-b border-outline-variant px-1 py-1 flex justify-between items-center text-outline">
+<span class="font-label-sm text-label-sm uppercase" style="font-size: 9px;">Waffen</span>
+<span class="material-symbols-outlined text-[12px]">lock</span>
+</div>
+<div class="p-2">
+<div class="font-body-md text-body-md text-outline">Laser Batt.</div>
+</div>
+</div>
+<!-- Center: Selected Target (Advanced Warp Drive - Available) -->
+<div class="flex-[1.5] border-2 border-primary-container bg-surface-container shadow-[0_0_16px_rgba(34,211,238,0.3)] transform scale-105 relative">
+<!-- Glitch effect pseudo-element -->
+<div class="absolute -inset-px border border-error mix-blend-screen opacity-30 animate-pulse pointer-events-none"></div>
+<div class="bg-primary/20 border-b border-primary px-2 py-1 flex justify-between items-center text-primary-fixed">
+<span class="font-label-sm text-label-sm uppercase tracking-widest chromatic-aberration">Antrieb II</span>
+<div class="w-2 h-2 bg-primary shadow-[0_0_4px_#22d3ee]"></div>
+</div>
+<div class="p-3 bg-surface-dim">
+<div class="font-body-md text-body-md text-on-surface font-bold">Adv. Warp Drive</div>
+<div class="font-label-sm text-label-sm text-primary mt-1">Requires: Base Lvl 3</div>
+</div>
+</div>
+<!-- Right: Alien-Tech (Locked) -->
+<div class="flex-1 border border-outline border-dashed bg-surface/50 opacity-60 grayscale">
+<div class="border-b border-outline-variant px-1 py-1 flex justify-between items-center text-outline">
+<span class="font-label-sm text-label-sm uppercase" style="font-size: 9px;">Alien-Tech</span>
+<span class="material-symbols-outlined text-[12px]">lock</span>
+</div>
+<div class="p-2">
+<div class="font-body-md text-body-md text-outline">Unknown</div>
+</div>
+</div>
+</div>
+<!-- Bottom padding element to ensure scroll reaches end -->
+<div class="h-8"></div>
+</main>
+<!-- Side Panel / Bottom Sheet (Detail View) -->
+<div class="fixed bottom-[72px] left-0 w-full z-40 bg-surface-container-highest/95 backdrop-blur-xl border-t border-primary border-x border-x-primary/30 rounded-t-xl shadow-[0_-8px_24px_rgba(0,0,0,0.8)] px-margin py-4">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary-fixed drop-shadow-[0_0_2px_rgba(47,217,244,0.4)]">Advanced Warp Drive</h2>
+<div class="font-label-sm text-label-sm text-outline-variant uppercase tracking-widest mt-1">Antrieb &gt; Node 04</div>
+</div>
+<div class="w-8 h-8 border border-primary/50 flex items-center justify-center bg-surface-dim text-primary">
+<span class="material-symbols-outlined text-[18px]">rocket</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 border-l-2 border-primary/30 pl-3 py-1 bg-surface/30">
+            Erweitert die Sprungkapazität der Flotte um 3 Sektoren. Reduziert den Treibstoffverbrauch bei Hyperraumsprüngen um 15%.
+        </p>
+<!-- Cost Breakdown -->
+<div class="flex flex-col gap-1 mb-4 border border-outline-variant/50 p-2 bg-surface-dim">
+<div class="flex justify-between items-center font-body-md text-body-md border-b border-outline-variant/20 pb-1 mb-1">
+<span class="text-on-surface">Cost Assessment</span>
+<span class="font-label-sm text-label-sm text-outline uppercase">Target Req</span>
+</div>
+<div class="flex justify-between items-center font-label-sm text-label-sm">
+<div class="flex items-center gap-xs text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-primary">science</span>
+                    Forschungspunkte
+                </div>
+<div class="text-primary font-bold">1200 / 2400</div>
+</div>
+<div class="flex justify-between items-center font-label-sm text-label-sm mt-1">
+<div class="flex items-center gap-xs text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-secondary">diamond</span>
+                    Kristalle
+                </div>
+<div class="text-secondary font-bold">5 / 12</div>
+</div>
+</div>
+<!-- Action Button (Primary) -->
+<button class="w-full py-3 border border-primary bg-transparent text-primary font-headline-md text-headline-md uppercase tracking-widest shadow-[0_0_8px_rgba(34,211,238,0.4)] hover:bg-primary/10 hover:shadow-[0_0_12px_rgba(34,211,238,0.6)] transition-all active:scale-95 duration-150 flex items-center justify-center gap-2 group relative overflow-hidden">
+<!-- Scanline overlay inside button -->
+<div class="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(34,211,238,0.1)_50%)] bg-[length:100%_4px] opacity-20 pointer-events-none"></div>
+<span class="material-symbols-outlined group-hover:animate-pulse">precision_manufacturing</span>
+            Forschen
+        </button>
+</div>
+<!-- BottomNavBar JSON Exact Execution -->
+<!-- Base active based on Tech Tree context (upgrading base capabilities) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-lg border-t border-primary/20 bg-surface-container-lowest shadow-[0_-4px_12px_rgba(34,211,238,0.15)] hidden md:flex" style="display: flex;">
+<!-- Inactive: HUD -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300 cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">HUD</span>
+</div>
+<!-- Inactive: Map -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300 cursor-pointer">
+<span class="material-symbols-outlined">map</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Map</span>
+</div>
+<!-- Active: Base (Semantic Match for Tech Tree) -->
+<div class="flex flex-col items-center justify-center text-primary-fixed font-bold bg-primary-container/20 rounded-xl p-2 border border-primary/40 shadow-[0_0_8px_rgba(34,211,238,0.3)] scale-90 transition-transform duration-200 cursor-pointer hover:text-primary transition-all">
+<span class="material-symbols-outlined" data-weight="fill">hub</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Base</span>
+</div>
+<!-- Inactive: Fleet -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300 cursor-pointer">
+<span class="material-symbols-outlined">deployed_code</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Fleet</span>
+</div>
+</nav>
+</body></html>

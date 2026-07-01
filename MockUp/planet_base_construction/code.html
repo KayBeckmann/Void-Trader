@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Base Builder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Archivo+Narrow:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#233144",
+                        "surface-container-low": "#161d1e",
+                        "error-container": "#93000a",
+                        "tertiary-fixed-dim": "#b9c7df",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#2f3638",
+                        "secondary-container": "#ee9800",
+                        "on-surface-variant": "#bbc9cd",
+                        "surface-variant": "#2f3638",
+                        "on-primary": "#00363e",
+                        "tertiary": "#cfdef6",
+                        "secondary": "#ffb95f",
+                        "inverse-surface": "#dde4e5",
+                        "on-background": "#dde4e5",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1a2122",
+                        "on-secondary-fixed": "#2a1700",
+                        "on-secondary": "#472a00",
+                        "surface-tint": "#2fd9f4",
+                        "on-primary-fixed": "#001f25",
+                        "surface-dim": "#0e1416",
+                        "on-error": "#690005",
+                        "on-secondary-container": "#5b3800",
+                        "outline": "#859397",
+                        "primary-fixed": "#a2eeff",
+                        "tertiary-container": "#b3c2d9",
+                        "on-tertiary-fixed": "#0d1c2e",
+                        "on-tertiary-container": "#425063",
+                        "primary-container": "#22d3ee",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#006877",
+                        "primary": "#8aebff",
+                        "on-surface": "#dde4e5",
+                        "tertiary-fixed": "#d5e3fc",
+                        "surface-bright": "#343a3c",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "background": "#0e1416",
+                        "on-primary-container": "#005763",
+                        "secondary-fixed": "#ffddb8",
+                        "outline-variant": "#3c494c",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "surface": "#0e1416",
+                        "surface-container-lowest": "#090f11",
+                        "surface-container-high": "#242b2d",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "on-tertiary-fixed-variant": "#3a485b",
+                        "inverse-on-surface": "#2b3233"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "12px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "margin": "16px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["JetBrains Mono"],
+                        "body-md": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Archivo Narrow"],
+                        "headline-md": ["Archivo Narrow"],
+                        "headline-lg": ["Archivo Narrow"],
+                        "label-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg": ["28px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .scanline-overlay {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+        }
+        .chromatic-edge {
+            box-shadow: -1px 0 0 rgba(255,0,0,0.3), 1px 0 0 rgba(0,255,255,0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-screen w-screen overflow-hidden font-body-md flex flex-col selection:bg-primary/30">
+<!-- TopAppBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin py-base bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">rocket_launch</span>
+<span class="text-headline-lg-mobile md:text-headline-md font-headline-lg-mobile md:font-headline-md text-primary-fixed drop-shadow-[0_0_4px_rgba(47,217,244,0.6)] font-bold tracking-tight">Aethelgard System</span>
+</div>
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed hover:bg-primary/10 transition-colors p-1 rounded-full cursor-pointer">settings</span>
+</nav>
+<!-- Main Workspace -->
+<main class="relative flex-1 w-full mt-[60px] mb-[80px] md:mb-0 overflow-hidden bg-[#0a0e1a]">
+<!-- Map Canvas / Planet Surface -->
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Top-down pixel art isometric view of a futuristic space colony base on a barren, rocky amber planet. Intricate mechanical details, deep impact craters, glowing cyan conduits, and deep cast shadows indicating intense sunlight. The aesthetic is tactical cyber-industrial with high contrast. Crisp pixel graphics, retro-futuristic atmosphere, immersive and technical." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAg8DjacUORUhuSiiGp7ywIc9mTDVVUOtOnGTbnyySJvl36wKw0s2t8wEfl1kOzfDKd2DPgzmxmDUSCyTDkcWI4OaUhc9NvuL2iEVpVt-87Tn81D_BjjASHxNYXRPbGotw58ArMPWKxL7pMeeAnL-zV_AlKBAB-7nAxXQHPrU4IMEMU1Iw8duo5Wo2OPyh6K-OXr77i0X1tCyBVr6bTeIYwa3169sGRZ0QqRmLUT3folNJm_BcZeIvQFuCjM23leYLizMBQ4dfTqbuJ')"></div>
+<!-- Tactical Grid Overlay -->
+<div class="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30" style="background-image: linear-gradient(rgba(34, 211, 238, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.4) 1px, transparent 1px); background-size: 64px 64px;"></div>
+<!-- Simulated Base Elements on Map -->
+<!-- HQ Building -->
+<div class="absolute top-[20%] left-[15%] w-32 h-32 bg-surface/90 border-2 border-outline flex items-center justify-center backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+<div class="absolute inset-0 scanline-overlay pointer-events-none opacity-50"></div>
+<span class="material-symbols-outlined text-on-surface-variant text-5xl">domain</span>
+<div class="absolute top-1 left-1 px-1 bg-surface-container border border-outline text-[9px] font-label-sm text-outline-variant">HQ</div>
+</div>
+<!-- Active Research Center with Popup -->
+<div class="absolute top-[45%] left-[40%] w-24 h-24 bg-surface/90 border border-primary flex items-center justify-center backdrop-blur-md shadow-[0_0_20px_rgba(34,211,238,0.15)] chromatic-edge">
+<div class="absolute inset-0 scanline-overlay pointer-events-none opacity-50"></div>
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">biotech</span>
+<!-- Info Popup (Connected to Research Center) -->
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-56 bg-surface-container-highest/95 border border-primary p-3 z-20 backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+<!-- Connector Line -->
+<div class="absolute top-full left-1/2 -translate-x-1/2 w-[1px] h-4 bg-primary"></div>
+<div class="flex items-center gap-2 border-b border-primary/20 pb-1 mb-2">
+<span class="material-symbols-outlined text-primary text-[16px]">science</span>
+<span class="text-label-sm font-label-sm text-primary uppercase tracking-widest">Research Center</span>
+</div>
+<div class="text-body-md font-body-md text-on-surface mb-3 truncate">Shield Calibration</div>
+<!-- Segmented Progress Bar -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-end">
+<span class="text-[9px] font-label-sm text-outline-variant uppercase">Progress</span>
+<span class="text-label-sm font-label-sm text-primary">45%</span>
+</div>
+<div class="flex gap-[2px] h-2 w-full border border-outline p-[1px]">
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary/40"></div>
+<div class="flex-1 bg-transparent"></div>
+<div class="flex-1 bg-transparent"></div>
+<div class="flex-1 bg-transparent"></div>
+<div class="flex-1 bg-transparent"></div>
+<div class="flex-1 bg-transparent"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Drills -->
+<div class="absolute top-[60%] left-[20%] w-16 h-16 bg-surface/80 border border-secondary flex items-center justify-center backdrop-blur-sm shadow-[0_0_10px_rgba(255,185,95,0.1)]">
+<span class="material-symbols-outlined text-secondary text-2xl">precision_manufacturing</span>
+</div>
+<!-- Right Side: Building Palette (Construct Drawer) -->
+<div class="absolute top-0 right-0 h-full w-20 md:w-64 bg-surface-container/95 border-l border-outline-variant/30 backdrop-blur-xl flex flex-col pt-4 pb-20 md:pb-4 z-30">
+<div class="px-3 pb-3 border-b border-outline-variant/20 mb-2 flex items-center justify-center md:justify-start gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">construction</span>
+<h2 class="hidden md:block text-label-sm font-label-sm text-on-surface-variant uppercase tracking-widest">Construct</h2>
+</div>
+<div class="flex-1 overflow-y-auto px-2 flex flex-col gap-2 custom-scrollbar">
+<!-- Drill Item -->
+<button class="w-full flex flex-col md:flex-row items-center md:items-start p-2 border border-outline bg-surface hover:border-primary hover:bg-primary/5 transition-all group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary transition-colors"></div>
+<div class="w-10 h-10 flex items-center justify-center bg-surface-dim border border-outline-variant mb-1 md:mb-0 md:mr-3">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">precision_manufacturing</span>
+</div>
+<div class="hidden md:flex flex-col items-start flex-1 text-left">
+<span class="text-body-md font-body-md text-on-surface group-hover:text-primary transition-colors">Thermal Drill</span>
+<span class="text-label-sm font-label-sm text-secondary mt-1">500c</span>
+</div>
+<span class="md:hidden text-[10px] font-label-sm text-secondary">500c</span>
+</button>
+<!-- Solar Panel Item -->
+<button class="w-full flex flex-col md:flex-row items-center md:items-start p-2 border border-outline bg-surface hover:border-primary hover:bg-primary/5 transition-all group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-primary transition-colors"></div>
+<div class="w-10 h-10 flex items-center justify-center bg-surface-dim border border-outline-variant mb-1 md:mb-0 md:mr-3">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">solar_power</span>
+</div>
+<div class="hidden md:flex flex-col items-start flex-1 text-left">
+<span class="text-body-md font-body-md text-on-surface group-hover:text-primary transition-colors">Solar Array</span>
+<span class="text-label-sm font-label-sm text-secondary mt-1">300c</span>
+</div>
+<span class="md:hidden text-[10px] font-label-sm text-secondary">300c</span>
+</button>
+<!-- Shipyard Item (Disabled/Expensive) -->
+<button class="w-full flex flex-col md:flex-row items-center md:items-start p-2 border border-outline-variant/50 bg-surface/50 opacity-60 cursor-not-allowed">
+<div class="w-10 h-10 flex items-center justify-center bg-surface-dim border border-outline-variant/50 mb-1 md:mb-0 md:mr-3">
+<span class="material-symbols-outlined text-outline-variant/50">rocket</span>
+</div>
+<div class="hidden md:flex flex-col items-start flex-1 text-left">
+<span class="text-body-md font-body-md text-outline-variant">Shipyard</span>
+<span class="text-label-sm font-label-sm text-error mt-1">5000c</span>
+</div>
+<span class="md:hidden text-[10px] font-label-sm text-error">5k</span>
+</button>
+</div>
+</div>
+<!-- Bottom HUD Panel (Overlaid on canvas) -->
+<div class="absolute bottom-4 left-margin right-[88px] md:right-auto md:left-1/2 md:-translate-x-1/2 md:w-[600px] bg-surface-container-highest/90 border border-outline-variant backdrop-blur-xl p-3 shadow-[0_-4px_24px_rgba(0,0,0,0.5)] z-20">
+<div class="absolute inset-0 scanline-overlay pointer-events-none opacity-20"></div>
+<div class="flex flex-col gap-3 relative z-10">
+<!-- Top Row: Metrics -->
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
+<div class="flex items-center gap-2 bg-surface-dim px-2 py-1 border border-outline/30">
+<span class="material-symbols-outlined text-primary text-[18px]">group</span>
+<div class="flex flex-col">
+<span class="text-[9px] font-label-sm text-outline-variant uppercase leading-none">Crew</span>
+<span class="text-body-md font-body-md text-on-surface leading-none mt-[2px]">12</span>
+</div>
+</div>
+<div class="flex items-center gap-2 bg-surface-dim px-2 py-1 border border-outline/30">
+<span class="material-symbols-outlined text-secondary text-[18px]">inventory_2</span>
+<div class="flex flex-col">
+<span class="text-[9px] font-label-sm text-outline-variant uppercase leading-none">Storage</span>
+<span class="text-body-md font-body-md text-secondary leading-none mt-[2px]">78%</span>
+</div>
+</div>
+<!-- Environment Indicator -->
+<div class="flex items-center gap-1 border border-secondary/50 px-2 py-1 bg-secondary/10">
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">light_mode</span>
+<span class="text-label-sm font-label-sm text-secondary uppercase">Day Cycle</span>
+</div>
+</div>
+<!-- Bottom Row: Power Output -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between items-end">
+<span class="text-label-sm font-label-sm text-outline-variant uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">bolt</span> Grid Power
+                        </span>
+<span class="text-body-md font-body-md text-on-surface font-bold">80<span class="text-outline-variant font-normal">/100</span></span>
+</div>
+<!-- 10 Segment Power Bar (Amber/Secondary for Power) -->
+<div class="flex gap-[2px] h-3 w-full border border-outline p-[1px] bg-surface-dim">
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-secondary shadow-[0_0_4px_rgba(255,185,95,0.8)]"></div>
+<div class="flex-1 bg-surface border border-outline-variant/30"></div>
+<div class="flex-1 bg-surface border border-outline-variant/30"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Shell) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-lg border-t border-primary/20 shadow-[0_-4px_12px_rgba(34,211,238,0.15)]">
+<!-- HUD -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">HUD</span>
+</div>
+<!-- Map -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined">map</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Map</span>
+</div>
+<!-- Base (ACTIVE) -->
+<div class="flex flex-col items-center justify-center text-primary-fixed font-bold bg-primary-container/20 rounded-xl p-2 border border-primary/40 shadow-[0_0_8px_rgba(34,211,238,0.3)] scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">hub</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1 text-primary-fixed drop-shadow-[0_0_2px_rgba(34,211,238,0.8)]">Base</span>
+</div>
+<!-- Fleet -->
+<div class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined">deployed_code</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Fleet</span>
+</div>
+</nav>
+</body></html>

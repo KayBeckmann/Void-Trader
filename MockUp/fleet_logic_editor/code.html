@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Fleet Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Archivo+Narrow:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#233144",
+                      "surface-container-low": "#161d1e",
+                      "error-container": "#93000a",
+                      "tertiary-fixed-dim": "#b9c7df",
+                      "on-secondary-fixed-variant": "#653e00",
+                      "surface-container-highest": "#2f3638",
+                      "secondary-container": "#ee9800",
+                      "on-surface-variant": "#bbc9cd",
+                      "surface-variant": "#2f3638",
+                      "on-primary": "#00363e",
+                      "tertiary": "#cfdef6",
+                      "secondary": "#ffb95f",
+                      "inverse-surface": "#dde4e5",
+                      "on-background": "#dde4e5",
+                      "on-error-container": "#ffdad6",
+                      "surface-container": "#1a2122",
+                      "on-secondary-fixed": "#2a1700",
+                      "on-secondary": "#472a00",
+                      "surface-tint": "#2fd9f4",
+                      "on-primary-fixed": "#001f25",
+                      "surface-dim": "#0e1416",
+                      "on-error": "#690005",
+                      "on-secondary-container": "#5b3800",
+                      "outline": "#859397",
+                      "primary-fixed": "#a2eeff",
+                      "tertiary-container": "#b3c2d9",
+                      "on-tertiary-fixed": "#0d1c2e",
+                      "on-tertiary-container": "#425063",
+                      "primary-container": "#22d3ee",
+                      "error": "#ffb4ab",
+                      "inverse-primary": "#006877",
+                      "primary": "#8aebff",
+                      "on-surface": "#dde4e5",
+                      "tertiary-fixed": "#d5e3fc",
+                      "surface-bright": "#343a3c",
+                      "on-primary-fixed-variant": "#004e5a",
+                      "background": "#0e1416",
+                      "on-primary-container": "#005763",
+                      "secondary-fixed": "#ffddb8",
+                      "outline-variant": "#3c494c",
+                      "primary-fixed-dim": "#2fd9f4",
+                      "surface": "#0e1416",
+                      "surface-container-lowest": "#090f11",
+                      "surface-container-high": "#242b2d",
+                      "secondary-fixed-dim": "#ffb95f",
+                      "on-tertiary-fixed-variant": "#3a485b",
+                      "inverse-on-surface": "#2b3233"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "12px",
+                      "base": "4px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "sm": "8px",
+                      "margin": "16px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Archivo Narrow"
+                      ],
+                      "headline-md": [
+                              "Archivo Narrow"
+                      ],
+                      "headline-lg": [
+                              "Archivo Narrow"
+                      ],
+                      "label-sm": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "22px",
+                              {
+                                      "lineHeight": "28px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "28px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.08em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Tactical Cyber-Industrial Artifacts */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0) 50%,
+                rgba(0, 0, 0, 0.1) 50%,
+                rgba(0, 0, 0, 0.1)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(to right, rgba(133, 147, 151, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(133, 147, 151, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .glow-border-primary {
+            box-shadow: 0 0 4px rgba(34, 211, 238, 0.5);
+        }
+        
+        .glow-text-primary {
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+        }
+
+        /* SVG Wire Animation */
+        @keyframes flow {
+            from { stroke-dashoffset: 20; }
+            to { stroke-dashoffset: 0; }
+        }
+        .wire-flow {
+            stroke-dasharray: 4 4;
+            animation: flow 1s linear infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md h-screen flex flex-col overflow-hidden relative">
+<!-- Ambient Background Effects -->
+<div class="absolute inset-0 scanlines z-50 mix-blend-overlay opacity-50"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin py-base bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/10 shadow-none">
+<button class="text-primary dark:text-primary-fixed hover:bg-primary/10 transition-colors p-2 rounded-DEFAULT active:scale-95 duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">rocket_launch</span>
+</button>
+<div class="text-headline-md font-headline-md text-primary-fixed drop-shadow-[0_0_4px_rgba(47,217,244,0.6)]">
+            Aethelgard System
+        </div>
+<button class="text-primary dark:text-primary-fixed hover:bg-primary/10 transition-colors p-2 rounded-DEFAULT active:scale-95 duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</header>
+<!-- Main Layout Container (pt-14 for TopBar, pb-24 for Nav/BottomBar) -->
+<main class="flex-1 flex flex-col md:flex-row pt-[56px] pb-[80px] md:pb-[60px] overflow-hidden w-full relative">
+<!-- Left Column: Palette (Hidden on small mobile, scrollable) -->
+<aside class="w-full md:w-[280px] bg-surface-dim border-r border-outline-variant/30 flex flex-col z-20 shrink-0 h-48 md:h-full overflow-y-auto hidden md:flex">
+<div class="p-sm border-b border-outline-variant/30 sticky top-0 bg-surface-dim z-10">
+<h2 class="text-label-sm font-label-sm uppercase tracking-widest text-outline">Block Palette</h2>
+</div>
+<div class="p-sm flex flex-col gap-gutter">
+<!-- Category: Trigger -->
+<div>
+<div class="text-label-sm font-label-sm text-on-surface-variant mb-xs flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">play_circle</span> Triggers
+                    </div>
+<div class="flex flex-col gap-xs">
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT cursor-grab hover:border-primary transition-colors">
+<div class="bg-primary px-2 py-1 text-on-primary text-label-sm font-label-sm rounded-t-DEFAULT flex justify-between items-center">
+<span>On Tick</span>
+<span class="material-symbols-outlined text-[12px]">schedule</span>
+</div>
+<div class="p-2 text-body-md text-on-surface-variant font-body-md">Every 10s</div>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT cursor-grab hover:border-primary transition-colors">
+<div class="bg-primary px-2 py-1 text-on-primary text-label-sm font-label-sm rounded-t-DEFAULT flex justify-between items-center">
+<span>Cargo Full</span>
+<span class="material-symbols-outlined text-[12px]">inventory_2</span>
+</div>
+<div class="p-2 text-body-md text-on-surface-variant font-body-md">When capacity &gt; 95%</div>
+</div>
+</div>
+</div>
+<!-- Category: Action -->
+<div>
+<div class="text-label-sm font-label-sm text-on-surface-variant mb-xs flex items-center gap-2 mt-sm">
+<span class="material-symbols-outlined text-[14px]">bolt</span> Actions
+                    </div>
+<div class="flex flex-col gap-xs">
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT cursor-grab hover:border-secondary transition-colors">
+<div class="bg-secondary px-2 py-1 text-on-secondary text-label-sm font-label-sm rounded-t-DEFAULT flex justify-between items-center">
+<span>Extract Ore</span>
+<span class="material-symbols-outlined text-[12px]">precision_manufacturing</span>
+</div>
+<div class="p-2 text-body-md text-on-surface-variant font-body-md">Target: Asteroid</div>
+</div>
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT cursor-grab hover:border-secondary transition-colors">
+<div class="bg-secondary px-2 py-1 text-on-secondary text-label-sm font-label-sm rounded-t-DEFAULT flex justify-between items-center">
+<span>Return Base</span>
+<span class="material-symbols-outlined text-[12px]">flight_land</span>
+</div>
+<div class="p-2 text-body-md text-on-surface-variant font-body-md">Auto-nav to hub</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center Column: Workspace -->
+<section class="flex-1 bg-surface relative overflow-hidden flex flex-col z-10">
+<div class="absolute inset-0 grid-bg opacity-30"></div>
+<!-- Workspace Header -->
+<div class="absolute top-0 left-0 w-full p-sm flex justify-between items-start z-20 pointer-events-none">
+<div class="pointer-events-auto">
+<h1 class="text-headline-md font-headline-md text-primary glow-text-primary">Mining Routine</h1>
+<div class="text-label-sm font-label-sm text-outline flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> Active Edit Mode
+                    </div>
+</div>
+<div class="pointer-events-auto flex gap-2">
+<button class="bg-surface-container border border-outline-variant text-on-surface-variant p-1 rounded-DEFAULT hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+<button class="bg-surface-container border border-outline-variant text-on-surface-variant p-1 rounded-DEFAULT hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">zoom_out</span>
+</button>
+</div>
+</div>
+<!-- Interactive Canvas Area (Mocked Nodes) -->
+<div class="flex-1 relative overflow-auto p-lg pt-16 mt-8 flex flex-col items-center justify-start min-h-[600px]">
+<!-- SVG Wires -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 1;">
+<path class="wire-flow" d="M 50% 120 L 50% 180" fill="none" stroke="#22d3ee" stroke-width="2"></path>
+<path class="wire-flow" d="M 50% 250 L 50% 310" fill="none" stroke="#22d3ee" stroke-width="2"></path>
+</svg>
+<!-- Node 1: Trigger -->
+<div class="relative w-[220px] bg-surface-container-high border border-primary rounded-DEFAULT shadow-[0_4px_12px_rgba(0,0,0,0.5)] z-10 mb-[60px]">
+<div class="bg-primary px-2 py-1 text-on-primary text-label-sm font-label-sm flex justify-between items-center rounded-t-[3px]">
+<span>START: Cargo Empty</span>
+<span class="material-symbols-outlined text-[14px]">flag</span>
+</div>
+<div class="p-3 text-body-md text-on-surface font-body-md flex justify-center items-center">
+                        Initiate Sequence
+                    </div>
+<!-- Output Port -->
+<div class="absolute bottom-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary border border-surface rounded-sm"></div>
+</div>
+<!-- Node 2: Action -->
+<div class="relative w-[220px] bg-surface-container-high border border-secondary rounded-DEFAULT shadow-[0_4px_12px_rgba(0,0,0,0.5)] z-10 mb-[60px]">
+<!-- Input Port -->
+<div class="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary border border-surface rounded-sm"></div>
+<div class="bg-secondary px-2 py-1 text-on-secondary text-label-sm font-label-sm flex justify-between items-center rounded-t-[3px]">
+<span>ACTION: Extract</span>
+<span class="material-symbols-outlined text-[14px]">precision_manufacturing</span>
+</div>
+<div class="p-3">
+<div class="text-body-md text-on-surface font-body-md mb-2">Target: Sector 7G</div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm text-outline">Loop until Full</span>
+<span class="material-symbols-outlined text-outline text-[14px]">sync</span>
+</div>
+</div>
+<!-- Output Port -->
+<div class="absolute bottom-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary border border-surface rounded-sm"></div>
+</div>
+<!-- Node 3: Action -->
+<div class="relative w-[220px] bg-surface-container-high border border-secondary rounded-DEFAULT shadow-[0_4px_12px_rgba(0,0,0,0.5)] z-10">
+<!-- Input Port -->
+<div class="absolute top-[-5px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary border border-surface rounded-sm"></div>
+<div class="bg-secondary px-2 py-1 text-on-secondary text-label-sm font-label-sm flex justify-between items-center rounded-t-[3px]">
+<span>ACTION: Return</span>
+<span class="material-symbols-outlined text-[14px]">flight_land</span>
+</div>
+<div class="p-3 text-body-md text-on-surface font-body-md flex justify-center items-center">
+                        Dock &amp; Unload
+                    </div>
+</div>
+</div>
+</section>
+<!-- Right Column: Inspector -->
+<aside class="w-full md:w-[320px] bg-surface-dim border-l border-outline-variant/30 flex flex-col z-20 shrink-0 border-t md:border-t-0 border-outline-variant/30 h-64 md:h-full">
+<div class="p-sm border-b border-outline-variant/30 bg-surface-container flex justify-between items-center">
+<h2 class="text-label-sm font-label-sm uppercase tracking-widest text-outline">Inspector</h2>
+<span class="material-symbols-outlined text-outline text-[16px]">info</span>
+</div>
+<div class="p-margin flex flex-col gap-lg overflow-y-auto">
+<!-- Entity Header -->
+<div>
+<div class="text-headline-lg font-headline-lg text-on-surface mb-1">Bohrer-7</div>
+<div class="flex items-center gap-2 text-label-sm font-label-sm text-primary">
+<span class="px-2 py-0.5 border border-primary/50 rounded-sm bg-primary/10">MINER CLASS</span>
+<span class="text-on-surface-variant">CREW: 3</span>
+</div>
+</div>
+<!-- Status -->
+<div class="flex justify-between items-center border-b border-outline-variant/30 pb-sm">
+<span class="text-body-md font-body-md text-on-surface-variant">Current Status</span>
+<span class="text-body-md font-body-md text-secondary animate-pulse">Idle</span>
+</div>
+<!-- Telemetry (Progress Bars) -->
+<div class="flex flex-col gap-md">
+<!-- Hull -->
+<div>
+<div class="flex justify-between text-label-sm font-label-sm mb-1">
+<span class="text-on-surface-variant">HULL INTEGRITY</span>
+<span class="text-secondary">100%</span>
+</div>
+<div class="flex gap-[2px] h-[12px] p-[2px] border border-outline-variant">
+<!-- 10 segments -->
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+<div class="flex-1 bg-secondary"></div>
+</div>
+</div>
+<!-- Shields -->
+<div>
+<div class="flex justify-between text-label-sm font-label-sm mb-1">
+<span class="text-on-surface-variant">DEFLECTOR SHIELDS</span>
+<span class="text-primary">80%</span>
+</div>
+<div class="flex gap-[2px] h-[12px] p-[2px] border border-outline-variant">
+<!-- 10 segments -->
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-primary"></div>
+<div class="flex-1 bg-surface-bright"></div>
+<div class="flex-1 bg-surface-bright"></div>
+</div>
+</div>
+</div>
+<!-- Cargo Slot Mock -->
+<div>
+<h3 class="text-label-sm font-label-sm text-outline mb-2">STORAGE BAY</h3>
+<div class="grid grid-cols-4 gap-2">
+<div class="aspect-square border border-outline-variant bg-surface-container relative">
+<div class="absolute inset-y-0 left-0 w-1 bg-secondary"></div>
+<span class="absolute bottom-1 right-1 text-label-sm font-label-sm text-on-surface">0</span>
+</div>
+<div class="aspect-square border border-outline-variant bg-surface-container relative"></div>
+<div class="aspect-square border border-outline-variant bg-surface-container relative"></div>
+<div class="aspect-square border border-outline-variant bg-surface-container relative"></div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Bottom Status & Action Bar -->
+<div class="fixed bottom-[80px] md:bottom-0 left-0 w-full bg-surface-container-high border-t border-outline-variant/50 p-sm px-margin flex justify-between items-center z-40">
+<div class="flex items-center gap-2 text-primary font-body-md text-body-md">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+            Program valid. Estimated efficiency: 78%
+        </div>
+<button class="px-6 py-2 border border-primary text-primary font-label-sm text-label-sm uppercase tracking-widest glow-border-primary hover:bg-primary/10 transition-colors flex items-center gap-2 rounded-sm">
+            Save Layout <span class="material-symbols-outlined text-[16px]">save</span>
+</button>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container-lowest/90 dark:bg-surface-container-lowest/90 backdrop-blur-lg border-t border-primary/20 bg-surface-container-lowest md:hidden shadow-[0_-4px_12px_rgba(34,211,238,0.15)]">
+<button class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">HUD</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">map</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Map</span>
+</button>
+<button class="flex flex-col items-center justify-center text-outline-variant p-2 opacity-70 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">hub</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1">Base</span>
+</button>
+<!-- Active Tab: Fleet -->
+<button class="flex flex-col items-center justify-center text-primary-fixed font-bold bg-primary-container/20 rounded-xl p-2 border border-primary/40 shadow-[0_0_8px_rgba(34,211,238,0.3)] scale-90 transition-transform duration-200 hover:text-primary transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">deployed_code</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest mt-1 text-primary-fixed">Fleet</span>
+</button>
+</nav>
+</body></html>
