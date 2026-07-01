@@ -155,17 +155,21 @@ class _HudTab extends StatelessWidget {
         GameWidget<VoidTraderGame>(game: game),
 
         if (!showJump && !showDocking && sys != null)
-          HudOverlay(stats: game.playerStats, systemName: sys.name),
+          HudOverlay(
+            stats: game.playerStats,
+            systemName: sys.name,
+            credits: gameState.player.credits,
+          ),
 
         if (!showJump && !showDocking)
           Positioned(
-            top: 16,
-            right: 16,
+            top: 90,
+            left: 12,
             child: ValueListenableBuilder<Vector2>(
               valueListenable: game.playerPosition,
               builder: (context, pos, _) {
                 if (sys == null) return const SizedBox.shrink();
-                return MiniMap(system: sys, playerPosition: pos);
+                return MiniMap(system: sys, playerPosition: pos, mapSize: 96);
               },
             ),
           ),
