@@ -8,6 +8,7 @@ import 'features/space/ui/docking_overlay.dart';
 import 'features/space/ui/hud_overlay.dart';
 import 'features/space/ui/jump_overlay.dart';
 import 'features/space/ui/mini_map.dart';
+import 'shared/theme/app_theme.dart';
 
 class VoidTraderApp extends StatelessWidget {
   const VoidTraderApp({super.key});
@@ -17,7 +18,7 @@ class VoidTraderApp extends StatelessWidget {
     return MaterialApp(
       title: 'Void Trader',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
+      theme: AppTheme.dark,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
