@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Market Economy</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&amp;family=Space+Grotesk:wght@400..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#e4e2e4",
+                      "surface-tint": "#00daf3",
+                      "on-tertiary-container": "#864a00",
+                      "surface-dim": "#131315",
+                      "on-error-container": "#ffdad6",
+                      "primary-fixed": "#9cf0ff",
+                      "surface-variant": "#353437",
+                      "error-container": "#93000a",
+                      "secondary": "#bcc7dd",
+                      "surface-bright": "#39393b",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#00daf3",
+                      "surface": "#131315",
+                      "on-tertiary-fixed": "#2e1500",
+                      "tertiary-fixed": "#ffdcc1",
+                      "primary": "#c3f5ff",
+                      "on-secondary-fixed": "#111c2c",
+                      "primary-container": "#00e5ff",
+                      "on-primary-fixed": "#001f24",
+                      "on-tertiary-fixed-variant": "#6c3a00",
+                      "surface-container-high": "#2a2a2c",
+                      "inverse-on-surface": "#303032",
+                      "on-primary": "#00363d",
+                      "tertiary-container": "#ffc594",
+                      "surface-container-highest": "#353437",
+                      "on-primary-fixed-variant": "#004f58",
+                      "surface-container": "#1f1f21",
+                      "on-secondary-container": "#aab6cc",
+                      "on-secondary-fixed-variant": "#3c475a",
+                      "on-tertiary": "#4c2700",
+                      "inverse-primary": "#006875",
+                      "inverse-surface": "#e4e2e4",
+                      "on-secondary": "#263142",
+                      "secondary-fixed": "#d8e3fa",
+                      "surface-container-lowest": "#0e0e10",
+                      "on-primary-container": "#00626e",
+                      "outline": "#849396",
+                      "tertiary-fixed-dim": "#ffb778",
+                      "outline-variant": "#3b494c",
+                      "error": "#ffb4ab",
+                      "background": "#131315",
+                      "secondary-container": "#3c475a",
+                      "secondary-fixed-dim": "#bcc7dd",
+                      "on-surface-variant": "#bac9cc",
+                      "surface-container-low": "#1b1b1d",
+                      "on-background": "#e4e2e4",
+                      "tertiary": "#ffe9d9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "12px",
+                      "panel-padding": "16px",
+                      "margin-mobile": "16px",
+                      "unit": "4px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "title-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "display-lg": [
+                              "Space Grotesk"
+                      ],
+                      "body-md": [
+                              "JetBrains Mono"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "title-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "800"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Custom Scanline Effect for Headers */
+        .scanline-text {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .scanline-text::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: theme('colors.surface-tint');
+            opacity: 0.5;
+            animation: scanline 3s linear infinite;
+        }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(1000%); }
+        }
+
+        /* Scrollbar Styling for Industrial Look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.surface-container');
+            border-left: 1px solid theme('colors.outline-variant');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border: 1px solid theme('colors.surface-container');
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen overflow-hidden selection:bg-surface-tint selection:text-surface">
+<!-- TopAppBar -->
+<header class="hidden md:flex fixed top-0 right-0 left-20 z-40 justify-between items-center px-panel-padding bg-surface-dim/80 border-b border-outline-variant backdrop-blur-md h-12">
+<div class="flex items-center gap-gutter">
+<span class="font-title-sm text-title-sm text-surface-tint italic">VOID TRADER</span>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<div class="flex gap-4 font-data-mono text-data-mono">
+<span class="text-error animate-pulse">ALERT: CRITICAL HEAT</span>
+<span class="text-on-surface-variant">SYSTEMS NOMINAL</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary-fixed transition-colors" title="notifications_active"><span class="material-symbols-outlined text-[20px]">notifications_active</span></button>
+<button class="hover:text-primary-fixed transition-colors" title="settings"><span class="material-symbols-outlined text-[20px]">settings</span></button>
+<button class="hover:text-primary-fixed transition-colors" title="power_settings_new"><span class="material-symbols-outlined text-[20px]">power_settings_new</span></button>
+</div>
+</header>
+<!-- SideNavBar (Desktop Navigation Rail) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full z-50 flex-col items-center py-gutter bg-surface border-r border-outline-variant w-20">
+<!-- Avatar/Profile Anchor -->
+<div class="mb-8 flex flex-col items-center group cursor-pointer">
+<div class="w-12 h-12 border border-outline-variant rounded-sm overflow-hidden mb-2 relative group-hover:border-surface-tint transition-colors">
+<img class="w-full h-full object-cover" data-alt="A gritty, high-contrast digital portrait of a deep-space pilot in a heavy graphite-plated EVA suit. The helmet visor reflects glowing cyan console readouts. Harsh directional lighting creates deep shadows, emphasizing the utilitarian, resilient, used-universe aesthetic. The background is a dark, metallic spacecraft interior." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcSW6qfFmyuzpL9PQilysuUG8m0Tw8qO5YoAFE4uOMSwNDS-uVSJwL7RKZiN58lKbUMHTo06vyLecMpNmcHK5Kg2WfyRFQPR3fhFYMtx8jw1PmhhDVkJwdSucMB-j67JFnGt_Fa41rn4UB7RIiewvkByRxhLrfC-oV9N3bvD1L62Zd2vLAcAf8k-AV01q_-_wairfaX9xZR6xRP89mJIyZkysPmSiRvnRXqf5cGFCjj1VZ-3GFxGxoTw"/>
+<div class="absolute inset-0 bg-surface-tint/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<span class="font-label-caps text-label-caps text-surface-tint uppercase tracking-tighter">[ COMMAND ]</span>
+<span class="font-data-mono text-data-mono text-[9px] text-on-surface-variant mt-1">VT-882</span>
+</div>
+<!-- Nav Items -->
+<div class="flex flex-col gap-2 w-full px-2">
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">map</span>
+<span class="font-label-caps text-label-caps text-[10px]">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">rocket_launch</span>
+<span class="font-label-caps text-label-caps text-[10px]">Ship</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint bg-surface-tint/5 w-full scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span class="font-label-caps text-label-caps text-[10px]">Market</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">domain</span>
+<span class="font-label-caps text-label-caps text-[10px]">Colony</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">science</span>
+<span class="font-label-caps text-label-caps text-[10px]">Research</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">groups</span>
+<span class="font-label-caps text-label-caps text-[10px]">Factions</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">security</span>
+<span class="font-label-caps text-label-caps text-[10px]">Alliance</span>
+</a>
+<a class="flex flex-col items-center justify-center py-3 rounded-sm border border-transparent text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-all w-full group" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:scale-110 transition-transform">receipt_long</span>
+<span class="font-label-caps text-label-caps text-[10px]">Logbook</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="relative h-full w-full md:pl-20 md:pt-12 pb-16 md:pb-16 flex flex-col">
+<!-- Dashboard Header -->
+<div class="px-panel-padding py-gutter flex justify-between items-end border-b border-outline-variant bg-surface-container-lowest">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2 scanline-text">
+<span class="material-symbols-outlined text-surface-tint">account_balance</span>
+                    [ COMMODITIES EXCHANGE ]
+                </h1>
+<div class="font-data-mono text-data-mono text-on-surface-variant mt-1 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-pulse"></span>
+                    STATION: HELION EXCHANGE // SEC-4
+                </div>
+</div>
+<div class="text-right">
+<div class="font-label-caps text-label-caps text-on-surface-variant">AVAILABLE CREDITS</div>
+<div class="font-title-sm text-title-sm text-tertiary-container mt-1">42,089.50 CR</div>
+</div>
+</div>
+<!-- Grid Layout -->
+<div class="flex-1 overflow-hidden p-panel-padding grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Center Panel: Market Table (Spans 8 cols on LG) -->
+<div class="lg:col-span-8 flex flex-col border border-outline-variant bg-surface-container/50 relative overflow-hidden">
+<!-- Inner Glow decorative element -->
+<div class="absolute inset-0 shadow-[inset_0_0_15px_rgba(0,218,243,0.05)] pointer-events-none z-0"></div>
+<div class="px-4 py-2 border-b border-outline-variant bg-surface-container-highest flex justify-between items-center z-10">
+<span class="font-label-caps text-label-caps text-on-surface">MARKET LISTING</span>
+<div class="flex gap-2">
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-surface-tint font-label-caps text-label-caps transition-colors">FILTER</button>
+<button class="px-2 py-1 border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-surface-tint font-label-caps text-label-caps transition-colors">SORT</button>
+</div>
+</div>
+<div class="flex-1 overflow-auto z-10">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface-container-high border-b border-outline-variant font-label-caps text-label-caps text-on-surface-variant">
+<tr>
+<th class="p-3 font-normal border-r border-outline-variant/30">GOOD</th>
+<th class="p-3 font-normal border-r border-outline-variant/30 text-right">PRICE (CR)</th>
+<th class="p-3 font-normal border-r border-outline-variant/30 text-center">TREND</th>
+<th class="p-3 font-normal border-r border-outline-variant/30 text-right">STOCK</th>
+<th class="p-3 font-normal border-r border-outline-variant/30">VOLATILITY</th>
+<th class="p-3 font-normal">LEGALITY</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-on-surface divide-y divide-outline-variant/30">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-tint/5 group cursor-pointer transition-colors">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center bg-surface group-hover:border-surface-tint transition-colors"><span class="material-symbols-outlined text-[14px]">category</span></div>
+                                    Iron Ore
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right">12.40</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-error"><span class="material-symbols-outlined text-[16px]">arrow_downward</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">14,500</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-secondary h-1" style="width: 20%"></div>
+</div>
+</td>
+<td class="p-3 text-primary-fixed">Legal</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-tint/5 group cursor-pointer transition-colors">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center bg-surface group-hover:border-surface-tint transition-colors"><span class="material-symbols-outlined text-[14px]">layers</span></div>
+                                    Refined Metal
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right">45.00</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-primary-container"><span class="material-symbols-outlined text-[16px]">arrow_upward</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">3,200</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-tertiary-container h-1" style="width: 45%"></div>
+</div>
+</td>
+<td class="p-3 text-primary-fixed">Legal</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-tint/5 group cursor-pointer transition-colors bg-surface-container-high/50">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center bg-surface group-hover:border-surface-tint transition-colors"><span class="material-symbols-outlined text-[14px]">water_drop</span></div>
+                                    Water
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right">8.50</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">horizontal_rule</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">45,000</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-secondary h-1" style="width: 10%"></div>
+</div>
+</td>
+<td class="p-3 text-primary-fixed">Legal</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-tint/5 group cursor-pointer transition-colors">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center bg-surface group-hover:border-surface-tint transition-colors"><span class="material-symbols-outlined text-[14px]">restaurant</span></div>
+                                    Food
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right">22.10</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-primary-container"><span class="material-symbols-outlined text-[16px]">arrow_upward</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">1,800</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-tertiary-container h-1" style="width: 60%"></div>
+</div>
+</td>
+<td class="p-3 text-primary-fixed">Legal</td>
+</tr>
+<!-- Row 5 (Selected State Demo) -->
+<tr class="bg-surface-tint/10 border-l-2 border-surface-tint group cursor-pointer">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-surface-tint flex items-center justify-center bg-surface shadow-[inset_0_0_8px_rgba(0,218,243,0.5)]"><span class="material-symbols-outlined text-[14px] text-surface-tint">medication</span></div>
+                                    Medicine
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right text-surface-tint">185.00</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-primary-container"><span class="material-symbols-outlined text-[16px] animate-bounce">arrow_upward</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">450</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-error h-1" style="width: 85%"></div>
+</div>
+</td>
+<td class="p-3 text-tertiary-container">Restricted</td>
+</tr>
+<!-- Row 6 -->
+<tr class="hover:bg-surface-tint/5 group cursor-pointer transition-colors border-l-2 border-transparent">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center bg-surface group-hover:border-surface-tint transition-colors"><span class="material-symbols-outlined text-[14px]">oil_barrel</span></div>
+                                    Fuel Cells
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right">110.50</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-error"><span class="material-symbols-outlined text-[16px]">arrow_downward</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">8,900</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-tertiary-container h-1" style="width: 40%"></div>
+</div>
+</td>
+<td class="p-3 text-primary-fixed">Legal</td>
+</tr>
+<!-- Row 7 -->
+<tr class="hover:bg-surface-tint/5 group cursor-pointer transition-colors border-l-2 border-transparent border-t-2 border-t-tertiary-container">
+<td class="p-3 border-r border-outline-variant/30 flex items-center gap-2">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center bg-surface group-hover:border-surface-tint transition-colors"><span class="material-symbols-outlined text-[14px]">memory</span></div>
+                                    Data Chips
+                                </td>
+<td class="p-3 border-r border-outline-variant/30 text-right">850.00</td>
+<td class="p-3 border-r border-outline-variant/30 text-center text-primary-container"><span class="material-symbols-outlined text-[16px]">arrow_upward</span></td>
+<td class="p-3 border-r border-outline-variant/30 text-right">12</td>
+<td class="p-3 border-r border-outline-variant/30">
+<div class="w-full bg-surface-container h-1 mt-1">
+<div class="bg-error h-1" style="width: 95%"></div>
+</div>
+</td>
+<td class="p-3 text-error">Contraband</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Terminal Input / Action Bar -->
+<div class="p-2 border-t border-outline-variant bg-surface flex gap-2 items-center">
+<span class="font-data-mono text-surface-tint ml-2">&gt;</span>
+<input class="bg-transparent border-none text-on-surface font-data-mono text-data-mono flex-1 focus:ring-0" spellcheck="false" type="text" value="BUY MEDICINE --QTY 50"/>
+<button class="bg-surface-container border border-outline-variant px-4 py-1 font-label-caps text-label-caps text-on-surface hover:bg-surface-tint hover:text-surface hover:border-surface-tint transition-colors">EXECUTE</button>
+</div>
+</div>
+<!-- Right Column: Profit & Route Info (Spans 4 cols on LG) -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<!-- Profit Analysis Panel -->
+<div class="border border-outline-variant bg-surface-container/30 flex-1 relative flex flex-col">
+<div class="px-4 py-2 border-b border-outline-variant bg-surface-container-highest">
+<span class="font-label-caps text-label-caps text-on-surface">PROFIT PROJECTION</span>
+</div>
+<div class="p-4 flex-1 flex flex-col font-data-mono text-data-mono">
+<div class="text-on-surface-variant mb-4 pb-2 border-b border-outline-variant/30 text-[11px] leading-tight">
+                            FORMULA: <br/>
+<span class="text-surface-tint">PROFIT</span> = PRICE DIFF - FUEL - TOLLS - RISK
+                        </div>
+<div class="space-y-3 flex-1">
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-1">
+<span class="text-on-surface-variant">Selected Item:</span>
+<span class="text-on-surface font-title-sm text-title-sm">Medicine</span>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-1">
+<span class="text-on-surface-variant">Avg Local Buy:</span>
+<span class="text-error">185.00 CR</span>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant/30 pb-1">
+<span class="text-on-surface-variant">Est. Target Sell:</span>
+<span class="text-primary-container">420.00 CR</span>
+</div>
+<div class="mt-4 pt-2 space-y-1">
+<div class="flex justify-between text-[11px] text-on-surface-variant">
+<span>- Est. Fuel Cost</span>
+<span>45.00 CR</span>
+</div>
+<div class="flex justify-between text-[11px] text-on-surface-variant">
+<span>- Sector Tolls</span>
+<span>10.00 CR</span>
+</div>
+<div class="flex justify-between text-[11px] text-tertiary-container">
+<span>- Risk Premium (Piracy)</span>
+<span>25.00 CR</span>
+</div>
+</div>
+</div>
+<div class="mt-4 bg-surface p-3 border border-outline-variant shadow-[inset_0_0_10px_rgba(0,218,243,0.1)]">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">NET PROFIT / UNIT</div>
+<div class="font-headline-md text-headline-md text-surface-tint">155.00 CR</div>
+<div class="w-full bg-surface-container h-1 mt-2">
+<div class="bg-surface-tint h-1" style="width: 78%"></div>
+</div>
+<div class="text-[10px] text-right text-on-surface-variant mt-1">HIGH YIELD EXPECTED</div>
+</div>
+</div>
+</div>
+<!-- Trade Route Widget -->
+<div class="h-48 border border-outline-variant bg-surface relative overflow-hidden flex flex-col group cursor-pointer hover:border-surface-tint transition-colors">
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+<img class="w-full h-full object-cover" data-alt="A highly stylized, top-down schematic map of a star system on a dark metallic screen. Trade routes are marked by glowing cyan and amber dotted lines connecting geometric nodes representing planets or stations. The aesthetic is industrial brutalist, resembling a retro-futuristic navigation console with grid lines and technical data overlays." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR6SS5XMqd1l5NMJY3ZSK3nS5h0S16o1WWgTWMkJGvSTeCoRyqt7PhFxFrbMieMgIWYqVs3CCt89s_KUx0bqjDlV_C6ZwGzb1Yz_Wqlnygfp9nZZpnpG26FSKWX-HRlCJmc5FF7b2FjJSATi7ZwZHU4cwp0jT_hBklcCleZFLNtcSfW_LjA0ng-WXOG0anz6GGfIv70tEFO1JCjT2KPTbEDCma31CsGvT9S9yh-8fcpWczQasFHCVTBg"/>
+</div>
+<div class="relative z-10 px-4 py-2 border-b border-outline-variant bg-surface-container-highest/80 backdrop-blur-sm flex justify-between items-center">
+<span class="font-label-caps text-label-caps text-on-surface">ROUTE PREVIEW</span>
+<span class="material-symbols-outlined text-[14px] text-surface-tint">timeline</span>
+</div>
+<div class="relative z-10 p-4 flex-1 flex flex-col justify-end">
+<div class="flex items-center gap-2 font-data-mono text-data-mono text-[11px]">
+<div class="w-2 h-2 rounded-full bg-primary-container"></div>
+<span class="text-on-surface">HELION</span>
+<span class="material-symbols-outlined text-[14px] text-outline flex-1 text-center">more_horiz</span>
+<div class="w-2 h-2 rounded-sm bg-tertiary-container"></div>
+<span class="text-on-surface">VANGUARD-9</span>
+</div>
+<div class="flex justify-between mt-2 font-data-mono text-data-mono text-[10px] text-on-surface-variant">
+<span>DIST: 4.2 LY</span>
+<span>ETA: 2 CYCLES</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 right-0 md:left-20 left-0 z-50 flex justify-around items-center px-4 h-16 border-t border-outline-variant bg-surface-container-highest">
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">payments</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Credits</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">category</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Ore</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">layers</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Metal</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">water_drop</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Water</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">restaurant</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Food</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">air</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">O2</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">oil_barrel</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Fuel</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">auto_awesome_motion</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Warp</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-2 rounded-sm transition-colors" href="#">
+<div class="w-6 h-6 border border-outline-variant flex items-center justify-center mb-1"><span class="material-symbols-outlined text-[16px]">memory</span></div>
+<span class="font-label-caps text-label-caps text-[9px]">Data</span>
+</a>
+</nav>
+</body></html>

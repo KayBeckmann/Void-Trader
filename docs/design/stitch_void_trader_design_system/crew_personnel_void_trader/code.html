@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Crew Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#bac9cc",
+                        "surface-dim": "#131315",
+                        "on-surface": "#e4e2e4",
+                        "secondary-fixed-dim": "#bcc7dd",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "secondary": "#bcc7dd",
+                        "primary-fixed-dim": "#00daf3",
+                        "tertiary": "#ffe9d9",
+                        "surface-variant": "#353437",
+                        "surface-container": "#1f1f21",
+                        "on-primary-fixed": "#001f24",
+                        "primary": "#c3f5ff",
+                        "on-tertiary-container": "#864a00",
+                        "on-error-container": "#ffdad6",
+                        "surface-bright": "#39393b",
+                        "secondary-fixed": "#d8e3fa",
+                        "on-secondary-fixed": "#111c2c",
+                        "outline-variant": "#3b494c",
+                        "primary-container": "#00e5ff",
+                        "tertiary-container": "#ffc594",
+                        "primary-fixed": "#9cf0ff",
+                        "on-primary": "#00363d",
+                        "tertiary-fixed": "#ffdcc1",
+                        "secondary-container": "#3c475a",
+                        "on-secondary": "#263142",
+                        "tertiary-fixed-dim": "#ffb778",
+                        "surface-container-high": "#2a2a2c",
+                        "on-primary-container": "#00626e",
+                        "on-tertiary": "#4c2700",
+                        "error-container": "#93000a",
+                        "surface-tint": "#00daf3",
+                        "inverse-surface": "#e4e2e4",
+                        "inverse-on-surface": "#303032",
+                        "surface-container-low": "#1b1b1d",
+                        "outline": "#849396",
+                        "on-secondary-container": "#aab6cc",
+                        "on-tertiary-fixed": "#2e1500",
+                        "on-error": "#690005",
+                        "background": "#131315",
+                        "surface-container-lowest": "#0e0e10",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#6c3a00",
+                        "inverse-primary": "#006875",
+                        "surface": "#131315",
+                        "on-background": "#e4e2e4",
+                        "surface-container-highest": "#353437",
+                        "on-primary-fixed-variant": "#004f58"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "gutter": "12px",
+                        "margin-desktop": "32px",
+                        "panel-padding": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Space Grotesk"],
+                        "title-sm": ["JetBrains Mono"],
+                        "body-md": ["JetBrains Mono"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["JetBrains Mono"],
+                        "display-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "800" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .pixel-art { image-rendering: pixelated; }
+        .glass-panel { background: rgba(28, 28, 30, 0.9); backdrop-filter: blur(10px); }
+        .tech-border { border: 1px solid #3b494c; }
+        .glow-active { box-shadow: inset 0 0 8px rgba(0, 218, 243, 0.3); }
+        .scanline {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanline::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 218, 243, 0.5);
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden selection:bg-surface-tint selection:text-background">
+<!-- SideNavBar (Hidden on Mobile, Visible on Desktop) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full z-50 flex-col items-center py-gutter w-20 border-r border-outline-variant bg-surface">
+<div class="mb-8 flex flex-col items-center">
+<img alt="Pilot Profile" class="w-10 h-10 pixel-art border border-outline-variant rounded-sm mb-2" data-alt="A pixel-art style portrait of a rugged space pilot wearing a worn-out helmet with glowing cyan accents. The background is a dark, gritty metallic surface. The image has a low-res, retro-futuristic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNQ1Ta_b8p6_gY1wWQDmE8PHGHxO0Ct_RDqk_1eC2SebQwrNvK5zMiso6FHEOYjzyx-zbv7oUcURiYPRzFyrrwHCeSY3GlzDdjRKELRVBa1FKmcMxjwSjKAVsjAcCMmCFMFmYut4rdHrCnzpVoTigmT-ihUvRI_ANFjB7UCTwWJJnd7XlI144deiB8A3w30_s-3sw4aykMOj8g9V7wHHyXKRGirZG8ki5cSv-dRgoigBG3WkKrI819yw"/>
+<div class="font-headline-md text-headline-md text-surface-tint uppercase tracking-tighter text-center" style="font-size: 10px; line-height: 12px;">[ COMMAND ]</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant text-center" style="font-size: 8px;">Vessel ID:<br/>VT-882</div>
+</div>
+<div class="flex-1 flex flex-col gap-4 w-full px-2">
+<!-- Tabs -->
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined mb-1">map</span>
+<span class="font-label-caps text-label-caps">Map</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined mb-1">rocket_launch</span>
+<span class="font-label-caps text-label-caps">Ship</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined mb-1">storefront</span>
+<span class="font-label-caps text-label-caps">Market</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined mb-1">domain</span>
+<span class="font-label-caps text-label-caps">Colony</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint bg-surface-variant glow-active transition-transform duration-150 scale-95">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-caps text-label-caps">Crew</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined mb-1">science</span>
+<span class="font-label-caps text-label-caps">Research</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center rounded-sm tech-border text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined mb-1">security</span>
+<span class="font-label-caps text-label-caps">Factions</span>
+</button>
+</div>
+</nav>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-20 z-40 flex justify-between items-center px-panel-padding h-12 bg-surface-dim/80 border-b border-outline-variant backdrop-blur-md">
+<div class="font-title-sm text-title-sm text-surface-tint italic flex items-center gap-2">
+<span class="material-symbols-outlined">satellite_alt</span>
+            VOID TRADER
+        </div>
+<div class="hidden md:flex gap-4">
+<span class="font-data-mono text-data-mono text-error animate-pulse">[ ALERT: CRITICAL HEAT ]</span>
+<span class="font-data-mono text-data-mono text-primary-fixed">[ SYSTEMS NOMINAL ]</span>
+</div>
+<div class="flex gap-4 items-center">
+<button class="text-on-surface-variant hover:text-primary-fixed transition-colors hover:brightness-125">
+<span class="material-symbols-outlined">notifications_active</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary-fixed transition-colors hover:brightness-125">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary-fixed transition-colors hover:brightness-125">
+<span class="material-symbols-outlined">power_settings_new</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-16 pb-20 md:pb-4 md:pl-24 px-4 min-h-screen flex flex-col lg:flex-row gap-4">
+<!-- Left Column: Crew Cards List -->
+<section class="flex-1 flex flex-col gap-4">
+<div class="font-headline-md text-headline-md text-on-surface uppercase scanline w-fit">
+                [ CREW ROSTER ]
+            </div>
+<!-- Crew Card 1: Pilot (Active) -->
+<div class="bg-surface-container tech-border p-4 flex flex-col sm:flex-row gap-4 relative overflow-hidden glow-active">
+<div class="absolute right-0 top-0 w-1 h-full bg-surface-tint"></div>
+<!-- Portrait -->
+<div class="w-24 h-24 sm:w-32 sm:h-32 bg-surface-dim border border-outline-variant p-1 shrink-0 relative">
+<img alt="Pilot Portrait" class="w-full h-full object-cover pixel-art grayscale contrast-125" data-alt="A gritty pixel-art portrait of a human pilot. He has short hair, a scuffed flight suit, and a serious expression. Dark industrial background with cyan interface elements overlayed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXdZ9xz_1t0SFbJsrskTKp3eIzTlwgFuPL4LnygXqnHPvgzdmme0lO0B0LWNnjY1h4SOOM8bBIS8q_MwtN2dYifDK0bmoAzhKnB_vY8ceIghpEc1I04ZPWhSXuqSKn7dBDeT9v7YveF1DydXQnhTILmQ-GL_jpX08EVWnfE7x63wCb8O4WuC7RpnIcVW7gqSOkvWugjzP520RDv6lhbN5Ke-PP4Ulohhra3Ghkr4yaAjxGY4AAA5juxQ"/>
+<div class="absolute bottom-1 right-1 bg-surface-tint text-background font-label-caps text-[8px] px-1">LVL 4</div>
+</div>
+<!-- Details -->
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-title-sm text-title-sm text-surface-tint">Jax 'Comet' Ryder</h3>
+<p class="font-data-mono text-data-mono text-on-surface-variant">Class: Pilot / Navigator</p>
+</div>
+<span class="px-2 py-1 border border-surface-tint text-surface-tint font-label-caps text-label-caps uppercase bg-surface-tint/10">Active Duty</span>
+</div>
+</div>
+<!-- Vitals Bars -->
+<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 sm:mt-0">
+<!-- Hunger -->
+<div>
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-1">
+<span>Hunger</span><span>85%</span>
+</div>
+<div class="h-2 w-full bg-surface-dim border border-outline-variant flex gap-[1px]">
+<div class="h-full bg-primary-fixed w-[85%]"></div>
+</div>
+</div>
+<!-- Rest -->
+<div>
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-1">
+<span>Rest</span><span>40%</span>
+</div>
+<div class="h-2 w-full bg-surface-dim border border-outline-variant flex gap-[1px]">
+<div class="h-full bg-tertiary-container w-[40%]"></div>
+</div>
+</div>
+<!-- Stress -->
+<div>
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-1">
+<span>Stress</span><span class="text-error">92%</span>
+</div>
+<div class="h-2 w-full bg-surface-dim border border-outline-variant flex gap-[1px]">
+<div class="h-full bg-error w-[92%] animate-pulse"></div>
+</div>
+</div>
+<!-- Morale -->
+<div>
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-1">
+<span>Morale</span><span>60%</span>
+</div>
+<div class="h-2 w-full bg-surface-dim border border-outline-variant flex gap-[1px]">
+<div class="h-full bg-secondary-fixed w-[60%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Crew Card 2: Mechanic -->
+<div class="bg-surface-container-low tech-border p-4 flex flex-col sm:flex-row gap-4 relative opacity-80 hover:opacity-100 transition-opacity cursor-pointer hover:bg-surface-variant">
+<!-- Portrait -->
+<div class="w-24 h-24 sm:w-32 sm:h-32 bg-surface-dim border border-outline-variant p-1 shrink-0 relative">
+<img alt="Mechanic Portrait" class="w-full h-full object-cover pixel-art grayscale contrast-125" data-alt="A gritty pixel-art portrait of a cyborg mechanic. Half metallic face, wearing a heavy grease-stained apron. Dark industrial background with warm amber interface elements overlayed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_N1h9in6CByAAqEqMgJDCx4DFEi31J3d4UwAeyzhk77W74OudZ_ma-QPkkerfGvOPAU6VT53WDS4ARBMqCjCJJWeuAtNU-RAGm8vG_o4gbd3b1fPeEGtdmttGASfuo6KD4R1F0K-N9p_FkmjAuJKIRTECVT7PMP-vUlNeNAkwFVhIYgi6ucuAlUleJVL_LfM6dg3VB6N_fwaJJw1ostRIdHCPG1WCoGGeEgAcVa5dZyyboLXbNEDOvw"/>
+<div class="absolute bottom-1 right-1 bg-surface-tint text-background font-label-caps text-[8px] px-1">LVL 6</div>
+</div>
+<!-- Details -->
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface">Kaelen 'Sparks' Voss</h3>
+<p class="font-data-mono text-data-mono text-on-surface-variant">Class: Chief Engineer</p>
+</div>
+<span class="px-2 py-1 border border-outline-variant text-on-surface-variant font-label-caps text-label-caps uppercase bg-surface-dim">Resting</span>
+</div>
+</div>
+<!-- Vitals Bars -->
+<div class="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 sm:mt-0">
+<div>
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-1">
+<span>Hunger</span><span>95%</span>
+</div>
+<div class="h-2 w-full bg-surface-dim border border-outline-variant flex gap-[1px]">
+<div class="h-full bg-primary-fixed w-[95%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-caps text-label-caps text-on-surface-variant mb-1">
+<span>Rest</span><span>100%</span>
+</div>
+<div class="h-2 w-full bg-surface-dim border border-outline-variant flex gap-[1px]">
+<div class="h-full bg-primary-fixed w-[100%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Crew Card 3: Miner -->
+<div class="bg-surface-container-low tech-border p-4 flex flex-col sm:flex-row gap-4 relative opacity-80 hover:opacity-100 transition-opacity cursor-pointer hover:bg-surface-variant">
+<!-- Portrait -->
+<div class="w-24 h-24 sm:w-32 sm:h-32 bg-surface-dim border border-outline-variant p-1 shrink-0 relative">
+<img alt="Miner Portrait" class="w-full h-full object-cover pixel-art grayscale contrast-125" data-alt="A gritty pixel-art portrait of a heavy-set asteroid miner in a bulky environmental suit. Visor is down reflecting stars. Dark industrial background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwaimzCG8ZdlmjEJCZ1O4IiivaWJvfhKuo1RFmBTVY3jNgEsRlBx1q07LRoPBVFhtXhT1TluMebhTE_Krjv9fUWGMlpUy44OK0io9_tErr2o3E8dEAyXzbMN93mckXxk9R7IYrdnqdP0xngJEnV4zX-V8k6MlhnueVhS9FDHhJmctFEV99nB-Zn9rPPrT1KFDcAcSVqk5E3MswqOfOq1kAMAB5jLyWonlrLzOyQ6ENOx9HRzGDvzNvww"/>
+<div class="absolute bottom-1 right-1 bg-surface-tint text-background font-label-caps text-[8px] px-1">LVL 2</div>
+</div>
+<!-- Details -->
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface">Brog</h3>
+<p class="font-data-mono text-data-mono text-on-surface-variant">Class: Extraction Specialist</p>
+</div>
+<span class="px-2 py-1 border border-tertiary-container text-tertiary-container font-label-caps text-label-caps uppercase bg-tertiary-container/10">On Mission</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-4 border border-outline-variant border-dashed text-on-surface-variant hover:text-surface-tint hover:border-surface-tint transition-colors flex items-center justify-center gap-2 font-label-caps text-label-caps bg-surface-dim/50">
+<span class="material-symbols-outlined text-[16px]">person_add</span> HIRE NEW CREW
+            </button>
+</section>
+<!-- Right Column: Detail Panel (Active Crew Member) -->
+<aside class="w-full lg:w-96 shrink-0 flex flex-col gap-4">
+<div class="bg-surface-container tech-border p-4 h-full flex flex-col relative overflow-hidden">
+<!-- Background ambient texture -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: repeating-linear-gradient(45deg, #00daf3 25%, transparent 25%, transparent 75%, #00daf3 75%, #00daf3), repeating-linear-gradient(45deg, #00daf3 25%, #131315 25%, #131315 75%, #00daf3 75%, #00daf3); background-position: 0 0, 10px 10px; background-size: 20px 20px;"></div>
+<div class="font-title-sm text-title-sm text-surface-tint mb-4 border-b border-outline-variant pb-2 flex items-center justify-between z-10">
+<span>[ PERSONNEL FILE ]</span>
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+</div>
+<div class="z-10 flex-1 flex flex-col gap-6">
+<!-- Skills -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-3 border-l-2 border-surface-tint pl-2">SKILL MATRIX</h4>
+<div class="space-y-3">
+<div>
+<div class="flex justify-between font-data-mono text-data-mono mb-1">
+<span>Piloting</span> <span class="text-surface-tint">88/100</span>
+</div>
+<div class="flex gap-1 h-3">
+<!-- segmented bar -->
+<div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint"></div><div class="flex-1 bg-surface-tint opacity-50"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-data-mono text-data-mono mb-1">
+<span>Engineering</span> <span class="text-surface-tint">42/100</span>
+</div>
+<div class="flex gap-1 h-3">
+<div class="flex-1 bg-surface-tint opacity-80"></div><div class="flex-1 bg-surface-tint opacity-80"></div><div class="flex-1 bg-surface-tint opacity-80"></div><div class="flex-1 bg-surface-tint opacity-80"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-data-mono text-data-mono mb-1">
+<span>Combat</span> <span class="text-surface-tint">65/100</span>
+</div>
+<div class="flex gap-1 h-3">
+<div class="flex-1 bg-surface-tint opacity-90"></div><div class="flex-1 bg-surface-tint opacity-90"></div><div class="flex-1 bg-surface-tint opacity-90"></div><div class="flex-1 bg-surface-tint opacity-90"></div><div class="flex-1 bg-surface-tint opacity-90"></div><div class="flex-1 bg-surface-tint opacity-90"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div><div class="flex-1 bg-surface-dim border border-outline-variant"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Traits -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-3 border-l-2 border-surface-tint pl-2">TRAITS & CONDITIONS</h4>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 border border-outline-variant bg-surface-dim font-data-mono text-data-mono text-on-surface">Void-Born</span>
+<span class="px-2 py-1 border border-error/50 bg-error/10 font-data-mono text-data-mono text-error">Caffeine Addict</span>
+<span class="px-2 py-1 border border-outline-variant bg-surface-dim font-data-mono text-data-mono text-on-surface">Reckless</span>
+</div>
+</div>
+<!-- Actions -->
+<div class="mt-auto pt-4 border-t border-outline-variant flex flex-col gap-2">
+<button class="w-full py-2 bg-surface-tint/10 border border-surface-tint text-surface-tint font-title-sm text-title-sm hover:bg-surface-tint hover:text-background transition-colors uppercase">
+                            Assign Station
+                        </button>
+<div class="flex gap-2">
+<button class="flex-1 py-2 border border-outline-variant bg-surface-dim text-on-surface hover:border-surface-tint transition-colors font-label-caps text-label-caps uppercase">
+                                Send to Medbay
+                            </button>
+<button class="flex-1 py-2 border border-outline-variant bg-surface-dim text-on-surface hover:border-error transition-colors font-label-caps text-label-caps uppercase text-error hover:bg-error/10">
+                                Dismiss
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- BottomNavBar (Visible on Mobile, Hidden on Desktop) -->
+<nav class="md:hidden fixed bottom-0 right-0 left-0 z-50 flex justify-around items-center px-4 h-16 border-t border-outline-variant bg-surface-container-highest">
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-caps text-label-caps hidden sm:block">Credits</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant">
+<span class="material-symbols-outlined">category</span>
+<span class="font-label-caps text-label-caps hidden sm:block">Ore</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant">
+<span class="material-symbols-outlined">layers</span>
+<span class="font-label-caps text-label-caps hidden sm:block">Metal</span>
+</div>
+<!-- Active Item contextually adapted for mobile view of Crew, replacing a resource for demonstration of active state -->
+<div class="bg-primary-container text-on-primary-container rounded-sm px-2 py-1 flex flex-col items-center scale-98 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-caps text-label-caps">Crew</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant">
+<span class="material-symbols-outlined">memory</span>
+<span class="font-label-caps text-label-caps hidden sm:block">Data</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Logistics &amp; Production</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400;1,700&amp;family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#bac9cc",
+                      "surface-dim": "#131315",
+                      "on-surface": "#e4e2e4",
+                      "secondary-fixed-dim": "#bcc7dd",
+                      "on-secondary-fixed-variant": "#3c475a",
+                      "secondary": "#bcc7dd",
+                      "primary-fixed-dim": "#00daf3",
+                      "tertiary": "#ffe9d9",
+                      "surface-variant": "#353437",
+                      "surface-container": "#1f1f21",
+                      "on-primary-fixed": "#001f24",
+                      "primary": "#c3f5ff",
+                      "on-tertiary-container": "#864a00",
+                      "on-error-container": "#ffdad6",
+                      "surface-bright": "#39393b",
+                      "secondary-fixed": "#d8e3fa",
+                      "on-secondary-fixed": "#111c2c",
+                      "outline-variant": "#3b494c",
+                      "primary-container": "#00e5ff",
+                      "tertiary-container": "#ffc594",
+                      "primary-fixed": "#9cf0ff",
+                      "on-primary": "#00363d",
+                      "tertiary-fixed": "#ffdcc1",
+                      "secondary-container": "#3c475a",
+                      "on-secondary": "#263142",
+                      "tertiary-fixed-dim": "#ffb778",
+                      "surface-container-high": "#2a2a2c",
+                      "on-primary-container": "#00626e",
+                      "on-tertiary": "#4c2700",
+                      "error-container": "#93000a",
+                      "surface-tint": "#00daf3",
+                      "inverse-surface": "#e4e2e4",
+                      "inverse-on-surface": "#303032",
+                      "surface-container-low": "#1b1b1d",
+                      "outline": "#849396",
+                      "on-secondary-container": "#aab6cc",
+                      "on-tertiary-fixed": "#2e1500",
+                      "on-error": "#690005",
+                      "background": "#131315",
+                      "surface-container-lowest": "#0e0e10",
+                      "error": "#ffb4ab",
+                      "on-tertiary-fixed-variant": "#6c3a00",
+                      "inverse-primary": "#006875",
+                      "surface": "#131315",
+                      "on-background": "#e4e2e4",
+                      "surface-container-highest": "#353437",
+                      "on-primary-fixed-variant": "#004f58"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "margin-mobile": "16px",
+                      "gutter": "12px",
+                      "margin-desktop": "32px",
+                      "panel-padding": "16px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "title-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "JetBrains Mono"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "label-caps": [
+                              "JetBrains Mono"
+                      ],
+                      "display-lg": [
+                              "Space Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "display-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .industrial-border { border: 1px solid theme('colors.outline-variant'); }
+        .inner-glow { box-shadow: inset 0 0 2px theme('colors.surface-tint'); }
+        .alert-glow { box-shadow: inset 0 0 4px theme('colors.error'); animation: pulse-alert 2s infinite; }
+        @keyframes pulse-alert {
+            0% { box-shadow: inset 0 0 4px theme('colors.error'); border-color: theme('colors.error'); }
+            50% { box-shadow: inset 0 0 12px theme('colors.error'); border-color: theme('colors.error-container'); }
+            100% { box-shadow: inset 0 0 4px theme('colors.error'); border-color: theme('colors.error'); }
+        }
+        .scan-line {
+            position: relative;
+            overflow: hidden;
+        }
+        .scan-line::after {
+            content: "";
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 218, 243, 0.2), transparent);
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scan {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+        .flow-line {
+            stroke: theme('colors.outline-variant');
+            stroke-width: 2;
+            fill: none;
+        }
+        .flow-line-active {
+            stroke: theme('colors.surface-tint');
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 4 4;
+            animation: flow 1s linear infinite;
+        }
+        .flow-line-alert {
+            stroke: theme('colors.error');
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 4 4;
+            animation: flow 0.5s linear infinite;
+        }
+        @keyframes flow {
+            from { stroke-dashoffset: 8; }
+            to { stroke-dashoffset: 0; }
+        }
+        
+        .glass-panel {
+            background: rgba(19, 19, 21, 0.6);
+            backdrop-filter: blur(20px);
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden flex font-body-md selection:bg-surface-tint selection:text-background">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-20 z-40 flex justify-between items-center px-panel-padding bg-surface-dim/80 text-error font-data-mono text-data-mono border-b border-outline-variant backdrop-blur-md h-12">
+<div class="flex items-center gap-4">
+<span class="font-title-sm text-title-sm text-surface-tint italic">VOID TRADER</span>
+<span class="text-error animate-pulse hidden sm:inline-block">ALERT: CRITICAL HEAT</span>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="hidden sm:inline-block">SYSTEMS NOMINAL</span>
+<div class="flex gap-2">
+<span class="material-symbols-outlined hover:text-primary-fixed cursor-pointer transition-colors" data-icon="notifications_active">notifications_active</span>
+<span class="material-symbols-outlined hover:text-primary-fixed cursor-pointer transition-colors" data-icon="settings">settings</span>
+<span class="material-symbols-outlined hover:text-primary-fixed cursor-pointer transition-colors" data-icon="power_settings_new">power_settings_new</span>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full w-20 z-50 flex-col items-center py-gutter bg-surface border-r border-outline-variant">
+<div class="mb-8 flex flex-col items-center">
+<div class="w-10 h-10 rounded-full border border-surface-tint mb-2 overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="A pixel-art style portrait of a rugged space freighter pilot with cybernetic implants, set against a dark industrial steel blue background, evoking a retro-futuristic sci-fi vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrb3mxixO6pNqSpO_2v1oZ--uCl415U8H0NUB4gthVYXAbsJolsqDH7TvlFQIp5ezzOjcrhLEzQP1J4ymsWcTUSFIL7a9jABtYmDiP2vZ1Bys6rYmlgOFZ3xTEe33EwY_foE_tPn5oQepgnJBUC0M_dyvrSPY0NLF7nY1nsnpyT4AUOPvZqYjad2MkkTFFU_NsEfqXlgcwpMJpEp7VQwqaaT5tvp_r-AJ3Cp8-7BuqjH__8AJ6iFxONg"/>
+</div>
+<span class="font-label-caps text-label-caps text-surface-tint uppercase tracking-tighter text-center leading-tight">VT-882</span>
+</div>
+<div class="flex flex-col gap-6 w-full px-2">
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="map">map</span>
+<span class="font-label-caps text-label-caps text-[9px]">Map</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint bg-surface-variant/30 p-2 group transition-colors" href="#">
+<span class="material-symbols-outlined scale-95 transition-transform duration-150" data-icon="rocket_launch">rocket_launch</span>
+<span class="font-label-caps text-label-caps text-[9px]">Ship</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="storefront">storefront</span>
+<span class="font-label-caps text-label-caps text-[9px]">Market</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="domain">domain</span>
+<span class="font-label-caps text-label-caps text-[9px]">Colony</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="science">science</span>
+<span class="font-label-caps text-label-caps text-[9px]">Research</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="groups">groups</span>
+<span class="font-label-caps text-label-caps text-[9px]">Factions</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="security">security</span>
+<span class="font-label-caps text-label-caps text-[9px]">Alliance</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed p-2 rounded-DEFAULT group transition-colors" href="#">
+<span class="material-symbols-outlined group-hover:scale-95 transition-transform duration-150" data-icon="receipt_long">receipt_long</span>
+<span class="font-label-caps text-label-caps text-[9px]">Logbook</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-12 md:ml-20 mb-16 md:mb-0 p-4 md:p-8 overflow-y-auto bg-surface relative">
+<!-- Background Grid Pattern -->
+<div class="absolute inset-0 pointer-events-none opacity-5" style="background-image: linear-gradient(theme('colors.on-surface') 1px, transparent 1px), linear-gradient(90deg, theme('colors.on-surface') 1px, transparent 1px); background-size: 32px 32px;"></div>
+<div class="max-w-7xl mx-auto relative z-10 flex flex-col gap-6 h-full">
+<!-- Header Section -->
+<div class="flex justify-between items-end border-b border-outline-variant pb-4 scan-line">
+<div>
+<h1 class="font-headline-md text-headline-md text-surface-tint tracking-tight uppercase">[ PRODUCTION CHAIN ]</h1>
+<p class="font-data-mono text-data-mono text-on-surface-variant mt-1">MODULE FABRICATION // SECTOR 7G // STATUS: ACTIVE_WITH_WARNINGS</p>
+</div>
+<div class="flex gap-4">
+<div class="industrial-border bg-surface-container p-2 flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">TOTAL PWR DRAW</span>
+<span class="font-data-mono text-data-mono text-error">840 MW</span>
+</div>
+<div class="industrial-border bg-surface-container p-2 flex flex-col items-end inner-glow">
+<span class="font-label-caps text-label-caps text-on-surface-variant">NET PROFIT/HR</span>
+<span class="font-data-mono text-data-mono text-primary-fixed">+42,000 CR</span>
+</div>
+</div>
+</div>
+<!-- Canvas Area for Flowchart -->
+<div class="flex-1 industrial-border bg-surface-container-low relative min-h-[600px] overflow-hidden rounded-sm glass-panel">
+<!-- SVG Overlay for Connection Lines -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<!-- Raw to Smelter -->
+<path class="flow-line-active" d="M 250 150 L 400 150"></path>
+<path class="flow-line-active" d="M 250 450 L 400 450"></path>
+<!-- Smelter to Fab -->
+<path class="flow-line-active" d="M 600 150 L 700 150 L 700 300 L 750 300"></path>
+<path class="flow-line-alert" d="M 600 450 L 700 450 L 700 300 L 750 300"></path>
+<!-- Fab to Module -->
+<path class="flow-line-active" d="M 950 300 L 1100 300"></path>
+</svg>
+<!-- Nodes -->
+<!-- Raw Ore Input 1 -->
+<div class="absolute top-[100px] left-[50px] w-48 industrial-border bg-surface p-3 flex flex-col gap-2">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<div class="w-8 h-8 industrial-border flex items-center justify-center bg-surface-container">
+<span class="material-symbols-outlined text-on-surface-variant text-lg" data-icon="category">category</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">RAW IRON</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">OUT:</span>
+<span class="text-surface-tint">120 T/h</span>
+</div>
+</div>
+<!-- Smelter 1 -->
+<div class="absolute top-[100px] left-[400px] w-48 industrial-border bg-surface p-3 flex flex-col gap-2 inner-glow">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<div class="w-8 h-8 industrial-border flex items-center justify-center bg-surface-container">
+<span class="material-symbols-outlined text-surface-tint text-lg" data-icon="local_fire_department">local_fire_department</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary-fixed">ARC SMELTER A</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">PWR:</span>
+<span class="text-on-surface">150 MW</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">OUT:</span>
+<span class="text-surface-tint">80 T/h</span>
+</div>
+<!-- Status Bar -->
+<div class="flex gap-[2px] mt-1">
+<div class="h-2 flex-1 bg-surface-tint"></div>
+<div class="h-2 flex-1 bg-surface-tint"></div>
+<div class="h-2 flex-1 bg-surface-tint"></div>
+<div class="h-2 flex-1 bg-surface-tint"></div>
+<div class="h-2 flex-1 bg-surface-container-highest"></div>
+</div>
+</div>
+<!-- Raw Copper Input 2 -->
+<div class="absolute top-[400px] left-[50px] w-48 industrial-border bg-surface p-3 flex flex-col gap-2">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<div class="w-8 h-8 industrial-border flex items-center justify-center bg-surface-container">
+<span class="material-symbols-outlined text-on-surface-variant text-lg" data-icon="layers">layers</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">RAW COPPER</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">OUT:</span>
+<span class="text-surface-tint">90 T/h</span>
+</div>
+</div>
+<!-- Smelter 2 (Alert State) -->
+<div class="absolute top-[400px] left-[400px] w-48 industrial-border bg-surface p-3 flex flex-col gap-2 alert-glow">
+<div class="flex items-center gap-2 border-b border-error pb-2">
+<div class="w-8 h-8 border border-error flex items-center justify-center bg-error-container">
+<span class="material-symbols-outlined text-error text-lg" data-icon="warning">warning</span>
+</div>
+<span class="font-label-caps text-label-caps text-error">ARC SMELTER B</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-error">ERR: THERMAL RUNAWAY</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">OUT:</span>
+<span class="text-error">20 T/h</span>
+</div>
+<!-- Status Bar -->
+<div class="flex gap-[2px] mt-1">
+<div class="h-2 flex-1 bg-error"></div>
+<div class="h-2 flex-1 bg-error"></div>
+<div class="h-2 flex-1 bg-surface-container-highest"></div>
+<div class="h-2 flex-1 bg-surface-container-highest"></div>
+<div class="h-2 flex-1 bg-surface-container-highest"></div>
+</div>
+</div>
+<!-- Fabricator -->
+<div class="absolute top-[225px] left-[750px] w-56 industrial-border bg-surface p-3 flex flex-col gap-2 inner-glow">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<div class="w-8 h-8 industrial-border flex items-center justify-center bg-surface-container">
+<span class="material-symbols-outlined text-surface-tint text-lg" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary-fixed">ASSEMBLY MATRIX</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">EFFICIENCY:</span>
+<span class="text-error">45% (BOTTLENECK)</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">PWR:</span>
+<span class="text-on-surface">420 MW</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">OUT:</span>
+<span class="text-surface-tint">15 T/h</span>
+</div>
+</div>
+<!-- Ship Module Output -->
+<div class="absolute top-[225px] left-[1100px] w-48 industrial-border bg-surface p-3 flex flex-col gap-2">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<div class="w-8 h-8 industrial-border flex items-center justify-center bg-surface-container">
+<span class="material-symbols-outlined text-primary-fixed text-lg" data-icon="rocket">rocket</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface">HULL PLATING</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">STORED:</span>
+<span class="text-surface-tint">4,020 U</span>
+</div>
+<div class="flex justify-between font-data-mono text-data-mono mt-2">
+<button class="w-full industrial-border py-1 text-center hover:bg-surface-tint hover:text-background transition-colors font-label-caps text-label-caps">EXPORT TO MARKET</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 right-0 left-0 z-50 flex justify-around items-center px-4 h-16 bg-surface-container-highest border-t border-outline-variant font-label-caps text-label-caps text-primary-fixed">
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-[9px]">Credits</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm" href="#">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="text-[9px]">Ore</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm" href="#">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+<span class="text-[9px]">Metal</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm" href="#">
+<span class="material-symbols-outlined" data-icon="water_drop">water_drop</span>
+<span class="text-[9px]">Water</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant">restaurant</span>
+<span class="text-[9px]">Food</span>
+</a>
+</nav>
+</body></html>

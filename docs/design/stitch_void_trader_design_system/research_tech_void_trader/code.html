@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Research Tech Tree</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#bac9cc",
+                    "surface-dim": "#131315",
+                    "on-surface": "#e4e2e4",
+                    "secondary-fixed-dim": "#bcc7dd",
+                    "on-secondary-fixed-variant": "#3c475a",
+                    "secondary": "#bcc7dd",
+                    "primary-fixed-dim": "#00daf3",
+                    "tertiary": "#ffe9d9",
+                    "surface-variant": "#353437",
+                    "surface-container": "#1f1f21",
+                    "on-primary-fixed": "#001f24",
+                    "primary": "#c3f5ff",
+                    "on-tertiary-container": "#864a00",
+                    "on-error-container": "#ffdad6",
+                    "surface-bright": "#39393b",
+                    "secondary-fixed": "#d8e3fa",
+                    "on-secondary-fixed": "#111c2c",
+                    "outline-variant": "#3b494c",
+                    "primary-container": "#00e5ff",
+                    "tertiary-container": "#ffc594",
+                    "primary-fixed": "#9cf0ff",
+                    "on-primary": "#00363d",
+                    "tertiary-fixed": "#ffdcc1",
+                    "secondary-container": "#3c475a",
+                    "on-secondary": "#263142",
+                    "tertiary-fixed-dim": "#ffb778",
+                    "surface-container-high": "#2a2a2c",
+                    "on-primary-container": "#00626e",
+                    "on-tertiary": "#4c2700",
+                    "error-container": "#93000a",
+                    "surface-tint": "#00daf3",
+                    "inverse-surface": "#e4e2e4",
+                    "inverse-on-surface": "#303032",
+                    "surface-container-low": "#1b1b1d",
+                    "outline": "#849396",
+                    "on-secondary-container": "#aab6cc",
+                    "on-tertiary-fixed": "#2e1500",
+                    "on-error": "#690005",
+                    "background": "#131315",
+                    "surface-container-lowest": "#0e0e10",
+                    "error": "#ffb4ab",
+                    "on-tertiary-fixed-variant": "#6c3a00",
+                    "inverse-primary": "#006875",
+                    "surface": "#131315",
+                    "on-background": "#e4e2e4",
+                    "surface-container-highest": "#353437",
+                    "on-primary-fixed-variant": "#004f58"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "margin-mobile": "16px",
+                    "gutter": "12px",
+                    "margin-desktop": "32px",
+                    "panel-padding": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": [
+                            "Space Grotesk"
+                    ],
+                    "title-sm": [
+                            "JetBrains Mono"
+                    ],
+                    "body-md": [
+                            "JetBrains Mono"
+                    ],
+                    "data-mono": [
+                            "JetBrains Mono"
+                    ],
+                    "label-caps": [
+                            "JetBrains Mono"
+                    ],
+                    "display-lg": [
+                            "Space Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "title-sm": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "data-mono": [
+                            "13px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-caps": [
+                            "11px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "800"
+                            }
+                    ],
+                    "display-lg": [
+                            "40px",
+                            {
+                                    "lineHeight": "48px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: #131315; /* surface */
+            color: #e4e2e4; /* on-surface */
+            overflow: hidden; /* App-like feel */
+        }
+        
+        .tech-line {
+            stroke: #3b494c; /* outline-variant */
+            stroke-width: 2;
+            fill: none;
+            transition: stroke 0.3s ease;
+        }
+        .tech-line.active {
+            stroke: #00daf3; /* surface-tint */
+            filter: drop-shadow(0 0 4px rgba(0,218,243,0.5));
+        }
+
+        .node-researched {
+            border-color: #00daf3;
+            box-shadow: inset 0 0 8px rgba(0,218,243,0.3);
+        }
+        .node-available {
+            border-color: #bcc7dd; /* secondary */
+        }
+        .node-locked {
+            border-color: #3b494c;
+            opacity: 0.6;
+        }
+
+        .scanline {
+            background: linear-gradient(to bottom, transparent 0%, rgba(0, 218, 243, 0.2) 10%, transparent 100%);
+            animation: scan 4s linear infinite;
+        }
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        /* Hide scrollbar for grid */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md bg-background text-on-background h-screen flex flex-col relative selection:bg-primary-container selection:text-on-primary-container">
+<!-- Scanline Overlay -->
+<div class="pointer-events-none fixed inset-0 z-50 scanline mix-blend-overlay"></div>
+<!-- TopAppBar (Hidden on Mobile, Visible on Desktop) -->
+<header class="hidden md:flex fixed top-0 right-0 left-20 z-40 justify-between items-center px-panel-padding bg-surface-dim/80 backdrop-blur-md h-12 border-b border-outline-variant">
+<div class="font-title-sm text-title-sm text-surface-tint italic flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint">api</span>
+            VOID TRADER
+        </div>
+<nav class="flex gap-6 font-data-mono text-data-mono">
+<a class="text-error animate-pulse hover:text-primary-fixed hover:brightness-125 transition-all" href="#">ALERT: CRITICAL HEAT</a>
+<a class="text-on-surface-variant hover:text-primary-fixed hover:brightness-125 transition-all" href="#">SYSTEMS NOMINAL</a>
+</nav>
+<div class="flex gap-4 text-on-surface-variant">
+<button class="hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined">notifications_active</span></button>
+<button class="hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined">settings</span></button>
+<button class="hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined">power_settings_new</span></button>
+</div>
+</header>
+<!-- SideNavBar (Visible on Desktop) -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-20 z-50 flex-col items-center py-gutter bg-surface border-r border-outline-variant">
+<!-- Brand/Avatar area -->
+<div class="mb-8 flex flex-col items-center group cursor-pointer">
+<div class="w-12 h-12 rounded-sm border border-outline-variant overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" data-alt="A gritty, high-contrast portrait of a rugged deep-space pilot in a dark industrial cockpit. Low-key lighting with stark cyan highlights illuminating worn graphite flight gear. Professional sci-fi game UI aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1FK7l7VY_Y3xykYRka_Zxr05z5CgjduzSCzisuZaPFpi77oh5efmLgF9BF-kpyGvSUVFFdOw-r_rt-Y3E26zUp7auXT1Fu6pFJcr3dCiArPW9AgAk8gj_Fsw8ODj0YoMxgoTCfjGBLRePNQ3pKI6QsWwAbZNS1dGiqP4x1ftdw90hrd3Uuk62ThE9hQYMCvXHN47oXWZ2WkdEtC_NY43ytLCGbS7UR10RFUGPYetg14TKl_P1OCm05g"/>
+<div class="absolute inset-0 border border-surface-tint/30 group-hover:border-surface-tint/80 transition-colors pointer-events-none"></div>
+</div>
+<div class="font-headline-md text-headline-md text-surface-tint uppercase tracking-tighter text-center text-[10px] leading-tight">[ COMMAND ]</div>
+<div class="font-data-mono text-data-mono text-[8px] text-on-surface-variant text-center">VT-882</div>
+</div>
+<!-- Nav Links -->
+<nav class="flex flex-col gap-4 w-full">
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">map</span>
+<span class="font-label-caps text-label-caps text-[9px]">Map</span>
+</a>
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">rocket_launch</span>
+<span class="font-label-caps text-label-caps text-[9px]">Ship</span>
+</a>
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">storefront</span>
+<span class="font-label-caps text-label-caps text-[9px]">Market</span>
+</a>
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">domain</span>
+<span class="font-label-caps text-label-caps text-[9px]">Colony</span>
+</a>
+<a class="flex flex-col items-center py-2 text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint bg-surface-variant/30 scale-95 transition-transform duration-150 relative" href="#">
+<div class="absolute left-0 top-0 bottom-0 w-[2px] bg-surface-tint shadow-[0_0_8px_rgba(0,218,243,1)]"></div>
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">science</span>
+<span class="font-label-caps text-label-caps text-[9px]">Research</span>
+</a>
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">groups</span>
+<span class="font-label-caps text-label-caps text-[9px]">Factions</span>
+</a>
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">security</span>
+<span class="font-label-caps text-label-caps text-[9px]">Alliance</span>
+</a>
+<a class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">receipt_long</span>
+<span class="font-label-caps text-label-caps text-[9px]">Logbook</span>
+</a>
+</nav>
+</aside>
+<!-- Main Canvas Area -->
+<main class="flex-1 w-full md:pl-20 md:pt-12 pb-16 md:pb-0 overflow-hidden relative flex flex-col">
+<!-- Section Header -->
+<div class="px-margin-mobile md:px-margin-desktop py-4 flex justify-between items-end border-b border-outline-variant bg-surface-container/50 relative z-10">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-widest flex items-center gap-2">
+<span class="text-surface-tint animate-pulse">_</span>
+                    [ TECH TREE ]
+                </h1>
+<p class="font-data-mono text-data-mono text-on-surface-variant mt-1">AVAILABLE DATA: <span class="text-primary-fixed">14,052 TB</span></p>
+</div>
+<!-- Category Tabs -->
+<div class="hidden sm:flex gap-2">
+<button class="px-4 py-1 font-label-caps text-label-caps border border-surface-tint bg-surface-tint/10 text-surface-tint transition-colors">ALL</button>
+<button class="px-4 py-1 font-label-caps text-label-caps border border-outline-variant text-on-surface-variant hover:border-surface-tint/50 hover:text-surface-tint transition-colors">MINING</button>
+<button class="px-4 py-1 font-label-caps text-label-caps border border-outline-variant text-on-surface-variant hover:border-surface-tint/50 hover:text-surface-tint transition-colors">POWER</button>
+<button class="px-4 py-1 font-label-caps text-label-caps border border-outline-variant text-on-surface-variant hover:border-surface-tint/50 hover:text-surface-tint transition-colors">WARP</button>
+</div>
+</div>
+<!-- Node Graph Container (Pan/Zoom Canvas) -->
+<div class="flex-1 overflow-auto no-scrollbar relative bg-surface-container-lowest" id="tech-canvas">
+<!-- Grid Background -->
+<div class="absolute inset-0" style="background-image: radial-gradient(#3b494c 1px, transparent 1px); background-size: 32px 32px; opacity: 0.2;"></div>
+<!-- SVG Lines connecting nodes -->
+<svg class="absolute top-0 left-0 w-full h-full pointer-events-none min-w-[1200px] min-h-[800px]" style="z-index: 1;">
+<!-- Mining Branch -->
+<path class="tech-line active" d="M 200 400 L 350 400"></path>
+<path class="tech-line active" d="M 350 400 L 500 300"></path>
+<path class="tech-line" d="M 350 400 L 500 500"></path>
+<path class="tech-line" d="M 500 300 L 700 200"></path>
+<!-- Power Branch -->
+<path class="tech-line active" d="M 200 400 L 350 600"></path>
+<path class="tech-line" d="M 350 600 L 550 700"></path>
+<!-- Warp Branch -->
+<path class="tech-line" d="M 200 400 L 400 200"></path>
+<path class="tech-line" d="M 400 200 L 600 100"></path>
+</svg>
+<!-- Node Elements Overlay -->
+<div class="relative w-full h-full min-w-[1200px] min-h-[800px]" style="z-index: 2;">
+<!-- Core Node (Researched) -->
+<div class="absolute top-[360px] left-[80px] w-48 group">
+<div class="node-researched bg-surface p-3 border rounded-sm flex items-start gap-3 cursor-pointer transition-all hover:bg-surface-variant">
+<div class="w-8 h-8 flex-shrink-0 bg-surface-tint/20 flex items-center justify-center border border-surface-tint">
+<span class="material-symbols-outlined text-surface-tint text-sm">hub</span>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-surface-tint">CORE SYSTEMS</div>
+<div class="font-data-mono text-[9px] text-on-surface-variant mt-1">Lvl 1 - Operational</div>
+</div>
+</div>
+</div>
+<!-- Mining 1 (Researched) -->
+<div class="absolute top-[360px] left-[350px] w-48 group">
+<div class="node-researched bg-surface p-3 border rounded-sm flex items-start gap-3 cursor-pointer transition-all hover:bg-surface-variant">
+<div class="w-8 h-8 flex-shrink-0 bg-surface-tint/20 flex items-center justify-center border border-surface-tint">
+<span class="material-symbols-outlined text-surface-tint text-sm">construction</span>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-surface-tint">DEEP CORE DRILL</div>
+<div class="font-data-mono text-[9px] text-on-surface-variant mt-1">Mining Yield +15%</div>
+</div>
+</div>
+</div>
+<!-- Mining 2A (Available) -->
+<div class="absolute top-[260px] left-[500px] w-48 group">
+<div class="node-available bg-surface p-3 border rounded-sm flex items-start gap-3 cursor-pointer transition-all hover:bg-surface-variant hover:border-surface-tint relative">
+<div class="w-8 h-8 flex-shrink-0 bg-secondary/10 flex items-center justify-center border border-secondary">
+<span class="material-symbols-outlined text-secondary text-sm">filter_alt</span>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-secondary">SLAG REFINER</div>
+<div class="font-data-mono text-[9px] text-on-surface-variant mt-1">Unlocks: Pure Ore</div>
+</div>
+<!-- Hover Tooltip -->
+<div class="hidden group-hover:block absolute top-full left-0 mt-2 w-full bg-surface-container-high border border-outline-variant p-2 z-50">
+<div class="font-data-mono text-[10px] text-on-surface mb-2 border-b border-outline-variant pb-1">RESEARCH COST</div>
+<div class="flex justify-between items-center text-[10px] mb-1">
+<span class="text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">memory</span> Data</span>
+<span class="text-error">2,500</span>
+</div>
+<div class="flex justify-between items-center text-[10px]">
+<span class="text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">payments</span> Credits</span>
+<span class="text-on-surface">15,000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Power 1 (Available) -->
+<div class="absolute top-[560px] left-[350px] w-48 group">
+<div class="node-available bg-surface p-3 border rounded-sm flex items-start gap-3 cursor-pointer transition-all hover:bg-surface-variant hover:border-surface-tint relative">
+<div class="w-8 h-8 flex-shrink-0 bg-secondary/10 flex items-center justify-center border border-secondary">
+<span class="material-symbols-outlined text-secondary text-sm">bolt</span>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-secondary">FUSION COIL</div>
+<div class="font-data-mono text-[9px] text-on-surface-variant mt-1">Max Energy +500</div>
+</div>
+<!-- Hover Tooltip -->
+<div class="hidden group-hover:block absolute top-full left-0 mt-2 w-full bg-surface-container-high border border-outline-variant p-2 z-50">
+<div class="font-data-mono text-[10px] text-on-surface mb-2 border-b border-outline-variant pb-1">RESEARCH COST</div>
+<div class="flex justify-between items-center text-[10px] mb-1">
+<span class="text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">memory</span> Data</span>
+<span class="text-on-surface">1,200</span>
+</div>
+<div class="flex justify-between items-center text-[10px]">
+<span class="text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">payments</span> Credits</span>
+<span class="text-on-surface">8,000</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Warp 1 (Locked) -->
+<div class="absolute top-[160px] left-[400px] w-48 group">
+<div class="node-locked bg-surface-container-low p-3 border rounded-sm flex items-start gap-3 cursor-not-allowed">
+<div class="w-8 h-8 flex-shrink-0 bg-surface flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-outline-variant text-sm">lock</span>
+</div>
+<div>
+<div class="font-label-caps text-label-caps text-outline-variant">SLIPSPACE DRIVE</div>
+<div class="font-data-mono text-[9px] text-outline-variant/70 mt-1">Requires: Nav Lvl 2</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Visible on Mobile, Hidden on Desktop) -->
+<nav class="md:hidden fixed bottom-0 right-0 left-0 z-50 flex justify-around items-center px-4 h-16 bg-surface-container-highest border-t border-outline-variant">
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant transition-colors p-1 rounded-sm w-12" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1">map</span>
+<span class="font-label-caps text-[8px]">Map</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant transition-colors p-1 rounded-sm w-12" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1">rocket_launch</span>
+<span class="font-label-caps text-[8px]">Ship</span>
+</a>
+<a class="bg-primary-container text-on-primary-container rounded-sm px-2 py-1 flex flex-col items-center scale-98 transition-all w-16 shadow-[0_0_8px_rgba(0,229,255,0.3)]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 1;">science</span>
+<span class="font-label-caps text-[8px]">Research</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant transition-colors p-1 rounded-sm w-12" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1">receipt_long</span>
+<span class="font-label-caps text-[8px]">Logbook</span>
+</a>
+</nav>
+<script>
+        // Simple drag to pan functionality for the tech tree canvas
+        const canvas = document.getElementById('tech-canvas');
+        let isDown = false;
+        let startX;
+        let startY;
+        let scrollLeft;
+        let scrollTop;
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDown = true;
+            canvas.style.cursor = 'grabbing';
+            startX = e.pageX - canvas.offsetLeft;
+            startY = e.pageY - canvas.offsetTop;
+            scrollLeft = canvas.scrollLeft;
+            scrollTop = canvas.scrollTop;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDown = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDown = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - canvas.offsetLeft;
+            const y = e.pageY - canvas.offsetTop;
+            const walkX = (x - startX) * 1.5; // Scroll-fast
+            const walkY = (y - startY) * 1.5;
+            canvas.scrollLeft = scrollLeft - walkX;
+            canvas.scrollTop = scrollTop - walkY;
+        });
+        
+        // Initial scroll to show some content
+        window.addEventListener('load', () => {
+             canvas.scrollLeft = 50;
+             canvas.scrollTop = 150;
+             canvas.style.cursor = 'grab';
+        });
+    </script>
+</body></html>

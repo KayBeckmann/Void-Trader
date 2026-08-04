@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Engineering Overview</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#e4e2e4",
+                        "surface-tint": "#00daf3",
+                        "on-tertiary-container": "#864a00",
+                        "surface-dim": "#131315",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#9cf0ff",
+                        "surface-variant": "#353437",
+                        "error-container": "#93000a",
+                        "secondary": "#bcc7dd",
+                        "surface-bright": "#39393b",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#00daf3",
+                        "surface": "#131315",
+                        "on-tertiary-fixed": "#2e1500",
+                        "tertiary-fixed": "#ffdcc1",
+                        "primary": "#c3f5ff",
+                        "on-secondary-fixed": "#111c2c",
+                        "primary-container": "#00e5ff",
+                        "on-primary-fixed": "#001f24",
+                        "on-tertiary-fixed-variant": "#6c3a00",
+                        "surface-container-high": "#2a2a2c",
+                        "inverse-on-surface": "#303032",
+                        "on-primary": "#00363d",
+                        "tertiary-container": "#ffc594",
+                        "surface-container-highest": "#353437",
+                        "on-primary-fixed-variant": "#004f58",
+                        "surface-container": "#1f1f21",
+                        "on-secondary-container": "#aab6cc",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "on-tertiary": "#4c2700",
+                        "inverse-primary": "#006875",
+                        "inverse-surface": "#e4e2e4",
+                        "on-secondary": "#263142",
+                        "secondary-fixed": "#d8e3fa",
+                        "surface-container-lowest": "#0e0e10",
+                        "on-primary-container": "#00626e",
+                        "outline": "#849396",
+                        "tertiary-fixed-dim": "#ffb778",
+                        "outline-variant": "#3b494c",
+                        "error": "#ffb4ab",
+                        "background": "#131315",
+                        "secondary-container": "#3c475a",
+                        "secondary-fixed-dim": "#bcc7dd",
+                        "on-surface-variant": "#bac9cc",
+                        "surface-container-low": "#1b1b1d",
+                        "on-background": "#e4e2e4",
+                        "tertiary": "#ffe9d9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "12px",
+                        "panel-padding": "16px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "title-sm": ["JetBrains Mono"],
+                        "display-lg": ["Space Grotesk"],
+                        "body-md": ["JetBrains Mono"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Space Grotesk"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "title-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "700" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "800" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Styles for Industrial Brutalism */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+        
+        body {
+            background-color: #131315;
+            color: #e4e2e4;
+        }
+
+        .panel-border {
+            border: 1px solid #3b494c; /* outline-variant */
+        }
+        
+        .glow-active {
+            box-shadow: inset 0 0 8px rgba(0, 218, 243, 0.4);
+        }
+
+        /* Scanline animation for headers */
+        .scanline-text {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .scanline-text::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 218, 243, 0.5);
+            animation: scan 2s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        /* Segmented LED Bar */
+        .led-segment {
+            width: calc(100% / 12 - 2px);
+            height: 100%;
+            background-color: #3b494c;
+            margin-right: 2px;
+        }
+        .led-segment.filled-cyan { background-color: #00daf3; }
+        .led-segment.filled-amber { background-color: #ffc594; }
+        .led-segment.filled-red { background-color: #ffb4ab; }
+
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #131315;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b494c;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface h-screen overflow-hidden flex font-body-md select-none">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col items-center py-gutter fixed left-0 top-0 h-full w-20 z-50 bg-surface dark:bg-surface border-r border-outline-variant">
+<div class="mb-8 flex flex-col items-center group cursor-pointer hover:brightness-125 transition-all">
+<div class="w-10 h-10 rounded-sm panel-border flex items-center justify-center bg-surface-container-high overflow-hidden mb-2 relative">
+<img alt="Pilot Profile" class="w-full h-full object-cover mix-blend-screen opacity-80" data-alt="A stylized, low-poly wireframe portrait of a deep-space pilot in a pressurized helmet. The portrait is rendered in high-contrast cyan lines against a deep black background, typical of a retro-futuristic heads-up display. A subtle glitch effect distorts the edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiJKFcpuuF651nZdKDZemKS31rgQxbrbfGSqE6KPunEyKKxDnqLUQ_DgiiK6b4OO7oRcWc9VNBCEPltAt08YCDKBW0JmdcBxBip1wAvuo4b92XnVz-jsJGCC8WpBKVj_F0823gDZq7uYH0rAPJVy2azVnQetE96xHdnzvZBuFf_rzL0072bsi0fKM7P8oCH6MhNyi-AnDWgr5KOU1kNyUz9JpB3n1tBgJr9TA1ZT-z96RuU1PLYYedKw"/>
+</div>
+<span class="font-headline-md text-headline-md text-surface-tint uppercase tracking-tighter">[ COMMAND ]</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant opacity-70">Vessel ID: VT-882</span>
+</div>
+<div class="flex flex-col w-full space-y-4 px-2">
+<!-- Tabs -->
+<!-- Active Tab Logic: Intentionally picking Ship since it's Ship Overview -->
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">map</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Map</span>
+</a>
+<!-- ACTIVE TAB -->
+<a class="w-full h-14 flex flex-col items-center justify-center relative bg-surface-container-highest text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+<span class="font-label-caps text-label-caps absolute bottom-1">Ship</span>
+</a>
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">storefront</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Market</span>
+</a>
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">domain</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Colony</span>
+</a>
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">science</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Research</span>
+</a>
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">groups</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Factions</span>
+</a>
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">security</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Alliance</span>
+</a>
+<a class="w-full h-14 flex flex-col items-center justify-center relative hover:bg-surface-variant hover:text-primary-fixed transition-colors text-on-surface-variant group" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">receipt_long</span>
+<span class="font-label-caps text-label-caps opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-1">Logbook</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-20 mb-16 md:mb-0 relative flex flex-col h-full bg-[#0e0e10]">
+<!-- TopAppBar (Shared Component) -->
+<header class="hidden md:flex justify-between items-center px-panel-padding h-12 w-full z-40 bg-surface-dim/80 border-b border-outline-variant backdrop-blur-md">
+<div class="flex items-center space-x-6">
+<span class="font-title-sm text-title-sm text-surface-tint italic">VOID TRADER</span>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<div class="flex space-x-4">
+<span class="font-data-mono text-data-mono text-error animate-pulse flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error inline-block"></span>
+                        ALERT: CRITICAL HEAT
+                    </span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">SYSTEMS NOMINAL</span>
+</div>
+</div>
+<div class="flex space-x-4">
+<button class="text-on-surface-variant hover:text-primary-fixed hover:brightness-125 transition-all outline-none">
+<span class="material-symbols-outlined">notifications_active</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary-fixed hover:brightness-125 transition-all outline-none">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary-fixed hover:brightness-125 transition-all outline-none">
+<span class="material-symbols-outlined text-error">power_settings_new</span>
+</button>
+</div>
+</header>
+<!-- Engineering Dashboard Layout -->
+<div class="flex-1 overflow-hidden p-gutter flex flex-col md:flex-row gap-gutter">
+<!-- Left Column: Ship Stats & Quick Overview -->
+<aside class="w-full md:w-64 flex flex-col gap-gutter overflow-y-auto">
+<!-- Hull Status Panel -->
+<div class="bg-surface panel-border p-3 flex flex-col relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary-fixed/5 z-0 pointer-events-none"></div>
+<div class="z-10 relative">
+<div class="flex justify-between items-center border-b border-outline-variant pb-2 mb-3">
+<h2 class="font-title-sm text-title-sm text-surface-tint scanline-text uppercase">[ SHIP SPECS ]</h2>
+<span class="font-data-mono text-data-mono text-on-surface-variant">K-MULE</span>
+</div>
+<div class="space-y-3 font-data-mono text-data-mono">
+<div class="flex justify-between">
+<span class="text-on-surface-variant">MASS</span>
+<span class="text-primary-fixed">420t</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">THRUST</span>
+<span class="text-primary-fixed">1.2M N</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">HEAT</span>
+<span class="text-error animate-pulse">65%</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">REACTOR PRI.</span>
+<span class="text-tertiary-container">HIGH</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Systems Alerts -->
+<div class="bg-surface panel-border p-3 flex flex-col">
+<h2 class="font-title-sm text-title-sm text-error uppercase border-b border-error/30 pb-2 mb-3">
+<span class="material-symbols-outlined align-text-bottom text-base mr-1">warning</span> ALERTS
+                    </h2>
+<div class="space-y-2">
+<div class="bg-error-container/20 border border-error/50 p-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<div>
+<div class="font-label-caps text-label-caps text-error">FIRE RISK HGH</div>
+<div class="text-[10px] text-error/70 font-data-mono">Aft Engine Compartment</div>
+</div>
+</div>
+<div class="bg-surface-container-high border border-outline-variant p-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-container">air</span>
+<div>
+<div class="font-label-caps text-label-caps text-tertiary-container">PRESSURE LOSS</div>
+<div class="text-[10px] text-on-surface-variant font-data-mono">Cargo Bay C (Minor)</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Auxiliary Systems -->
+<div class="bg-surface panel-border p-3 flex-1 flex flex-col min-h-[150px]">
+<h2 class="font-title-sm text-title-sm text-on-surface uppercase border-b border-outline-variant pb-2 mb-3">AUXILIARY</h2>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between font-label-caps text-label-caps mb-1">
+<span class="text-on-surface-variant">O2 RESERVES</span>
+<span class="text-surface-tint">88%</span>
+</div>
+<div class="h-2 w-full flex">
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan opacity-20"></div>
+<div class="led-segment"></div>
+<div class="led-segment"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-caps text-label-caps mb-1">
+<span class="text-on-surface-variant">WATER RECLAMATION</span>
+<span class="text-primary-fixed">92%</span>
+</div>
+<div class="h-2 w-full flex">
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment filled-cyan"></div>
+<div class="led-segment"></div>
+<div class="led-segment"></div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center Column: Blueprint Viewport -->
+<section class="flex-1 bg-surface-container-lowest panel-border relative flex items-center justify-center overflow-hidden min-h-[400px]">
+<!-- Grid Background -->
+<div class="absolute inset-0 z-0 opacity-20" style="background-image: radial-gradient(#3b494c 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- Viewport Header -->
+<div class="absolute top-0 left-0 w-full p-2 flex justify-between items-start z-20 pointer-events-none">
+<div class="bg-surface/80 backdrop-blur-sm border border-outline-variant px-3 py-1 inline-flex items-center gap-2 pointer-events-auto">
+<span class="w-2 h-2 rounded-full bg-surface-tint"></span>
+<span class="font-data-mono text-data-mono text-surface-tint">DECK 1 - ENGINEERING</span>
+</div>
+<div class="font-data-mono text-[10px] text-on-surface-variant flex flex-col items-end opacity-70">
+<span>COORD: 44.2X 99.1Y</span>
+<span>ZOOM: 1.2x</span>
+</div>
+</div>
+<!-- Interactive Ship Schematic Map -->
+<!-- We simulate a modular top-down ship interior using HTML/CSS layout blocks -->
+<div class="relative z-10 w-[500px] h-[700px] scale-75 md:scale-100 transform origin-center flex flex-col gap-2 p-4 border-2 border-outline-variant/30">
+<!-- Forward Section -->
+<div class="flex justify-center h-32 w-full gap-2">
+<!-- Life Support -->
+<button class="w-1/3 bg-surface border border-outline-variant hover:border-primary-fixed hover:bg-surface-variant transition-colors relative group focus:outline-none focus:ring-1 focus:ring-surface-tint">
+<span class="absolute top-2 left-2 font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-fixed">LIFE SUPP</span>
+<span class="material-symbols-outlined absolute bottom-2 right-2 text-outline-variant group-hover:text-primary-fixed">air</span>
+</button>
+<!-- Crew Quarters -->
+<button class="w-1/3 bg-surface border border-outline-variant hover:border-primary-fixed hover:bg-surface-variant transition-colors relative group focus:outline-none focus:ring-1 focus:ring-surface-tint">
+<span class="absolute top-2 left-2 font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-fixed">CREW Q</span>
+<span class="material-symbols-outlined absolute bottom-2 right-2 text-outline-variant group-hover:text-primary-fixed">hotel</span>
+</button>
+</div>
+<!-- Mid Section -->
+<div class="flex h-64 w-full gap-2">
+<!-- Cargo Bay -->
+<button class="w-2/3 bg-surface border border-outline-variant hover:border-primary-fixed hover:bg-surface-variant transition-colors relative group focus:outline-none focus:ring-1 focus:ring-surface-tint">
+<div class="absolute inset-2 border border-dashed border-outline-variant/50 pointer-events-none"></div>
+<span class="absolute top-4 left-4 font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-fixed">CARGO BAY B</span>
+<span class="material-symbols-outlined absolute bottom-4 right-4 text-outline-variant group-hover:text-primary-fixed text-3xl">inventory_2</span>
+<!-- Mock crates -->
+<div class="absolute inset-0 flex items-center justify-center opacity-30 gap-1 pointer-events-none">
+<div class="w-8 h-8 border border-outline-variant bg-surface-container-high"></div>
+<div class="w-8 h-8 border border-outline-variant bg-surface-container-high"></div>
+<div class="w-8 h-8 border border-outline-variant bg-surface-container-high"></div>
+</div>
+</button>
+<!-- Corridor / Access -->
+<div class="w-1/3 flex flex-col gap-2">
+<button class="h-1/2 bg-surface border border-outline-variant hover:border-primary-fixed hover:bg-surface-variant transition-colors relative group focus:outline-none focus:ring-1 focus:ring-surface-tint">
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-fixed absolute top-2 left-2">MAINT. C</span>
+</button>
+<button class="h-1/2 bg-surface border border-outline-variant hover:border-primary-fixed hover:bg-surface-variant transition-colors relative group focus:outline-none focus:ring-1 focus:ring-surface-tint">
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-fixed absolute top-2 left-2">MAINT. D</span>
+</button>
+</div>
+</div>
+<!-- Aft Section (Reactors / Engines) -->
+<div class="flex h-48 w-full gap-2 relative">
+<!-- Active Selected Room: Reactor -->
+<button class="w-1/2 bg-surface border border-surface-tint glow-active relative group focus:outline-none z-10">
+<!-- Scanning line effect over active room -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+<div class="w-full h-[2px] bg-surface-tint absolute top-0 animate-[scan_3s_linear_infinite]"></div>
+</div>
+<span class="absolute top-2 left-2 font-label-caps text-label-caps text-surface-tint font-bold">REACTOR CORE</span>
+<span class="material-symbols-outlined absolute bottom-2 right-2 text-surface-tint animate-pulse">settings_input_component</span>
+<!-- Danger Indicator -->
+<div class="absolute bottom-2 left-2 flex items-center gap-1 bg-error-container/80 px-1 py-0.5 border border-error">
+<span class="material-symbols-outlined text-[12px] text-error">warning</span>
+<span class="font-data-mono text-[10px] text-error">TEMP HGH</span>
+</div>
+</button>
+<!-- Engine -->
+<button class="w-1/2 bg-surface border border-outline-variant hover:border-primary-fixed hover:bg-surface-variant transition-colors relative group focus:outline-none">
+<span class="absolute top-2 left-2 font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary-fixed">MAIN THRUSTERS</span>
+<span class="material-symbols-outlined absolute bottom-2 right-2 text-outline-variant group-hover:text-primary-fixed">speed</span>
+<!-- Thrust plume visualization -->
+<div class="absolute -bottom-8 left-1/2 -translate-x-1/2 w-16 h-8 border border-outline-variant/50 border-t-0 flex justify-center opacity-50">
+<div class="w-10 h-6 bg-tertiary-container/20 mt-1 blur-sm"></div>
+</div>
+</button>
+</div>
+</div>
+</section>
+<!-- Right Column: Inspector Panel -->
+<aside class="w-full md:w-80 bg-surface panel-border flex flex-col h-[512px] md:h-full shrink-0">
+<div class="p-3 border-b border-outline-variant bg-surface-container-high flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint">settings_input_component</span>
+<h2 class="font-headline-md text-headline-md text-on-surface uppercase m-0 leading-none">REACTOR</h2>
+</div>
+<span class="bg-surface px-2 py-0.5 font-label-caps text-label-caps border border-surface-tint text-surface-tint">ONLINE</span>
+</div>
+<div class="p-4 flex-1 overflow-y-auto space-y-6">
+<!-- Output Metric -->
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface-variant mb-2">[ ENERGY OUTPUT ]</h3>
+<div class="flex items-end justify-between mb-1">
+<span class="font-display-lg text-display-lg text-primary-fixed leading-none">3.8<span class="text-xl">GW</span></span>
+<span class="font-data-mono text-data-mono text-tertiary-container">+0.2GW SURGE</span>
+</div>
+<!-- Graph mockup -->
+<div class="h-16 border border-outline-variant bg-surface-container-lowest relative flex items-end p-1 gap-[2px]">
+<div class="w-full h-full absolute inset-0 opacity-10 bg-[linear-gradient(0deg,transparent_24%,#00daf3_25%,#00daf3_26%,transparent_27%,transparent_74%,#00daf3_75%,#00daf3_76%,transparent_77%,transparent)] bg-[length:10px_10px]"></div>
+<!-- Bars -->
+<div class="flex-1 bg-surface-variant h-[40%]"></div>
+<div class="flex-1 bg-surface-variant h-[45%]"></div>
+<div class="flex-1 bg-surface-variant h-[42%]"></div>
+<div class="flex-1 bg-surface-variant h-[50%]"></div>
+<div class="flex-1 bg-surface-variant h-[55%]"></div>
+<div class="flex-1 bg-surface-variant h-[60%]"></div>
+<div class="flex-1 bg-surface-variant h-[58%]"></div>
+<div class="flex-1 bg-surface-variant h-[65%]"></div>
+<div class="flex-1 bg-primary-fixed h-[80%] border-t border-surface-tint"></div>
+<div class="flex-1 bg-primary-fixed h-[85%] border-t border-surface-tint"></div>
+<div class="flex-1 bg-surface-tint h-[95%] border-t border-white glow-active"></div>
+</div>
+</div>
+<!-- Consumption Metric -->
+<div>
+<h3 class="font-title-sm text-title-sm text-on-surface-variant mb-2">[ FUEL CONSUMPTION ]</h3>
+<div class="bg-surface-container p-3 border border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 border border-outline flex items-center justify-center bg-surface">
+<span class="material-symbols-outlined text-outline text-sm">oil_barrel</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface">HE-3 ISOTOPE</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant">Flow Rate</span>
+</div>
+</div>
+<span class="font-data-mono text-data-mono text-on-surface">12kg / hr</span>
+</div>
+</div>
+<!-- Heat Buildup Alert Metric -->
+<div>
+<h3 class="font-title-sm text-title-sm text-error mb-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">warning</span> 
+                            [ HEAT BUILDUP ]
+                        </h3>
+<div class="space-y-2">
+<div class="flex justify-between font-data-mono text-data-mono">
+<span class="text-on-surface-variant">CORE TEMP</span>
+<span class="text-error font-bold">4,200K</span>
+</div>
+<div class="h-3 w-full border border-outline-variant bg-surface-container-lowest p-0.5">
+<div class="h-full bg-gradient-to-r from-surface-tint via-tertiary-container to-error w-[85%] relative">
+<div class="absolute right-0 top-0 bottom-0 w-[2px] bg-white animate-pulse"></div>
+</div>
+</div>
+<div class="flex justify-between font-label-caps text-[9px] text-outline">
+<span>OPTIMAL</span>
+<span>WARN</span>
+<span class="text-error">CRITICAL</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="pt-4 border-t border-outline-variant space-y-2 mt-auto">
+<button class="w-full h-10 bg-surface border border-surface-tint text-surface-tint font-label-caps text-label-caps hover:bg-surface-tint hover:text-black transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">tune</span> ADJUST FLOW
+                        </button>
+<button class="w-full h-10 bg-error-container/20 border border-error text-error font-label-caps text-label-caps hover:bg-error hover:text-black transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">power_settings_new</span> EMERGENCY SCRAM
+                        </button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- BottomNavBar (Shared Component - Mobile Only per Semantic Rules, but forcing Bottom Resource Bar as requested by user prompt for "Consistent SideNavBar and Bottom Resource Bar") -->
+<!-- Usually responsive rules hide this on Web, but prompt requested it visible. I will build it to spec from JSON but allow it to render based on layout needs. Assuming fixed to bottom across the board to satisfy "Bottom Resource Bar". -->
+<!-- We offset left by 20 (5rem) on desktop to account for SideNavBar -->
+<nav class="fixed bottom-0 right-0 left-0 md:left-20 h-16 z-50 flex justify-around items-center px-4 bg-surface-container-highest border-t border-outline-variant">
+<!-- Tab 1: Credits -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">payments</span>
+<span class="font-label-caps text-label-caps">Credits</span>
+</a>
+<!-- Tab 2: Ore -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">category</span>
+<span class="font-label-caps text-label-caps">Ore</span>
+</a>
+<!-- Tab 3: Metal -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">layers</span>
+<span class="font-label-caps text-label-caps">Metal</span>
+</a>
+<!-- Tab 4: Water -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">water_drop</span>
+<span class="font-label-caps text-label-caps">Water</span>
+</a>
+<!-- Tab 5: Food -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">restaurant</span>
+<span class="font-label-caps text-label-caps">Food</span>
+</a>
+<!-- Tab 6: O2 -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">air</span>
+<span class="font-label-caps text-label-caps">O2</span>
+</a>
+<!-- Tab 7: Fuel -->
+<!-- Since we are looking at Engineering/Reactor, highlighting Fuel might make sense, or no active state. The JSON dictates an active state for Nav items. We'll leave them inactive as this is a resource bar in this context, not primary nav, despite being generated from the BottomNavBar JSON. -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">oil_barrel</span>
+<span class="font-label-caps text-label-caps">Fuel</span>
+</a>
+<!-- Tab 8: Warp -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">auto_awesome_motion</span>
+<span class="font-label-caps text-label-caps">Warp</span>
+</a>
+<!-- Tab 9: Data -->
+<a class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors py-1 px-2 rounded-sm group min-w-[48px]" href="#">
+<span class="material-symbols-outlined text-[20px] mb-1" style="font-variation-settings: 'FILL' 0;">memory</span>
+<span class="font-label-caps text-label-caps">Data</span>
+</a>
+</nav>
+</body></html>

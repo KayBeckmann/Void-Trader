@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Flight Systems</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#e4e2e4",
+                        "surface-tint": "#00daf3",
+                        "on-tertiary-container": "#864a00",
+                        "surface-dim": "#131315",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#9cf0ff",
+                        "surface-variant": "#353437",
+                        "error-container": "#93000a",
+                        "secondary": "#bcc7dd",
+                        "surface-bright": "#39393b",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#00daf3",
+                        "surface": "#131315",
+                        "on-tertiary-fixed": "#2e1500",
+                        "tertiary-fixed": "#ffdcc1",
+                        "primary": "#c3f5ff",
+                        "on-secondary-fixed": "#111c2c",
+                        "primary-container": "#00e5ff",
+                        "on-primary-fixed": "#001f24",
+                        "on-tertiary-fixed-variant": "#6c3a00",
+                        "surface-container-high": "#2a2a2c",
+                        "inverse-on-surface": "#303032",
+                        "on-primary": "#00363d",
+                        "tertiary-container": "#ffc594",
+                        "surface-container-highest": "#353437",
+                        "on-primary-fixed-variant": "#004f58",
+                        "surface-container": "#1f1f21",
+                        "on-secondary-container": "#aab6cc",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "on-tertiary": "#4c2700",
+                        "inverse-primary": "#006875",
+                        "inverse-surface": "#e4e2e4",
+                        "on-secondary": "#263142",
+                        "secondary-fixed": "#d8e3fa",
+                        "surface-container-lowest": "#0e0e10",
+                        "on-primary-container": "#00626e",
+                        "outline": "#849396",
+                        "tertiary-fixed-dim": "#ffb778",
+                        "outline-variant": "#3b494c",
+                        "error": "#ffb4ab",
+                        "background": "#131315",
+                        "secondary-container": "#3c475a",
+                        "secondary-fixed-dim": "#bcc7dd",
+                        "on-surface-variant": "#bac9cc",
+                        "surface-container-low": "#1b1b1d",
+                        "on-background": "#e4e2e4",
+                        "tertiary": "#ffe9d9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "12px",
+                        "panel-padding": "16px",
+                        "margin-mobile": "16px",
+                        "unit": "4px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "title-sm": ["JetBrains Mono"],
+                        "display-lg": ["Space Grotesk"],
+                        "body-md": ["JetBrains Mono"],
+                        "data-mono": ["JetBrains Mono"],
+                        "headline-md": ["Space Grotesk"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "title-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "700" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "800" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .radar-sweep {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(0, 218, 243, 0.1) 95%, rgba(0, 218, 243, 0.6) 100%);
+            transform-origin: 0 0;
+            animation: sweep 4s linear infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes sweep {
+            0% { transform: rotate(0deg) translate(-50%, -50%); }
+            100% { transform: rotate(360deg) translate(-50%, -50%); }
+        }
+
+        .pulse-ping {
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 30;
+            opacity: 0.15;
+        }
+
+        .tech-border {
+            border: 1px solid var(--tw-colors-outline-variant);
+        }
+        
+        .glow-inner {
+            box-shadow: inset 0 0 8px rgba(0, 218, 243, 0.2);
+        }
+
+        .brutal-panel {
+            background-color: var(--tw-colors-surface-container);
+            border: 1px solid var(--tw-colors-outline-variant);
+            position: relative;
+        }
+        
+        .brutal-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--tw-colors-surface-tint);
+            opacity: 0.5;
+        }
+
+        .segmented-bar {
+            display: flex;
+            gap: 2px;
+            height: 12px;
+        }
+        
+        .segment {
+            flex: 1;
+            background-color: var(--tw-colors-surface-variant);
+            border: 1px solid var(--tw-colors-outline-variant);
+        }
+        .segment.active {
+            background-color: var(--tw-colors-surface-tint);
+            box-shadow: 0 0 4px var(--tw-colors-surface-tint);
+            border-color: transparent;
+        }
+        .segment.danger {
+            background-color: var(--tw-colors-error);
+            box-shadow: 0 0 4px var(--tw-colors-error);
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen w-screen overflow-hidden flex flex-col md:flex-row relative selection:bg-surface-tint selection:text-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-0 md:left-20 z-40 flex justify-between items-center px-panel-padding bg-surface-dim/80 border-b border-outline-variant backdrop-blur-md h-12">
+<div class="flex items-center gap-4">
+<span class="font-title-sm text-title-sm text-surface-tint italic">VOID TRADER</span>
+</div>
+<div class="flex-1 flex justify-center hidden md:flex">
+<!-- Space for top nav links if needed -->
+<span class="text-error animate-pulse font-data-mono text-data-mono mx-4">ALERT: CRITICAL HEAT</span>
+<span class="text-on-surface-variant font-data-mono text-data-mono mx-4 hover:text-primary-fixed hover:brightness-125 cursor-pointer">SYSTEMS NOMINAL</span>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="material-symbols-outlined hover:text-primary-fixed cursor-pointer" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+<span class="material-symbols-outlined hover:text-primary-fixed cursor-pointer" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="material-symbols-outlined hover:text-primary-fixed cursor-pointer" style="font-variation-settings: 'FILL' 0;">power_settings_new</span>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full z-50 flex-col items-center py-gutter bg-surface dark:bg-surface w-20 border-r border-outline-variant pt-16">
+<div class="flex flex-col gap-6 mt-4 w-full px-2">
+<button class="flex flex-col items-center text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint w-full py-2 bg-surface-variant/20">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+<span class="font-label-caps text-label-caps">Ship</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">map</span>
+<span class="font-label-caps text-label-caps">Map</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">storefront</span>
+<span class="font-label-caps text-label-caps">Market</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">domain</span>
+<span class="font-label-caps text-label-caps">Colony</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">science</span>
+<span class="font-label-caps text-label-caps">Research</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">groups</span>
+<span class="font-label-caps text-label-caps">Factions</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">security</span>
+<span class="font-label-caps text-label-caps">Alliance</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed w-full py-2 rounded transition-transform duration-150 active:scale-95 border-l-2 border-transparent">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">receipt_long</span>
+<span class="font-label-caps text-label-caps">Logbook</span>
+</button>
+</div>
+<div class="mt-auto mb-4 w-full text-center px-1">
+<div class="font-label-caps text-[8px] text-surface-tint border-t border-outline-variant pt-2 mt-2 truncate">VT-882</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 relative w-full h-full md:ml-20 pt-12 pb-16 md:pb-0 overflow-hidden bg-[#0A0A0C]">
+<!-- Viewport Canvas (The Space Background) -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-auto" data-alt="A deep space top-down view of the Vega Run star system in an industrial brutalist aesthetic. The background is a vast, dark void (deep blacks #0e0e10) scattered with subtle distant stars. A large, rugged planet with industrial textures and muted earthy tones (copper, rust) sits in the upper left. A dense asteroid belt of jagged, graphite-colored rocks curves through the space. Cutting through the dark void are intensely glowing cyan (#00daf3) 'Speedway' lanes, looking like highly technical light bridges connecting massive, brutalist metal jump gates. The scene is illuminated by harsh, high-contrast directional lighting, giving it a gritty, tactical sensor-display feel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRpTJasoIBhdMpXRzxUxVfZ2vukt9zf24w3e9ffofe3HsLYPmJXpvi5wyuje-tJS9LuWWLPOAdOMR_KZW7dfnVJTFxgOe_9ece5yfQmlyRxO5uMEHIxZx0N6XfsKLtvXBTnNmHqBHTHb6LSzaBRB76Kxx5ubqO48nQGaORtsNm6Hx_lYmvl-RbhNz0NQe7sSC64V-si5t3BXK4hmKED9bnDqgvX2iKwnY6ipwxqBcra933kUxDQOLyHQ')">
+<div class="scanline"></div>
+<!-- Simulated Grid Background -->
+<div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(var(--tw-colors-outline-variant) 1px, transparent 1px), linear-gradient(90deg, var(--tw-colors-outline-variant) 1px, transparent 1px); background-size: 40px 40px;"></div>
+<!-- Radar overlay -->
+<div class="absolute inset-0 overflow-hidden pointer-events-none z-10 flex items-center justify-center">
+<div class="relative w-[800px] h-[800px] rounded-full border border-surface-tint/20">
+<div class="absolute inset-0 rounded-full border border-surface-tint/10 scale-75"></div>
+<div class="absolute inset-0 rounded-full border border-surface-tint/10 scale-50"></div>
+<div class="absolute inset-0 rounded-full border border-surface-tint/5 scale-25"></div>
+<div class="absolute top-1/2 left-0 w-full h-px bg-surface-tint/20"></div>
+<div class="absolute top-0 left-1/2 w-px h-full bg-surface-tint/20"></div>
+<div class="radar-sweep"></div>
+</div>
+</div>
+<!-- Entities on Canvas -->
+<!-- Player Ship -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center group cursor-crosshair">
+<div class="w-4 h-4 bg-surface-tint rotate-45 border border-primary-fixed shadow-[0_0_10px_rgba(0,218,243,0.8)] z-10"></div>
+<!-- Thrust trail -->
+<div class="absolute top-4 w-1 h-12 bg-gradient-to-b from-surface-tint to-transparent blur-sm"></div>
+<div class="absolute -bottom-8 bg-surface-container-high border border-surface-tint text-surface-tint font-label-caps text-[10px] px-1 py-[2px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">KESTREL MULE</div>
+</div>
+<!-- Speedway Gate -->
+<div class="absolute top-1/3 left-2/3 transform -translate-x-1/2 -translate-y-1/2 z-10">
+<div class="w-12 h-12 border-2 border-surface-variant flex items-center justify-center relative">
+<div class="w-8 h-8 border border-outline-variant rotate-45 flex items-center justify-center bg-surface-dim/80">
+<div class="w-2 h-2 bg-secondary-container"></div>
+</div>
+<!-- Beacons -->
+<div class="absolute -top-1 -left-1 w-2 h-2 bg-surface-tint animate-pulse"></div>
+<div class="absolute -bottom-1 -right-1 w-2 h-2 bg-surface-tint animate-pulse"></div>
+</div>
+<!-- Speedway Lane -->
+<div class="absolute top-1/2 right-1/2 w-[300px] h-2 bg-surface-tint/30 transform -rotate-15 origin-right rounded-full blur-[2px] shadow-[0_0_15px_rgba(0,218,243,0.5)]"></div>
+</div>
+<!-- Asteroid Pings -->
+<div class="absolute bottom-1/4 left-1/3 w-2 h-2 rounded-full bg-error z-10">
+<div class="absolute inset-0 rounded-full bg-error pulse-ping opacity-75"></div>
+</div>
+<div class="absolute bottom-[28%] left-[30%] w-1.5 h-1.5 rounded-full bg-error/70 z-10"></div>
+<div class="absolute bottom-[22%] left-[36%] w-2 h-2 rounded-full bg-error z-10">
+<div class="absolute inset-0 rounded-full bg-error pulse-ping opacity-75 animation-delay-500"></div>
+</div>
+</div> <!-- End Viewport Canvas -->
+<!-- Tactical Overlay (Left) -->
+<div class="absolute top-16 left-panel-padding z-30 flex flex-col gap-unit w-64 pointer-events-none">
+<!-- Header -->
+<div class="font-headline-md text-headline-md text-surface-tint uppercase tracking-tighter mb-2 flex items-center gap-2">
+<span class="w-2 h-6 bg-surface-tint"></span>
+<span>[ FLIGHT SYS ]</span>
+</div>
+<!-- Tech Data Panel -->
+<div class="brutal-panel p-3 pointer-events-auto backdrop-blur-sm bg-surface-dim/90">
+<div class="font-data-mono text-data-mono text-on-surface-variant mb-4 flex justify-between border-b border-outline-variant pb-1">
+<span>STATUS</span>
+<span class="text-surface-tint">IN TRANSIT</span>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Speed -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-caps text-label-caps">
+<span class="text-on-surface-variant">VELOCITY</span>
+<span class="text-primary-fixed">420 m/s</span>
+</div>
+<div class="segmented-bar">
+<div class="segment active"></div><div class="segment active"></div><div class="segment active"></div>
+<div class="segment active"></div><div class="segment active"></div><div class="segment"></div>
+<div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+</div>
+</div>
+<!-- Thrust -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-caps text-label-caps">
+<span class="text-on-surface-variant">MAIN THRUST</span>
+<span class="text-primary-fixed">80%</span>
+</div>
+<div class="segmented-bar">
+<div class="segment active"></div><div class="segment active"></div><div class="segment active"></div>
+<div class="segment active"></div><div class="segment active"></div><div class="segment active"></div>
+<div class="segment active"></div><div class="segment active"></div><div class="segment"></div><div class="segment"></div>
+</div>
+</div>
+<!-- Fuel -->
+<div class="flex flex-col gap-1">
+<div class="flex justify-between font-label-caps text-label-caps">
+<span class="text-on-surface-variant">FUEL DRAW</span>
+<span class="text-error">12.4 kg/s</span>
+</div>
+<div class="segmented-bar">
+<div class="segment active"></div><div class="segment active"></div><div class="segment active"></div>
+<div class="segment active"></div><div class="segment active"></div><div class="segment active"></div>
+<div class="segment danger"></div><div class="segment danger"></div><div class="segment"></div><div class="segment"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Risk Panel -->
+<div class="brutal-panel mt-2 p-2 pointer-events-auto backdrop-blur-sm bg-surface-dim/90 flex items-center justify-between border-l-error before:bg-error">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="font-data-mono text-data-mono text-on-surface">PIRATE RISK</span>
+</div>
+<span class="font-title-sm text-title-sm text-error">15%</span>
+</div>
+</div>
+<!-- Inspector Overlay (Right) -->
+<div class="absolute top-16 right-panel-padding z-30 w-72 pointer-events-none hidden lg:block">
+<!-- Target Reticle Decoration -->
+<div class="w-full flex justify-end mb-2">
+<svg fill="none" height="24" stroke="var(--tw-colors-surface-tint)" stroke-width="1" viewbox="0 0 24 24" width="24">
+<path d="M4 4v4m0-4h4M20 4v4m0-4h-4M4 20v-4m0 4h4M20 20v-4m0 4h-4M12 8v8M8 12h8"></path>
+</svg>
+</div>
+<div class="brutal-panel p-4 pointer-events-auto backdrop-blur-md bg-surface-container-low/90 glow-inner">
+<div class="border-b border-surface-variant pb-2 mb-3">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">TARGET LOCK</div>
+<div class="font-headline-md text-headline-md text-on-surface uppercase truncate">Speedway Gate</div>
+<div class="font-data-mono text-[10px] text-surface-tint mt-1">ID: SWG-VGA-09</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-end border-b border-outline-variant/50 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">POWER NODE</span>
+<span class="font-data-mono text-data-mono text-primary-fixed">92%</span>
+</div>
+<div class="flex justify-between items-end border-b border-outline-variant/50 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">TOLL REQ</span>
+<span class="font-data-mono text-data-mono text-tertiary-fixed flex items-center gap-1">
+                            150 <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+</span>
+</div>
+<div class="flex flex-col gap-1 pt-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">JURISDICTION</span>
+<div class="bg-surface-variant p-2 border border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">gavel</span>
+<span class="font-data-mono text-data-mono text-on-surface truncate">Helion Trade Compact</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full mt-4 bg-surface-container border border-surface-tint text-surface-tint font-title-sm text-title-sm py-2 hover:bg-surface-tint hover:text-on-primary transition-colors duration-150 uppercase flex justify-center items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">flight_takeoff</span>
+                    INITIATE JUMP
+                </button>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile / Unified Resource Bar) -->
+<!-- Applying BottomNavBar logic as requested, acting as resource bar here -->
+<nav class="fixed bottom-0 right-0 left-0 md:left-20 z-50 flex justify-around items-center px-4 bg-surface-container-highest border-t border-outline-variant h-16">
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-caps text-[9px]">Credits</span>
+</div>
+<div class="bg-primary-container text-on-primary-container rounded-sm px-2 py-1 flex flex-col items-center scale-98 transition-all w-12 cursor-pointer border border-primary-fixed">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">category</span>
+<span class="font-label-caps text-[9px]">Ore</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">layers</span>
+<span class="font-label-caps text-[9px]">Metal</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer hidden sm:flex">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+<span class="font-label-caps text-[9px]">Water</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer hidden sm:flex">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+<span class="font-label-caps text-[9px]">Food</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer hidden md:flex">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">air</span>
+<span class="font-label-caps text-[9px]">O2</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">oil_barrel</span>
+<span class="font-label-caps text-[9px]">Fuel</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer hidden md:flex">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">auto_awesome_motion</span>
+<span class="font-label-caps text-[9px]">Warp</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant p-1 rounded-sm w-12 transition-all cursor-pointer hidden lg:flex">
+<span class="material-symbols-outlined mb-1 text-[20px]" style="font-variation-settings: 'FILL' 1;">memory</span>
+<span class="font-label-caps text-[9px]">Data</span>
+</div>
+</nav>
+</body></html>

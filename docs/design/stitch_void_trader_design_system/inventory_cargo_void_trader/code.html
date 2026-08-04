@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Void Trader - Cargo Manifest</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#bac9cc",
+                        "surface-dim": "#131315",
+                        "on-surface": "#e4e2e4",
+                        "secondary-fixed-dim": "#bcc7dd",
+                        "on-secondary-fixed-variant": "#3c475a",
+                        "secondary": "#bcc7dd",
+                        "primary-fixed-dim": "#00daf3",
+                        "tertiary": "#ffe9d9",
+                        "surface-variant": "#353437",
+                        "surface-container": "#1f1f21",
+                        "on-primary-fixed": "#001f24",
+                        "primary": "#c3f5ff",
+                        "on-tertiary-container": "#864a00",
+                        "on-error-container": "#ffdad6",
+                        "surface-bright": "#39393b",
+                        "secondary-fixed": "#d8e3fa",
+                        "on-secondary-fixed": "#111c2c",
+                        "outline-variant": "#3b494c",
+                        "primary-container": "#00e5ff",
+                        "tertiary-container": "#ffc594",
+                        "primary-fixed": "#9cf0ff",
+                        "on-primary": "#00363d",
+                        "tertiary-fixed": "#ffdcc1",
+                        "secondary-container": "#3c475a",
+                        "on-secondary": "#263142",
+                        "tertiary-fixed-dim": "#ffb778",
+                        "surface-container-high": "#2a2a2c",
+                        "on-primary-container": "#00626e",
+                        "on-tertiary": "#4c2700",
+                        "error-container": "#93000a",
+                        "surface-tint": "#00daf3",
+                        "inverse-surface": "#e4e2e4",
+                        "inverse-on-surface": "#303032",
+                        "surface-container-low": "#1b1b1d",
+                        "outline": "#849396",
+                        "on-secondary-container": "#aab6cc",
+                        "on-tertiary-fixed": "#2e1500",
+                        "on-error": "#690005",
+                        "background": "#131315",
+                        "surface-container-lowest": "#0e0e10",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed-variant": "#6c3a00",
+                        "inverse-primary": "#006875",
+                        "surface": "#131315",
+                        "on-background": "#e4e2e4",
+                        "surface-container-highest": "#353437",
+                        "on-primary-fixed-variant": "#004f58"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "gutter": "12px",
+                        "margin-desktop": "32px",
+                        "panel-padding": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Space Grotesk"],
+                        "title-sm": ["JetBrains Mono"],
+                        "body-md": ["JetBrains Mono"],
+                        "data-mono": ["JetBrains Mono"],
+                        "label-caps": ["JetBrains Mono"],
+                        "display-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "title-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["13px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "800" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        .crt-scanline {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+        .text-glow { text-shadow: 0 0 8px theme('colors.surface-tint'); }
+        .border-glow-active { box-shadow: inset 0 0 4px theme('colors.surface-tint'); }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden flex flex-col md:flex-row h-screen antialiased selection:bg-surface-tint selection:text-background">
+<div class="fixed inset-0 crt-scanline z-50 mix-blend-overlay"></div>
+<!-- TopAppBar (Desktop hidden md:flex) -->
+<header class="hidden md:flex fixed top-0 right-0 left-20 z-40 justify-between items-center px-panel-padding bg-surface-dim/80 border-b border-outline-variant backdrop-blur-md h-12">
+<div class="flex items-center gap-gutter">
+<span class="font-title-sm text-title-sm text-surface-tint italic">VOID TRADER</span>
+</div>
+<nav class="flex gap-margin-desktop font-data-mono text-data-mono">
+<span class="text-error animate-pulse">ALERT: CRITICAL HEAT</span>
+<span class="text-on-surface-variant hover:text-primary-fixed cursor-pointer transition-colors duration-150">SYSTEMS NOMINAL</span>
+</nav>
+<div class="flex gap-gutter">
+<button aria-label="notifications_active" class="text-on-surface-variant hover:text-primary-fixed transition-colors duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+</button>
+<button aria-label="settings" class="text-on-surface-variant hover:text-primary-fixed transition-colors duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+<button aria-label="power_settings_new" class="text-on-surface-variant hover:text-primary-fixed transition-colors duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">power_settings_new</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop hidden md:flex) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full z-50 flex-col items-center py-gutter docked w-20 border-r border-outline-variant bg-surface">
+<div class="mb-margin-desktop text-center">
+<div class="w-12 h-12 bg-surface-variant rounded-sm border border-outline-variant mb-2 overflow-hidden mx-auto">
+<img alt="Pilot Profile" class="w-full h-full object-cover" data-alt="A gritty, low-res pixel art portrait of a rugged space freighter pilot. The character has cybernetic implants and wears a heavy, worn industrial flight suit. High-contrast lighting with harsh neon blue and amber accents against a dark, metallic background. Industrial brutalism aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHaxuF1mh-ccqaaGcqQ5WS23eOs6IOSJ0KUMd7aqTC63UlrqpWMrSjd7i1Ps-fiSSiCikEKJqX-pHiTMVWtM2QnC4cJGNBG8EFQbv7h69Jmof5Tl3ZkGiKyNkhOVOJfK_yWjA-7Wa5Z3icDkuCVy-GIZ5z-hcWgPaBx_XgexSFJTPXSFFfvybkjAnIe45o0dKRd7MWoNr8uWzayPb5tzmbF0cTJvQhRFT2QSS68gDY8PPM8yjuPpQSKA"/>
+</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant flex flex-col">
+<span class="font-headline-md text-headline-md text-surface-tint uppercase tracking-tighter">[ COMMAND ]</span>
+<span class="text-[9px]">Vessel ID: VT-882</span>
+</div>
+</div>
+<div class="flex flex-col w-full px-2 gap-unit">
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">map</span>
+<span class="font-label-caps text-label-caps mt-1">Map</span>
+</button>
+<button class="flex flex-col items-center py-2 text-surface-tint drop-shadow-[0_0_8px_rgba(0,218,243,0.8)] border-l-2 border-surface-tint bg-surface-variant/20 scale-95 transition-transform duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+<span class="font-label-caps text-label-caps mt-1">Ship</span>
+</button>
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">storefront</span>
+<span class="font-label-caps text-label-caps mt-1">Market</span>
+</button>
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">domain</span>
+<span class="font-label-caps text-label-caps mt-1">Colony</span>
+</button>
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">science</span>
+<span class="font-label-caps text-label-caps mt-1">Research</span>
+</button>
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">groups</span>
+<span class="font-label-caps text-label-caps mt-1">Factions</span>
+</button>
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">security</span>
+<span class="font-label-caps text-label-caps mt-1">Alliance</span>
+</button>
+<button class="flex flex-col items-center py-2 text-on-surface-variant hover:bg-surface-variant hover:text-primary-fixed transition-colors duration-150 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">receipt_long</span>
+<span class="font-label-caps text-label-caps mt-1">Logbook</span>
+</button>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col md:ml-20 md:mt-12 mb-16 md:mb-0 h-[calc(100vh-64px)] md:h-[calc(100vh-48px)] p-panel-padding gap-panel-padding bg-background relative overflow-hidden">
+<!-- Header / Filters -->
+<div class="flex justify-between items-end border-b border-outline-variant pb-2">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface uppercase tracking-widest">[ CARGO MANIFEST ]</h1>
+<p class="font-data-mono text-data-mono text-on-surface-variant mt-1">CAPACITY: 420 / 500 SCU <span class="text-error ml-4 animate-pulse">WARNING: OVERMASS</span></p>
+</div>
+<div class="flex gap-unit">
+<button class="px-3 py-1 border border-outline-variant text-on-surface bg-surface-container font-label-caps text-label-caps uppercase hover:bg-surface-variant transition-colors">All</button>
+<button class="px-3 py-1 border border-surface-tint text-background bg-surface-tint font-label-caps text-label-caps uppercase text-glow border-glow-active">Raw</button>
+<button class="px-3 py-1 border border-outline-variant text-on-surface bg-surface-container font-label-caps text-label-caps uppercase hover:bg-surface-variant transition-colors">Refined</button>
+<button class="px-3 py-1 border border-outline-variant text-on-surface bg-surface-container font-label-caps text-label-caps uppercase hover:bg-surface-variant transition-colors">Food</button>
+<button class="px-3 py-1 border border-outline-variant text-on-surface bg-surface-container font-label-caps text-label-caps uppercase hover:bg-surface-variant transition-colors">Tech</button>
+<button class="px-3 py-1 border border-outline-variant text-error bg-surface-container font-label-caps text-label-caps uppercase hover:bg-error-container hover:text-on-error-container transition-colors">Illegal</button>
+</div>
+</div>
+<div class="flex flex-1 gap-panel-padding overflow-hidden">
+<!-- Inventory Grid -->
+<div class="flex-1 bg-surface-container border border-outline-variant p-unit overflow-y-auto">
+<div class="grid grid-cols-8 gap-unit auto-rows-max" id="inventory-grid">
+<!-- Javascript will populate 64 slots here -->
+</div>
+</div>
+<!-- Inspector Panel -->
+<aside class="w-80 bg-surface-container border border-outline-variant flex flex-col">
+<div class="p-gutter border-b border-outline-variant bg-surface-container-high flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant">ITEM DIAGNOSTICS</span>
+<span class="material-symbols-outlined text-surface-tint text-[18px]">query_stats</span>
+</div>
+<div class="p-panel-padding flex-1 flex flex-col">
+<div class="w-full aspect-square border border-surface-tint bg-surface-dim mb-4 flex items-center justify-center border-glow-active relative overflow-hidden">
+<img alt="Selected Item" class="w-3/4 h-3/4 object-contain filter drop-shadow-[0_0_12px_rgba(0,218,243,0.6)]" data-alt="A macro shot of a raw chunk of glowing blue crystalline iron ore, floating in a dark vacuum. The ore is highly detailed, showing rough, faceted textures with internal luminescence. Industrial brutalist UI frame surrounds it. Cinematic lighting, stark shadows, and high contrast against a pitch-black background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDocZyyo776DvHu3H7uc1-omVvfcLW2iYyXDqqpORW2ha5_ksSsOykHa1N8spw1zPbEQYZ8ws7V72D9yupXGGPyw3PMgMLPvS9t7eA-Mmbv7Wvt-mD-ZM1TnMq6Bc0OfYl330gz_rbTrWULwj8-wXMH52RUsDtyew9oOiadN4-qZnEefVR1rMDgKtIiW6wLjbmouD_IVlMl-A_PHPTfSdz2yRj7gsch6v0nPtl_G3T38cJ-WXLXazsi5Q"/>
+<div class="absolute inset-0 bg-surface-tint/5 pointer-events-none"></div>
+</div>
+<h2 class="font-title-sm text-title-sm text-surface-tint uppercase mb-1">Voltaic Iron Ore</h2>
+<p class="font-data-mono text-data-mono text-on-surface-variant mb-6 text-xs uppercase">Class-II Raw Material</p>
+<div class="space-y-3 mb-6">
+<div class="flex justify-between border-b border-outline-variant/50 pb-1">
+<span class="font-data-mono text-data-mono text-on-surface-variant">Mass</span>
+<span class="font-data-mono text-data-mono text-on-surface">42.5 KG</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/50 pb-1">
+<span class="font-data-mono text-data-mono text-on-surface-variant">Stack Size</span>
+<span class="font-data-mono text-data-mono text-on-surface">64 / 64</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/50 pb-1">
+<span class="font-data-mono text-data-mono text-on-surface-variant">Legality</span>
+<span class="font-data-mono text-data-mono text-surface-tint">Permitted</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant/50 pb-1">
+<span class="font-data-mono text-data-mono text-on-surface-variant">Market Value</span>
+<span class="font-data-mono text-data-mono text-tertiary-fixed">1,250 CR</span>
+</div>
+</div>
+<div class="mt-auto flex gap-unit">
+<button class="flex-1 py-2 border border-outline-variant bg-surface-container font-label-caps text-label-caps text-on-surface hover:bg-surface-variant transition-colors uppercase">Jettison</button>
+<button class="flex-1 py-2 border border-surface-tint bg-surface-tint/10 font-label-caps text-label-caps text-surface-tint hover:bg-surface-tint hover:text-background transition-colors uppercase">Transfer</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- BottomNavBar (Mobile md:hidden) -->
+<nav class="md:hidden fixed bottom-0 right-0 left-0 z-50 flex justify-around items-center px-4 bg-surface-container-highest border-t border-outline-variant h-16">
+<!-- Labels omitted for brevity, logic dictates only rendering current context on mobile nav if relevant, or the full JSON structure -->
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant px-2 py-1 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">payments</span>
+</button>
+<button class="flex flex-col items-center bg-primary-container text-on-primary-container rounded-sm px-2 py-1 scale-98 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">category</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant px-2 py-1 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">layers</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant px-2 py-1 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">water_drop</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant hover:bg-surface-variant px-2 py-1 rounded-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">auto_awesome_motion</span>
+</button>
+</nav>
+<script>
+        // Generate grid items
+        const grid = document.getElementById('inventory-grid');
+        const icons = ['category', 'layers', 'water_drop', 'restaurant', 'air', 'oil_barrel', 'memory', 'diamond', 'bolt', 'science'];
+        const colors = ['text-surface-tint', 'text-tertiary-fixed', 'text-error', 'text-on-surface-variant'];
+        
+        for (let i = 0; i < 64; i++) {
+            const slot = document.createElement('div');
+            const isEmpty = Math.random() > 0.7;
+            
+            slot.className = 'aspect-square border flex items-center justify-center relative cursor-pointer group transition-colors';
+            
+            if (isEmpty) {
+                slot.classList.add('border-outline-variant/30', 'bg-surface-dim');
+            } else {
+                const icon = icons[Math.floor(Math.random() * icons.length)];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const isSelected = i === 12; // Force one active state
+                
+                slot.classList.add(
+                    isSelected ? 'border-surface-tint' : 'border-outline-variant',
+                    isSelected ? 'bg-surface-tint/10' : 'bg-surface-container-high',
+                    isSelected ? 'border-glow-active' : 'hover:border-surface-tint/50'
+                );
+                
+                const iconEl = document.createElement('span');
+                iconEl.className = `material-symbols-outlined text-[24px] ${color} ${isSelected ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`;
+                iconEl.style.fontVariationSettings = "'FILL' 1";
+                iconEl.textContent = icon;
+                slot.appendChild(iconEl);
+                
+                const stackSize = document.createElement('span');
+                stackSize.className = 'absolute bottom-1 right-1 font-data-mono text-[9px] text-on-surface';
+                stackSize.textContent = Math.floor(Math.random() * 64) + 1;
+                slot.appendChild(stackSize);
+            }
+            
+            grid.appendChild(slot);
+        }
+    </script>
+</body></html>
