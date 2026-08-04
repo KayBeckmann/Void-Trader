@@ -1,0 +1,10 @@
+services:
+  toolchain:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      - PUB_CACHE=/workspace/.pub-cache
