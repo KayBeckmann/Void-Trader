@@ -3,12 +3,18 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
 
+/// Sprite-Datei der Spielerfigur, relativ zu `Flame.images.prefix`
+/// (`assets/pixel-art/`, siehe VoidTraderGame.onLoad).
+const String _spriteAssetFile = 'characters/colonist.png';
+
 /// Steuerbare Spielerfigur für die Debug-Karte (Phase 1: erste
 /// Harvest-Moon-Schleife).
 ///
 /// Bewegung per Tastatur (WASD/Pfeiltasten), diagonal normalisiert damit
-/// sie nicht schneller ist als geradeaus. Grafik ist bewusst ein simples
-/// Rechteck — echte Sprites kommen mit der Pixel-Art-Integration.
+/// sie nicht schneller ist als geradeaus. Rendert einen Colonist-Sprite
+/// (Sofort-Korrektur nach Webpreview 2026-08-05) statt des früheren
+/// gelben Debug-Punkts; solange das Sprite noch lädt, wird ein einfaches
+/// Rechteck als Platzhalter gezeichnet, damit die Figur nie unsichtbar ist.
 class PlayerComponent extends PositionComponent with KeyboardHandler {
   final double speed;
   Vector2 velocity = Vector2.zero();
@@ -21,9 +27,10 @@ class PlayerComponent extends PositionComponent with KeyboardHandler {
   final void Function(LogicalKeyboardKey key, Vector2 position)? onAction;
 
   PlayerComponent({required Vector2 position, this.speed = 120, this.onAction})
-    : super(position: position, size: Vector2.all(12), anchor: Anchor.center);
+    : super(position: position, size: Vector2(28, 34), anchor: Anchor.center);
 
-  final Paint _paint = Paint()..color = const Color(0xFFFFC107);
+  Sprite? _sprite;
+  final Paint _fallbackPaint = Paint()..color = const Color(0xFFFFC107);
 
   // Kein `const Set`: LogicalKeyboardKey überschreibt ==/hashCode, was in
   // konstanten Set-Literalen vom Analyzer abgelehnt wird.
@@ -39,8 +46,19 @@ class PlayerComponent extends PositionComponent with KeyboardHandler {
   };
 
   @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    _sprite = await Sprite.load(_spriteAssetFile);
+  }
+
+  @override
   void render(Canvas canvas) {
-    canvas.drawRect(size.toRect(), _paint);
+    final sprite = _sprite;
+    if (sprite != null) {
+      sprite.render(canvas, size: size);
+    } else {
+      canvas.drawRect(size.toRect(), _fallbackPaint);
+    }
   }
 
   @override
