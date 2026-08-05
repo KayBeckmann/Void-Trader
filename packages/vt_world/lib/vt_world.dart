@@ -1,8 +1,10 @@
-/// Support for doing something awesome.
+/// Weltgeneration, Tiles, Ebenen und Biome für Void Trader.
 ///
-/// More dartdocs go here.
+/// Reine Dart-Simulation ohne Flutter-/Flame-Abhängigkeiten
+/// (siehe docs/ARCHITECTURE.md: "Dart-Core zuerst").
 library;
 
-export 'src/vt_world_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/chunk.dart';
+export 'src/tile.dart';
+export 'src/world.dart';
+export 'src/z_level.dart';
