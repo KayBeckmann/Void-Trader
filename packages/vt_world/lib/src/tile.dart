@@ -28,7 +28,19 @@ enum TileType {
 class Tile {
   final TileType type;
 
-  const Tile(this.type);
+  /// Wasserstand auf/in diesem Tile (Phase 3: Oberflächen-Physikengine).
+  /// Immer `0` für solide Tiles — Fels hält kein Wasser über sich.
+  final double waterLevel;
+
+  const Tile(this.type, {this.waterLevel = 0})
+    : assert(waterLevel >= 0, 'waterLevel darf nicht negativ sein'),
+      assert(
+        waterLevel == 0 ||
+            (type != TileType.stone &&
+                type != TileType.rockWall &&
+                type != TileType.ore),
+        'Solide Tiles ($type) dürfen kein Wasser halten',
+      );
 
   /// Felsige/undurchdringliche Tiles blockieren Bewegung und Sichtlinien.
   bool get isSolid =>
@@ -36,16 +48,18 @@ class Tile {
 
   bool get isWalkable => !isSolid;
 
-  Tile copyWith({TileType? type}) => Tile(type ?? this.type);
+  Tile copyWith({TileType? type, double? waterLevel}) =>
+      Tile(type ?? this.type, waterLevel: waterLevel ?? this.waterLevel);
 
   @override
-  bool operator ==(Object other) => other is Tile && other.type == type;
+  bool operator ==(Object other) =>
+      other is Tile && other.type == type && other.waterLevel == waterLevel;
 
   @override
-  int get hashCode => type.hashCode;
+  int get hashCode => Object.hash(type, waterLevel);
 
   @override
-  String toString() => 'Tile(${type.name})';
+  String toString() => 'Tile(${type.name}, water: $waterLevel)';
 }
 
 /// Regeln für das erste Interaktionswerkzeug (Graben/Abbauen, Phase 1).

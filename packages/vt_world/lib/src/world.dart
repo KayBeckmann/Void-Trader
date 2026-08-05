@@ -80,6 +80,20 @@ class World {
     return chunk.layerAt(z).tileAt(localX, localY);
   }
 
+  /// Wie [tileAt], aber ohne einen fehlenden Chunk zu generieren. Liefert
+  /// `null`, wenn der zuständige Chunk noch nicht geladen ist. Gedacht für
+  /// Systeme (z.B. eine Fluid-Simulation), die bewusst nur auf bereits
+  /// sichtbaren/besuchten Bereichen arbeiten sollen, statt durch reines
+  /// Nachschauen neue Chunks zu erzeugen.
+  Tile? peekTileAt(int worldX, int worldY, int z) {
+    final coord = chunkCoordForWorldTile(worldX, worldY);
+    final chunk = peekChunk(coord);
+    if (chunk == null) return null;
+    final localX = _localCoord(worldX);
+    final localY = _localCoord(worldY);
+    return chunk.layerAt(z).tileAt(localX, localY);
+  }
+
   /// Schreibt ein Tile anhand von Welt-Tile-Koordinaten.
   void setTileAt(int worldX, int worldY, int z, Tile tile) {
     final coord = chunkCoordForWorldTile(worldX, worldY);
@@ -151,7 +165,11 @@ class World {
           }
         }
 
-        return Tile(biomeType);
+        // Wasser-Biom-Tiles starten mit vollem Wasserstand, damit die
+        // Fluid-Simulation (Phase 3) echte Seen statt trockener
+        // "Wasser"-Etiketten vorfindet.
+        final waterLevel = biomeType == TileType.water ? 1.0 : 0.0;
+        return Tile(biomeType, waterLevel: waterLevel);
       }),
     );
     return ChunkLayer(ZLevel.surface, tiles);
