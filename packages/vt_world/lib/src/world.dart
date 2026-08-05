@@ -1,21 +1,36 @@
-import 'dart:math';
-
+import 'biome.dart';
 import 'chunk.dart';
+import 'noise.dart';
 import 'tile.dart';
 import 'z_level.dart';
 
 /// Seed-basierte, deterministische Welt aus Chunks.
 ///
-/// Phase 1 liefert nur das Datenmodell plus einen bewusst simplen
-/// Platzhalter-Generator (überwiegend Gras auf der Oberfläche, Fels
-/// darunter/darüber). Die eigentliche prozedurale Generierung (Biome,
-/// Höhen-/Feuchtigkeitskarten, Höhlen) folgt in Phase 2. Wichtig ist hier:
-/// gleicher Seed + gleiche Chunk-Koordinate erzeugen immer denselben Inhalt.
+/// Die Oberflächen-Ebene wird über Höhen-/Feuchtigkeits-/Temperatur-Noise
+/// generiert (siehe [surfaceTileForBiome]) — "Generation V1" nach Roadmap
+/// Phase 2. Elevierte Ebenen (Berge/Hügel) und der einfache Keller sind
+/// bewusst noch uniform gefüllt; Höhlen-Carving und Erzadern kommen in den
+/// nächsten Entwicklungsschritten dazu. Wichtig bleibt: gleicher Seed +
+/// gleiche Chunk-Koordinate erzeugen immer denselben Inhalt.
 class World {
   final int seed;
   final Map<ChunkCoord, Chunk> _chunks = {};
 
-  World(this.seed);
+  // Unabhängige "Kanäle" für die verschiedenen Noise-Karten, damit sie sich
+  // trotz gemeinsamem Welt-Seed nicht wie eine einzige Karte verhalten.
+  static const int _heightChannel = 0x1000;
+  static const int _moistureChannel = 0x2000;
+  static const int _temperatureChannel = 0x3000;
+
+  late final NoiseField _heightNoise;
+  late final NoiseField _moistureNoise;
+  late final NoiseField _temperatureNoise;
+
+  World(this.seed) {
+    _heightNoise = NoiseField(seed: seed ^ _heightChannel, scale: 40);
+    _moistureNoise = NoiseField(seed: seed ^ _moistureChannel, scale: 28);
+    _temperatureNoise = NoiseField(seed: seed ^ _temperatureChannel, scale: 60);
+  }
 
   /// Liefert den Chunk an [coord], generiert ihn deterministisch bei Bedarf.
   Chunk getOrCreateChunk(ChunkCoord coord) {
@@ -66,37 +81,42 @@ class World {
   static int _localCoord(int a) => a % Chunk.size;
 
   Chunk _generateChunk(ChunkCoord coord) {
-    final layers = <int, ChunkLayer>{};
+    final layers = <int, ChunkLayer>{ZLevel.surface: _generateSurfaceLayer(coord)};
     for (final z in ZLevel.all) {
-      layers[z] = _generateLayer(coord, z);
+      if (z == ZLevel.surface) continue;
+      layers[z] = _generateUniformLayer(z);
     }
     return Chunk(coord, layers);
   }
 
-  ChunkLayer _generateLayer(ChunkCoord coord, int z) {
-    final rng = Random(_layerSeed(coord, z));
+  ChunkLayer _generateSurfaceLayer(ChunkCoord coord) {
     final tiles = List.generate(
       Chunk.size,
-      (_) => List.generate(Chunk.size, (_) => Tile(_defaultTileFor(z, rng))),
+      (y) => List.generate(Chunk.size, (x) {
+        final worldX = coord.x * Chunk.size + x;
+        final worldY = coord.y * Chunk.size + y;
+        final type = surfaceTileForBiome(
+          height: _heightNoise.valueAt(worldX, worldY),
+          moisture: _moistureNoise.valueAt(worldX, worldY),
+          temperature: _temperatureNoise.valueAt(worldX, worldY),
+        );
+        return Tile(type);
+      }),
     );
-    return ChunkLayer(z, tiles);
+    return ChunkLayer(ZLevel.surface, tiles);
   }
 
-  int _layerSeed(ChunkCoord coord, int z) =>
-      Object.hash(seed, coord.x, coord.y, z);
-
-  TileType _defaultTileFor(int z, Random rng) {
-    if (z == ZLevel.surface) {
-      return rng.nextDouble() < 0.85 ? TileType.grass : TileType.dirt;
-    }
-    if (z > ZLevel.surface) {
-      return TileType.stone;
-    }
-    if (z == ZLevel.cellar) {
-      return TileType.dirt;
-    }
-    // caves / deepCaves: standardmäßig massiver Fels, wird später
-    // (Phase 2/3) durch Höhlengenerierung ausgehöhlt.
-    return TileType.rockWall;
+  /// Einfache, noch nicht durch Noise aufgelöste Ebenen: Berge/Hügel sind
+  /// durchgehend Stein, der Keller (erste Ebene unter der Oberfläche)
+  /// durchgehend Erde. Höhlen-Carving/Erzadern folgen als nächster Schritt.
+  ChunkLayer _generateUniformLayer(int z) {
+    final type = z > ZLevel.surface
+        ? TileType.stone
+        : (z == ZLevel.cellar ? TileType.dirt : TileType.rockWall);
+    final tiles = List.generate(
+      Chunk.size,
+      (_) => List.generate(Chunk.size, (_) => Tile(type)),
+    );
+    return ChunkLayer(z, tiles);
   }
 }

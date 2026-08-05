@@ -97,17 +97,21 @@ void main() {
       expect(world.tileAt(-2, -1, ZLevel.surface).type, isNot(TileType.path));
     });
 
-    test('Oberfläche besteht nur aus Gras/Erde, Berge aus Stein', () {
+    test('Oberfläche besteht nur aus gültigen Biom-Tiles, Berge aus Stein', () {
       final world = World(123);
       final chunk = world.getOrCreateChunk(const ChunkCoord(0, 0));
 
       final surface = chunk.layerAt(ZLevel.surface);
+      const validSurfaceTypes = {
+        TileType.grass,
+        TileType.dirt,
+        TileType.forest,
+        TileType.stone,
+        TileType.water,
+      };
       for (var y = 0; y < Chunk.size; y++) {
         for (var x = 0; x < Chunk.size; x++) {
-          expect(
-            surface.tileAt(x, y).type,
-            anyOf(TileType.grass, TileType.dirt),
-          );
+          expect(validSurfaceTypes, contains(surface.tileAt(x, y).type));
         }
       }
 
@@ -117,6 +121,25 @@ void main() {
           expect(mountains.tileAt(x, y).type, TileType.stone);
         }
       }
+    });
+
+    test('Oberflächengenerierung nutzt Höhen-/Feuchtigkeits-/Temperatur-Noise (Biom-Vielfalt)', () {
+      // Über einen größeren Ausschnitt sollten mehrere Biom-Typen auftauchen,
+      // nicht nur ein einzelner Standardwert — sonst würde Noise nichts tun.
+      final world = World(456);
+      final types = <TileType>{};
+      for (var cx = -2; cx <= 2; cx++) {
+        for (var cy = -2; cy <= 2; cy++) {
+          final chunk = world.getOrCreateChunk(ChunkCoord(cx, cy));
+          final surface = chunk.layerAt(ZLevel.surface);
+          for (var y = 0; y < Chunk.size; y++) {
+            for (var x = 0; x < Chunk.size; x++) {
+              types.add(surface.tileAt(x, y).type);
+            }
+          }
+        }
+      }
+      expect(types.length, greaterThan(1));
     });
   });
 }

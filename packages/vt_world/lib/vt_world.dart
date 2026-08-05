@@ -4,7 +4,9 @@
 /// (siehe docs/ARCHITECTURE.md: "Dart-Core zuerst").
 library;
 
+export 'src/biome.dart';
 export 'src/chunk.dart';
+export 'src/noise.dart';
 export 'src/tile.dart';
 export 'src/world.dart';
 export 'src/z_level.dart';
