@@ -13,7 +13,13 @@ class PlayerComponent extends PositionComponent with KeyboardHandler {
   final double speed;
   Vector2 velocity = Vector2.zero();
 
-  PlayerComponent({required Vector2 position, this.speed = 120})
+  /// Wird einmalig beim Drücken der Grab-/Abbau-Taste (Leertaste/E) mit der
+  /// aktuellen Spielerposition aufgerufen. Die eigentliche Abbau-Logik lebt
+  /// bewusst außerhalb dieser Komponente (siehe VoidTraderGame.digAt), damit
+  /// PlayerComponent unabhängig vom Spiel testbar bleibt.
+  final bool Function(Vector2 position)? onDig;
+
+  PlayerComponent({required Vector2 position, this.speed = 120, this.onDig})
     : super(position: position, size: Vector2.all(12), anchor: Anchor.center);
 
   final Paint _paint = Paint()..color = const Color(0xFFFFC107);
@@ -42,8 +48,18 @@ class PlayerComponent extends PositionComponent with KeyboardHandler {
     );
 
     velocity = direction.length2 > 0 ? (direction.normalized() * speed) : Vector2.zero();
+
+    // Nur bei KeyDownEvent auslösen, sonst würde Gedrückthalten den Abbau
+    // jeden Frame erneut triggern.
+    if (event is KeyDownEvent && _isDigKey(event.logicalKey)) {
+      onDig?.call(position);
+    }
+
     return true;
   }
+
+  bool _isDigKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyE;
 
   bool _pressed(
     Set<LogicalKeyboardKey> keysPressed,

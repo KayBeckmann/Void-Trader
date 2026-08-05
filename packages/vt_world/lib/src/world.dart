@@ -46,6 +46,17 @@ class World {
     chunk.layerAt(z).setTile(localX, localY, tile);
   }
 
+  /// Baut das Tile an den Welt-Tile-Koordinaten ab, falls es abbaubar ist
+  /// (siehe [TileMining.isMinable]). Gibt den ursprünglichen [TileType]
+  /// zurück (z.B. als Ressourcen-Ertrag), oder `null` wenn dort nichts
+  /// abzubauen war.
+  TileType? mineTileAt(int worldX, int worldY, int z) {
+    final current = tileAt(worldX, worldY, z);
+    if (!current.type.isMinable) return null;
+    setTileAt(worldX, worldY, z, Tile(current.type.minedResult));
+    return current.type;
+  }
+
   static ChunkCoord chunkCoordForWorldTile(int worldX, int worldY) {
     return ChunkCoord(_floorDiv(worldX), _floorDiv(worldY));
   }

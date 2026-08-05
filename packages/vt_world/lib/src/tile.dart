@@ -38,3 +38,19 @@ class Tile {
   @override
   String toString() => 'Tile(${type.name})';
 }
+
+/// Regeln für das erste Interaktionswerkzeug (Graben/Abbauen, Phase 1).
+///
+/// Bewusst als reine Funktionen auf [TileType] statt in der Flame-Schicht,
+/// damit "was ist abbaubar" ohne Rendering testbar ist (siehe
+/// docs/ARCHITECTURE.md: "Dart-Core zuerst").
+extension TileMining on TileType {
+  /// Ob dieses Tile mit dem Graben/Abbauen-Werkzeug entfernt werden kann.
+  bool get isMinable => this == TileType.stone || this == TileType.rockWall;
+
+  /// Tile-Typ, der nach erfolgreichem Abbau zurückbleibt.
+  TileType get minedResult {
+    assert(isMinable, 'minedResult nur für abbaubare Tiles ($this) aufrufen');
+    return TileType.path;
+  }
+}
