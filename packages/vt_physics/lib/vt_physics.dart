@@ -7,3 +7,4 @@ library;
 
 export 'src/fluid_grid.dart';
 export 'src/water_cell.dart';
+export 'src/world_fluid_bridge.dart';

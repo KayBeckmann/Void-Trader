@@ -1,6 +1,7 @@
 name: vt_physics
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
+publish_to: 'none'
 # repository: https://github.com/my_org/my_repo
 
 environment:
@@ -8,7 +9,8 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  # path: ^1.9.0
+  vt_world:
+    path: ../vt_world
 
 dev_dependencies:
   lints: ^6.0.0
