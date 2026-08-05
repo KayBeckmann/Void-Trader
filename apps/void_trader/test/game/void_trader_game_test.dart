@@ -178,6 +178,34 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.sellAllAt', () {
+    test('verkauft alle handelbaren Ressourcen an einem Marktkiosk', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 5 + 5); // Baukosten + zu verkaufen
+      game.inventory.add(Resource.ore, 2 + 2); // Baukosten + zu verkaufen
+      game.buildAt(game.player.position, BuildingType.market);
+
+      final earned = game.sellAllAt(game.player.position);
+
+      expect(earned, sellPrices[Resource.stone]! * 5 + sellPrices[Resource.ore]! * 2);
+      expect(game.inventory.count(Resource.stone), 0);
+      expect(game.inventory.count(Resource.ore), 0);
+      expect(game.inventory.count(Resource.credits), earned);
+    });
+
+    test('liefert 0 ohne Marktkiosk an der Position', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 5);
+
+      final earned = game.sellAllAt(game.player.position);
+
+      expect(earned, 0);
+      expect(game.inventory.count(Resource.stone), 5);
+    });
+  });
+
   group('VoidTraderGame NPCs + Tag/Nacht-Zyklus', () {
     test('onLoad erzeugt mindestens 3 NPCs mit passenden Komponenten', () async {
       final game = VoidTraderGame(seed: 1);

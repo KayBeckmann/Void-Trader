@@ -26,8 +26,9 @@ const _npcSpawns = [
 /// Zeigt die [DebugMapComponent] (Tiles + Wasserzustand rund um den
 /// Weltursprung, dort liegt die sichere Startzone aus vt_world) plus eine
 /// steuerbare [PlayerComponent] mit Kamera-Follow. Interaktionen: Graben/
-/// Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank) und Craften
-/// (C an einer Werkbank) — Phase 4. Ein periodischer Fluid-Tick
+/// Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank, 3 =
+/// Marktkiosk), Craften (C an einer Werkbank) und Verkaufen (V an einem
+/// Marktkiosk) — Phase 4/6. Ein periodischer Fluid-Tick
 /// ([WorldFluidBridge]) lässt echtes Wasser aus vt_world im sichtbaren
 /// Fenster fließen (Phase 3). Ein [DayNightCycle] treibt drei NPCs mit
 /// einfacher Tagesroutine an (Phase 5).
@@ -143,8 +144,12 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       buildAt(position, BuildingType.wall);
     } else if (key == LogicalKeyboardKey.digit2) {
       buildAt(position, BuildingType.workbench);
+    } else if (key == LogicalKeyboardKey.digit3) {
+      buildAt(position, BuildingType.market);
     } else if (key == LogicalKeyboardKey.keyC) {
       craftAt(position);
+    } else if (key == LogicalKeyboardKey.keyV) {
+      sellAllAt(position);
     }
   }
 
@@ -207,6 +212,26 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       outputAmount: basicComponentRecipe.outputAmount,
     );
     return true;
+  }
+
+  /// Verkauft alle handelbaren Ressourcen im Inventar auf einmal, sofern
+  /// unter [worldPosition] ein Marktkiosk steht — "Produktionsüberschuss
+  /// kann verkauft werden" aus Phase 6. Gibt die insgesamt erzielten
+  /// Credits zurück (0, wenn kein Markt dort steht oder nichts verkäuflich
+  /// war).
+  int sellAllAt(Vector2 worldPosition) {
+    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
+    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
+    final building = simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface);
+    if (building != BuildingType.market) return 0;
+
+    var totalEarned = 0;
+    for (final resource in sellPrices.keys) {
+      final amount = inventory.count(resource);
+      if (amount <= 0) continue;
+      totalEarned += sellResource(inventory, resource, amount) ?? 0;
+    }
+    return totalEarned;
   }
 
   /// Welcher Rohstoff (falls überhaupt einer) beim Abbau von [type] anfällt.
