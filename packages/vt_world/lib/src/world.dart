@@ -1,3 +1,5 @@
+import 'package:vt_content/vt_content.dart';
+
 import 'biome.dart';
 import 'chunk.dart';
 import 'noise.dart';
@@ -16,6 +18,10 @@ import 'z_level.dart';
 class World {
   final int seed;
   final Map<ChunkCoord, Chunk> _chunks = {};
+
+  /// Platzierte Gebäude (Roadmap Phase 4), sparse statt chunk-gebunden —
+  /// Gebäude sind seltener als Tiles und brauchen keine Generierung.
+  final Map<({int x, int y, int z}), BuildingType> _buildings = {};
 
   // Unabhängige "Kanäle" für die verschiedenen Noise-Karten, damit sie sich
   // trotz gemeinsamem Welt-Seed nicht wie eine einzige Karte verhalten.
@@ -113,6 +119,31 @@ class World {
     setTileAt(worldX, worldY, z, Tile(current.type.minedResult));
     return current.type;
   }
+
+  /// Platziert ein Gebäude an den Welt-Tile-Koordinaten, falls das Tile
+  /// begehbar und noch nicht belegt ist. Gibt `true` bei Erfolg zurück.
+  /// Prüft nur die Platzierungsregel — Baukosten/Inventar-Abzug ist Sache
+  /// der aufrufenden Schicht (siehe vt_content für Baukosten).
+  bool placeBuildingAt(int worldX, int worldY, int z, BuildingType type) {
+    final tile = tileAt(worldX, worldY, z);
+    if (!tile.isWalkable) return false;
+
+    final key = (x: worldX, y: worldY, z: z);
+    if (_buildings.containsKey(key)) return false;
+
+    _buildings[key] = type;
+    return true;
+  }
+
+  /// Liefert das an den Welt-Tile-Koordinaten platzierte Gebäude, falls
+  /// eines existiert.
+  BuildingType? buildingAt(int worldX, int worldY, int z) =>
+      _buildings[(x: worldX, y: worldY, z: z)];
+
+  /// Entfernt ein platziertes Gebäude. Gibt `true` zurück, falls dort
+  /// tatsächlich eines stand.
+  bool removeBuildingAt(int worldX, int worldY, int z) =>
+      _buildings.remove((x: worldX, y: worldY, z: z)) != null;
 
   static ChunkCoord chunkCoordForWorldTile(int worldX, int worldY) {
     return ChunkCoord(_floorDiv(worldX), _floorDiv(worldY));
