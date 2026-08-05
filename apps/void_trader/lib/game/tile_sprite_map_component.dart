@@ -8,30 +8,31 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 
 import 'debug_map_component.dart';
 
-/// Normale Spielansicht (Sofort-Korrektur nach Webpreview 2026-08-05):
-/// rendert Pixel-Art-Sprites statt Debug-Farbflächen für dasselbe
-/// Welt-Tile-Fenster wie [DebugMapComponent]. Wasserstand und platzierte
-/// Gebäude werden weiterhin direkt mit angezeigt — [DebugMapComponent]
-/// bleibt daneben als schaltbares Debug-Overlay erhalten (siehe
-/// VoidTraderGame).
+/// Normale Spielansicht: rendert Pixel-Art-Sprites für ein Fenster aus
+/// Welt-Tiles, das sich **jeden Frame neu um [centerProvider] zentriert**
+/// — die Welt scrollt so unter der (von der Kamera immer zentrierten)
+/// Spielfigur, statt an ein festes Fenster um den Weltursprung gebunden zu
+/// sein. Jedes Welt-Tile liegt auf einer festen, absoluten Pixel-Position
+/// (`worldX * tileSize`), nicht relativ zu einem Fenster-Ursprung — genau
+/// diese Absolutheit macht das Scrollen möglich, ohne beim Verlassen eines
+/// vorab berechneten Bereichs ins Leere zu laufen.
+///
+/// [DebugMapComponent] bleibt daneben als schaltbares Debug-Overlay
+/// erhalten (siehe VoidTraderGame) und nutzt dasselbe Prinzip.
 class TileSpriteMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
-  final int originX;
-  final int originY;
-  final int tileWidth;
-  final int tileHeight;
+  final Vector2 Function() centerProvider;
+  final int viewRadiusTiles;
   final int z;
   final double tileSize;
 
   TileSpriteMapComponent({
     required this.gameWorld,
-    required this.originX,
-    required this.originY,
-    required this.tileWidth,
-    required this.tileHeight,
+    required this.centerProvider,
+    required this.viewRadiusTiles,
     required this.z,
     this.tileSize = 32,
-  }) : super(size: Vector2(tileWidth * tileSize, tileHeight * tileSize));
+  }) : assert(viewRadiusTiles > 0, 'viewRadiusTiles muss positiv sein');
 
   /// Sprite-Dateien je Tile-Typ, relativ zu `Flame.images.prefix`
   /// (`assets/pixel-art/`, siehe VoidTraderGame.onLoad). Quellen/Status
@@ -71,14 +72,21 @@ class TileSpriteMapComponent extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
-    for (var y = 0; y < tileHeight; y++) {
-      for (var x = 0; x < tileWidth; x++) {
-        final worldX = originX + x;
-        final worldY = originY + y;
+    final center = centerProvider();
+    final centerTileX = (center.x / tileSize).floor();
+    final centerTileY = (center.y / tileSize).floor();
+    final originX = centerTileX - viewRadiusTiles;
+    final originY = centerTileY - viewRadiusTiles;
+    final span = viewRadiusTiles * 2;
+
+    for (var dy = 0; dy <= span; dy++) {
+      for (var dx = 0; dx <= span; dx++) {
+        final worldX = originX + dx;
+        final worldY = originY + dy;
         final tile = gameWorld.tileAt(worldX, worldY, z);
         final rect = Rect.fromLTWH(
-          x * tileSize,
-          y * tileSize,
+          worldX * tileSize,
+          worldY * tileSize,
           tileSize,
           tileSize,
         );

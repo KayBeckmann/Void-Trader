@@ -1,3 +1,4 @@
+import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
 import 'package:void_trader/game/tile_sprite_map_component.dart';
@@ -22,21 +23,33 @@ void main() {
   });
 
   group('TileSpriteMapComponent Konstruktion', () {
-    test('Größe ergibt sich aus tileWidth/tileHeight * tileSize', () {
+    test('lässt sich mit einem centerProvider erstellen', () {
       final world = vt_world.World(1);
 
       final component = TileSpriteMapComponent(
         gameWorld: world,
-        originX: -5,
-        originY: -5,
-        tileWidth: 10,
-        tileHeight: 6,
+        centerProvider: () => Vector2.zero(),
+        viewRadiusTiles: 10,
         z: vt_world.ZLevel.surface,
         tileSize: 32,
       );
 
-      expect(component.size.x, 10 * 32);
-      expect(component.size.y, 6 * 32);
+      expect(component.viewRadiusTiles, 10);
+      expect(component.tileSize, 32);
+    });
+
+    test('wirft bei nicht-positivem viewRadiusTiles', () {
+      final world = vt_world.World(1);
+
+      expect(
+        () => TileSpriteMapComponent(
+          gameWorld: world,
+          centerProvider: () => Vector2.zero(),
+          viewRadiusTiles: -1,
+          z: vt_world.ZLevel.surface,
+        ),
+        throwsA(isA<AssertionError>()),
+      );
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vt_content/vt_content.dart';
@@ -25,6 +26,29 @@ void main() {
       game.player.onAction?.call(LogicalKeyboardKey.f1, game.player.position);
       expect(game.map.enabled, isFalse);
     });
+
+    test('Interaktionen funktionieren auch weit entfernt vom Weltursprung', () async {
+      // Die Karte war früher an ein festes Fenster um (0,0) gebunden —
+      // dieser Test würde fehlschlagen, wenn diese Kopplung zurückkäme.
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      game.player.position = Vector2(500 * VoidTraderGame.tileSize, -300 * VoidTraderGame.tileSize);
+      game.simulationWorld.setTileAt(
+        500,
+        -300,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+
+      final success = game.digAt(game.player.position);
+
+      expect(success, isTrue);
+      expect(
+        game.simulationWorld.tileAt(500, -300, vt_world.ZLevel.surface).type,
+        vt_world.TileType.path,
+      );
+    });
   });
 
   group('VoidTraderGame.digAt', () {
@@ -32,8 +56,8 @@ void main() {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
 
-      final tileX = game.map.originX + (game.player.position.x / game.map.tileSize).floor();
-      final tileY = game.map.originY + (game.player.position.y / game.map.tileSize).floor();
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
       game.simulationWorld.setTileAt(
         tileX,
         tileY,
@@ -56,8 +80,8 @@ void main() {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
 
-      final tileX = game.map.originX + (game.player.position.x / game.map.tileSize).floor();
-      final tileY = game.map.originY + (game.player.position.y / game.map.tileSize).floor();
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
       game.simulationWorld.setTileAt(
         tileX,
         tileY,
@@ -75,8 +99,8 @@ void main() {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
 
-      final tileX = game.map.originX + (game.player.position.x / game.map.tileSize).floor();
-      final tileY = game.map.originY + (game.player.position.y / game.map.tileSize).floor();
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
       game.simulationWorld.setTileAt(
         tileX,
         tileY,
@@ -146,8 +170,8 @@ void main() {
       expect(success, isTrue);
       expect(game.inventory.count(Resource.stone), 0);
 
-      final tileX = game.map.originX + (game.player.position.x / game.map.tileSize).floor();
-      final tileY = game.map.originY + (game.player.position.y / game.map.tileSize).floor();
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
       expect(
         game.simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface),
         BuildingType.wall,

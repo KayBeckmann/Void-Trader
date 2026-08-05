@@ -8,40 +8,35 @@ import 'package:vt_content/vt_content.dart';
 // unten bewusst `gameWorld` statt `world`.
 import 'package:vt_world/vt_world.dart' as vt_world;
 
-/// Rendert ein rechteckiges Fenster aus Welt-Tile-Koordinaten (eine
-/// z-Ebene) inklusive des dort persistierten Wasserstands
-/// ([vt_world.Tile.waterLevel]) als einfaches Debug-Grid aus Farbflächen.
+/// Rendert ein Fenster aus Welt-Tile-Koordinaten (eine z-Ebene) inklusive
+/// des dort persistierten Wasserstands ([vt_world.Tile.waterLevel]) als
+/// einfaches Debug-Grid aus Farbflächen — zentriert sich jeden Frame neu
+/// um [centerProvider], genau wie `TileSpriteMapComponent`, damit beide
+/// exakt dasselbe (mitscrollende) Fenster zeigen.
 ///
 /// Seit der Sofort-Korrektur nach Webpreview 2026-08-05 ist dies **nicht
-/// mehr die normale Spielansicht** (das übernimmt
-/// [TileSpriteMapComponent]), sondern ein schaltbares Debug-Overlay —
-/// siehe [enabled]. Arbeitet wie [TileSpriteMapComponent] bewusst in
-/// Welt- statt Chunk-Koordinaten, damit beide exakt dasselbe Fenster
-/// zeigen können.
+/// mehr die normale Spielansicht** (das übernimmt `TileSpriteMapComponent`),
+/// sondern ein schaltbares Debug-Overlay — siehe [enabled].
 class DebugMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
-  final int originX;
-  final int originY;
-  final int tileWidth;
-  final int tileHeight;
+  final Vector2 Function() centerProvider;
+  final int viewRadiusTiles;
   final int z;
   final double tileSize;
 
   /// Ob das Debug-Overlay (Tile-Farben + Wasser + Gebäude-Umrandung)
   /// gezeichnet wird. Standardmäßig aus, da die normale Ansicht jetzt
-  /// [TileSpriteMapComponent] ist — per Taste umschaltbar (VoidTraderGame).
+  /// `TileSpriteMapComponent` ist — per Taste umschaltbar (VoidTraderGame).
   bool enabled;
 
   DebugMapComponent({
     required this.gameWorld,
-    required this.originX,
-    required this.originY,
-    required this.tileWidth,
-    required this.tileHeight,
+    required this.centerProvider,
+    required this.viewRadiusTiles,
     required this.z,
     this.tileSize = 16,
     this.enabled = false,
-  }) : super(size: Vector2(tileWidth * tileSize, tileHeight * tileSize));
+  }) : assert(viewRadiusTiles > 0, 'viewRadiusTiles muss positiv sein');
 
   final Paint _tilePaint = Paint();
   final Paint _waterPaint = Paint();
@@ -51,14 +46,21 @@ class DebugMapComponent extends PositionComponent {
   void render(Canvas canvas) {
     if (!enabled) return;
 
-    for (var y = 0; y < tileHeight; y++) {
-      for (var x = 0; x < tileWidth; x++) {
-        final worldX = originX + x;
-        final worldY = originY + y;
+    final center = centerProvider();
+    final centerTileX = (center.x / tileSize).floor();
+    final centerTileY = (center.y / tileSize).floor();
+    final originX = centerTileX - viewRadiusTiles;
+    final originY = centerTileY - viewRadiusTiles;
+    final span = viewRadiusTiles * 2;
+
+    for (var dy = 0; dy <= span; dy++) {
+      for (var dx = 0; dx <= span; dx++) {
+        final worldX = originX + dx;
+        final worldY = originY + dy;
         final tile = gameWorld.tileAt(worldX, worldY, z);
         final rect = Rect.fromLTWH(
-          x * tileSize,
-          y * tileSize,
+          worldX * tileSize,
+          worldY * tileSize,
           tileSize,
           tileSize,
         );

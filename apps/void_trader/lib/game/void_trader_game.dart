@@ -25,17 +25,20 @@ const _npcSpawns = [
 
 /// Root Flame game.
 ///
-/// Zeigt [TileSpriteMapComponent] (Pixel-Art-Tiles + Wasserzustand rund um
-/// den Weltursprung, dort liegt die sichere Startzone aus vt_world) als
+/// Zeigt [TileSpriteMapComponent] (Pixel-Art-Tiles + Wasserzustand) als
 /// normale Ansicht plus eine steuerbare [PlayerComponent] mit
-/// Kamera-Follow. [DebugMapComponent] liegt als schaltbares Debug-Overlay
-/// (F1) darüber — Sofort-Korrektur nach Webpreview 2026-08-05. Interaktionen:
-/// Graben/Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank, 3 =
-/// Marktkiosk, 4 = Landepad), Craften (C an einer Werkbank), Verkaufen (V an
-/// einem Marktkiosk) und Fracht laden (L an einem Landepad, Phase 7). Ein
-/// periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
-/// vt_world im sichtbaren Fenster fließen (Phase 3). Ein [DayNightCycle]
-/// treibt drei NPCs mit einfacher Tagesroutine an (Phase 5).
+/// Kamera-Follow. Die Spielfigur bleibt dabei **immer im Bildmittelpunkt**
+/// — die Karte rendert stattdessen jeden Frame neu ein Fenster rund um die
+/// Spielerposition, die Welt scrollt also unter dem Spieler statt an ein
+/// festes Fenster gebunden zu sein (siehe TileSpriteMapComponent).
+/// [DebugMapComponent] liegt als schaltbares Debug-Overlay (F1) darüber.
+/// Interaktionen: Graben/Abbauen (Space/E, Phase 1), Bauen (1 = Mauer,
+/// 2 = Werkbank, 3 = Marktkiosk, 4 = Landepad), Craften (C an einer
+/// Werkbank), Verkaufen (V an einem Marktkiosk) und Fracht laden (L an
+/// einem Landepad, Phase 7). Ein periodischer Fluid-Tick
+/// ([WorldFluidBridge]) lässt echtes Wasser aus vt_world im sichtbaren
+/// Fenster fließen (Phase 3). Ein [DayNightCycle] treibt drei NPCs mit
+/// einfacher Tagesroutine an (Phase 5).
 class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   VoidTraderGame({int seed = 1}) : simulationWorld = vt_world.World(seed) {
     // In der Initializer-Liste kann fluidBridge noch nicht auf
@@ -47,9 +50,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     fluidBridge = WorldFluidBridge(simulationWorld, vt_world.ZLevel.surface);
   }
 
-  /// Radius des Debug-Fensters um den Weltursprung (in Tiles). Das Fenster
-  /// ist damit `2 * _viewRadius` Tiles breit/hoch und zentriert auf (0,0) —
-  /// dieselbe sichere Startzone, die vt_world garantiert.
+  /// Sichtradius der Karte um die Spielfigur (in Tiles). Das gerenderte
+  /// Fenster ist damit `2 * _viewRadius + 1` Tiles breit/hoch.
   static const int _viewRadius = 16;
 
   /// Sekunden zwischen zwei Fluid-Simulationsschritten. Nicht jeden Frame,
@@ -60,7 +62,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Kachelgröße in Pixeln — an die importierten Pixel-Art-Assets angelehnt
   /// (siehe assets/pixel-art/manifest.json), von Sprite- und Debug-Karte
   /// gemeinsam genutzt, damit beide exakt dasselbe Fenster zeigen.
-  static const double _tileSize = 32;
+  static const double tileSize = 32;
 
   final vt_world.World simulationWorld;
   final Inventory inventory = Inventory();
@@ -87,33 +89,31 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // Pixel-Art liegt unter "assets/pixel-art/" (siehe Manifest dort).
     Flame.images.prefix = 'assets/pixel-art/';
 
-    const viewSize = _viewRadius * 2;
+    // Spieler spawnt in der Mitte von Welt-Tile (0,0) — dort liegt die
+    // sichere Startzone aus vt_world. Die Karte zentriert sich ab jetzt
+    // jeden Frame auf player.position, nicht umgekehrt.
+    player = PlayerComponent(
+      position: Vector2.all(tileSize / 2),
+      onAction: _handleAction,
+    );
 
     spriteMap = TileSpriteMapComponent(
       gameWorld: simulationWorld,
-      originX: -_viewRadius,
-      originY: -_viewRadius,
-      tileWidth: viewSize,
-      tileHeight: viewSize,
+      centerProvider: () => player.position,
+      viewRadiusTiles: _viewRadius,
       z: vt_world.ZLevel.surface,
-      tileSize: _tileSize,
+      tileSize: tileSize,
     );
 
-    // Schaltbares Debug-Overlay (F1) — dasselbe Fenster wie spriteMap,
-    // standardmäßig aus (siehe DebugMapComponent-Doc).
+    // Schaltbares Debug-Overlay (F1) — dasselbe mitscrollende Fenster wie
+    // spriteMap, standardmäßig aus (siehe DebugMapComponent-Doc).
     map = DebugMapComponent(
       gameWorld: simulationWorld,
-      originX: -_viewRadius,
-      originY: -_viewRadius,
-      tileWidth: viewSize,
-      tileHeight: viewSize,
+      centerProvider: () => player.position,
+      viewRadiusTiles: _viewRadius,
       z: vt_world.ZLevel.surface,
-      tileSize: _tileSize,
+      tileSize: tileSize,
     );
-
-    // map.size / 2 entspricht damit exakt Welt-Tile (0,0) — Mitte der
-    // sicheren Startzone.
-    player = PlayerComponent(position: map.size / 2, onAction: _handleAction);
 
     npcComponents = [
       for (final spawn in _npcSpawns) _spawnNpc(spawn.type, spawn.x, spawn.y),
@@ -125,7 +125,10 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // Reihenfolge = Zeichenreihenfolge: spriteMap zuunterst, Debug-Overlay
     // direkt darüber, NPCs/Spieler obenauf.
     await world.addAll([spriteMap, map, player, ...npcComponents]);
-    camera.follow(player);
+
+    // snap: true hält den Spieler von Anfang an exakt im Bildmittelpunkt,
+    // statt sich der Position erst über die erste(n) Frame(s) anzunähern.
+    camera.follow(player, snap: true);
   }
 
   @override
@@ -141,27 +144,35 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     if (_fluidTickAccumulator < _fluidTickInterval) return;
     _fluidTickAccumulator -= _fluidTickInterval;
 
+    final playerTile = _worldTileFor(player.position);
     fluidBridge.step(
-      originX: map.originX,
-      originY: map.originY,
-      width: map.tileWidth,
-      height: map.tileHeight,
+      originX: playerTile.x - _viewRadius,
+      originY: playerTile.y - _viewRadius,
+      width: _viewRadius * 2 + 1,
+      height: _viewRadius * 2 + 1,
     );
   }
 
   /// Erzeugt einen [Npc] + zugehörige [NpcComponent] an einer Welt-Tile-
   /// Koordinate relativ zum Ursprung und registriert den Npc in [npcs].
-  NpcComponent _spawnNpc(NpcType type, int offsetX, int offsetY) {
+  NpcComponent _spawnNpc(NpcType type, int worldX, int worldY) {
     final npc = Npc(id: '${type.name}-${npcs.length}', type: type);
     npcs.add(npc);
-    return NpcComponent(npc: npc, position: _pixelForWorldTile(offsetX, offsetY));
+    return NpcComponent(npc: npc, position: _pixelForWorldTile(worldX, worldY));
   }
 
+  /// Pixel-Position der Mitte des Welt-Tiles (worldX, worldY) im
+  /// (kameraweiten) Weltkoordinatensystem — jedes Tile liegt fest auf
+  /// `worldX * tileSize`, unabhängig davon, welches Kartenfenster gerade
+  /// sichtbar ist.
   Vector2 _pixelForWorldTile(int worldX, int worldY) {
-    return Vector2(
-      (worldX - map.originX) * map.tileSize,
-      (worldY - map.originY) * map.tileSize,
-    );
+    return Vector2((worldX + 0.5) * tileSize, (worldY + 0.5) * tileSize);
+  }
+
+  /// Kehrt [_pixelForWorldTile] um: zu welchem Welt-Tile gehört eine
+  /// Pixel-Position im Weltkoordinatensystem.
+  ({int x, int y}) _worldTileFor(Vector2 position) {
+    return (x: (position.x / tileSize).floor(), y: (position.y / tileSize).floor());
   }
 
   /// Ordnet Tastendrücke den Interaktionen zu. Lebt bewusst im Spiel statt
@@ -195,13 +206,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Welt-Tile-Koordinaten umgerechnet, das Ergebnis gezählt und passende
   /// Rohstoffe ins Inventar gelegt.
   bool digAt(Vector2 worldPosition) {
-    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
-    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
-    final mined = simulationWorld.mineTileAt(
-      tileX,
-      tileY,
-      vt_world.ZLevel.surface,
-    );
+    final tile = _worldTileFor(worldPosition);
+    final mined = simulationWorld.mineTileAt(tile.x, tile.y, vt_world.ZLevel.surface);
     if (mined == null) return false;
 
     minedResourceCount++;
@@ -215,14 +221,13 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// erlaubt (begehbares, unbelegtes Tile). Zieht die Kosten erst nach
   /// erfolgreicher Platzierung ab.
   bool buildAt(Vector2 worldPosition, BuildingType type) {
-    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
-    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
+    final tile = _worldTileFor(worldPosition);
     final cost = buildingDefinitionFor(type).buildCost;
     if (!inventory.hasAll(cost)) return false;
 
     final placed = simulationWorld.placeBuildingAt(
-      tileX,
-      tileY,
+      tile.x,
+      tile.y,
       vt_world.ZLevel.surface,
       type,
     );
@@ -236,9 +241,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Werkbank steht und genug Rohstoffe vorhanden sind — die erste
   /// vollständige "Sammeln → Verarbeiten"-Stufe der Produktionskette.
   bool craftAt(Vector2 worldPosition) {
-    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
-    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
-    final building = simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface);
+    final tile = _worldTileFor(worldPosition);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
     if (building != BuildingType.workbench) return false;
     if (!inventory.hasAll(basicComponentRecipe.input)) return false;
 
@@ -256,9 +260,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Credits zurück (0, wenn kein Markt dort steht oder nichts verkäuflich
   /// war).
   int sellAllAt(Vector2 worldPosition) {
-    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
-    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
-    final building = simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface);
+    final tile = _worldTileFor(worldPosition);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
     if (building != BuildingType.market) return 0;
 
     var totalEarned = 0;
@@ -277,9 +280,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Fracht. Gibt die Gesamtmenge geladener Einheiten zurück (0, wenn kein
   /// Landepad dort steht oder nichts zu laden war).
   int loadCargoAt(Vector2 worldPosition) {
-    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
-    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
-    final building = simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface);
+    final tile = _worldTileFor(worldPosition);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
     if (building != BuildingType.landingPad) return 0;
 
     var totalLoaded = 0;

@@ -1,3 +1,4 @@
+import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
@@ -21,37 +22,33 @@ void main() {
   });
 
   group('DebugMapComponent Konstruktion', () {
-    test('Größe ergibt sich aus tileWidth/tileHeight * tileSize', () {
-      final world = vt_world.World(1);
-
-      final component = DebugMapComponent(
-        gameWorld: world,
-        originX: -5,
-        originY: -5,
-        tileWidth: 20,
-        tileHeight: 10,
-        z: vt_world.ZLevel.surface,
-      );
-
-      expect(component.size.x, 20 * component.tileSize);
-      expect(component.size.y, 10 * component.tileSize);
-    });
-
     test('enabled ist standardmäßig aus (Overlay statt Standardansicht)', () {
       final world = vt_world.World(1);
 
       final component = DebugMapComponent(
         gameWorld: world,
-        originX: 0,
-        originY: 0,
-        tileWidth: 4,
-        tileHeight: 4,
+        centerProvider: () => Vector2.zero(),
+        viewRadiusTiles: 4,
         z: vt_world.ZLevel.surface,
       );
 
       expect(component.enabled, isFalse);
       component.enabled = true;
       expect(component.enabled, isTrue);
+    });
+
+    test('wirft bei nicht-positivem viewRadiusTiles', () {
+      final world = vt_world.World(1);
+
+      expect(
+        () => DebugMapComponent(
+          gameWorld: world,
+          centerProvider: () => Vector2.zero(),
+          viewRadiusTiles: 0,
+          z: vt_world.ZLevel.surface,
+        ),
+        throwsA(isA<AssertionError>()),
+      );
     });
   });
 }
