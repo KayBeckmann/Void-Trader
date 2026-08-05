@@ -5,3 +5,4 @@ library;
 
 export 'src/inventory.dart';
 export 'src/resource.dart';
+export 'src/ship.dart';
