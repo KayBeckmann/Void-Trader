@@ -2,44 +2,41 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 
-/// Zeichnet eine Umrandung um das Tile unter [positionProvider] — die
-/// visuelle Entsprechung zum kontextabhängigen HUD-Hinweis
-/// (`VoidTraderGame.currentInteractionHint`): der Spieler soll nicht nur
-/// lesen, sondern auch sehen, worauf sich eine mögliche Interaktion
-/// bezieht. Rendert nur, wenn [isActiveProvider] `true` liefert, damit die
-/// Karte nicht ständig eine Umrandung ohne Bedeutung zeigt.
+/// Zeichnet eine Umrandung um ein Welt-Tile — genutzt für Hover-Anzeige und
+/// Interaktions-/Selektions-Hervorhebung (Roadmap UI-03: "Hover-Highlight
+/// und Selected-Highlight trennen"). Rendert nichts, wenn [tileProvider]
+/// `null` liefert (kein Hover, keine aktive Interaktion), damit die Karte
+/// nicht ständig eine bedeutungslose Umrandung zeigt.
 class TileHighlightComponent extends PositionComponent {
-  final Vector2 Function() positionProvider;
-  final bool Function() isActiveProvider;
+  final ({int x, int y})? Function() tileProvider;
   final double tileSize;
   final Color color;
+  final double strokeWidth;
 
   TileHighlightComponent({
-    required this.positionProvider,
-    required this.isActiveProvider,
+    required this.tileProvider,
     required this.tileSize,
     this.color = const Color(0xFFFFEB3B),
+    this.strokeWidth = 3,
   });
 
-  final Paint _paint = Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 3;
+  final Paint _paint = Paint()..style = PaintingStyle.stroke;
 
   @override
   void render(Canvas canvas) {
-    if (!isActiveProvider()) return;
+    final tile = tileProvider();
+    if (tile == null) return;
 
-    final position = positionProvider();
-    final tileX = (position.x / tileSize).floor();
-    final tileY = (position.y / tileSize).floor();
     final rect = Rect.fromLTWH(
-      tileX * tileSize,
-      tileY * tileSize,
+      tile.x * tileSize,
+      tile.y * tileSize,
       tileSize,
       tileSize,
     );
 
-    _paint.color = color;
-    canvas.drawRect(rect.deflate(1.5), _paint);
+    _paint
+      ..color = color
+      ..strokeWidth = strokeWidth;
+    canvas.drawRect(rect.deflate(strokeWidth / 2), _paint);
   }
 }

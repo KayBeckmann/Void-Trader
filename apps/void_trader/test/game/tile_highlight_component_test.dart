@@ -1,33 +1,27 @@
-import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:void_trader/game/tile_highlight_component.dart';
 
 void main() {
   group('TileHighlightComponent', () {
-    test('lässt sich mit den nötigen Providern erstellen', () {
+    test('lässt sich mit einem tileProvider erstellen', () {
       final component = TileHighlightComponent(
-        positionProvider: () => Vector2.zero(),
-        isActiveProvider: () => true,
+        tileProvider: () => (x: 0, y: 0),
         tileSize: 32,
       );
 
       expect(component.tileSize, 32);
     });
 
-    test('isActiveProvider steuert, ob überhaupt etwas hervorgehoben wird', () {
-      var active = false;
+    test('tileProvider steuert, ob überhaupt etwas hervorgehoben wird', () {
+      ({int x, int y})? tile;
       final component = TileHighlightComponent(
-        positionProvider: () => Vector2.zero(),
-        isActiveProvider: () => active,
+        tileProvider: () => tile,
         tileSize: 32,
       );
 
-      // render() darf in beiden Zuständen nicht werfen — der eigentliche
-      // Effekt (nichts zeichnen, wenn inaktiv) lässt sich ohne echten
-      // Canvas nicht sinnvoll prüfen, das frühe Return aber schon.
-      expect(() => component.isActiveProvider(), returnsNormally);
-      active = true;
-      expect(component.isActiveProvider(), isTrue);
+      expect(component.tileProvider(), isNull);
+      tile = (x: 3, y: 4);
+      expect(component.tileProvider(), (x: 3, y: 4));
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
@@ -11,6 +12,8 @@ import 'package:vt_physics/vt_physics.dart';
 // Namenskollision mit vt_world.World.
 import 'package:vt_world/vt_world.dart' as vt_world;
 
+import '../ui/tile_inspector_info.dart';
+import '../ui/tool_mode.dart';
 import 'debug_map_component.dart';
 import 'npc_component.dart';
 import 'player_component.dart';
@@ -34,15 +37,21 @@ const _npcSpawns = [
 /// Spielerposition, die Welt scrollt also unter dem Spieler statt an ein
 /// festes Fenster gebunden zu sein (siehe TileSpriteMapComponent).
 /// [DebugMapComponent] liegt als schaltbares Debug-Overlay (F1) darüber.
-/// Interaktionen: Graben/Abbauen (Space/E, Phase 1), Bauen (1 = Mauer,
-/// 2 = Werkbank, 3 = Marktkiosk, 4 = Landepad), Craften (C an einer
-/// Werkbank), Verkaufen (V an einem Marktkiosk) und Fracht laden (L an
-/// einem Landepad, Phase 7). Ein periodischer Fluid-Tick
-/// ([WorldFluidBridge]) lässt echtes Wasser aus vt_world im sichtbaren
-/// Fenster fließen (Phase 3). Ein [DayNightCycle] treibt drei NPCs mit
-/// einfacher Tagesroutine an (Phase 5).
-class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
-  VoidTraderGame({int seed = 1}) : simulationWorld = vt_world.World(seed) {
+///
+/// Interaktionen funktionieren über **zwei gleichwertige Wege** (Roadmap
+/// UI-Slice 1): Tastatur (Space/E graben, 1-4 bauen, C craften, V
+/// verkaufen, L Fracht laden) und Maus/Touch (Klick führt die per
+/// [activeTool] gewählte Aktion an der Klickposition aus, siehe
+/// [performActionAt]) — beide rufen dieselben Aktionsmethoden auf. Ein
+/// periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
+/// vt_world im sichtbaren Fenster fließen (Phase 3). Ein [DayNightCycle]
+/// und ein [WeatherSystem] treiben drei NPCs mit einfacher Tagesroutine an
+/// (Phase 5).
+class VoidTraderGame extends FlameGame
+    with HasKeyboardHandlerComponents, TapCallbacks, PointerMoveCallbacks {
+  VoidTraderGame({int seed = 1})
+    : simulationWorld = vt_world.World(seed),
+      weather = WeatherSystem(seed: seed) {
     // In der Initializer-Liste kann fluidBridge noch nicht auf
     // simulationWorld verweisen (Felder dürfen sich dort nicht gegenseitig
     // referenzieren) — daher hier im Konstruktor-Body zugewiesen, wo
@@ -75,11 +84,13 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   final Inventory inventory = Inventory();
   final Ship ship = Ship();
   final DayNightCycle dayNightCycle = DayNightCycle();
+  final WeatherSystem weather;
   final List<Npc> npcs = [];
   late final WorldFluidBridge fluidBridge;
   late final TileSpriteMapComponent spriteMap;
   late final DebugMapComponent map;
   late final TileHighlightComponent tileHighlight;
+  late final TileHighlightComponent hoverHighlight;
   late final PlayerComponent player;
   late final List<NpcComponent> npcComponents;
 
@@ -89,6 +100,29 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Zähler für erfolgreich abgebaute Tiles (nützlich für UI/Debug,
   /// unabhängig vom Inventarstand).
   int minedResourceCount = 0;
+
+  /// Fortschritts-Tracking fürs Ziel-/Tutorialpanel (Roadmap UI-07) —
+  /// bewusst als einfache Zähler/Sets statt eines Quest-Systems.
+  final Set<BuildingType> builtBuildingTypes = {};
+  int totalCrafted = 0;
+  bool cargoEverLoaded = false;
+
+  /// Aktiver Toolbelt-Modus (Roadmap UI-04). Bestimmt, was ein Klick auf
+  /// die Karte tut — siehe [performActionAt].
+  final ValueNotifier<ToolMode> activeTool = ValueNotifier(ToolMode.inspect);
+
+  /// Welches Gebäude im Baumenü ausgewählt ist (Roadmap UI-05), relevant
+  /// wenn [activeTool] auf [ToolMode.build] steht.
+  final ValueNotifier<BuildingType?> selectedBuildingType = ValueNotifier(null);
+
+  /// Tile unter dem Mauszeiger/Finger (Roadmap UI-03: Hover-Highlight),
+  /// `null` wenn außerhalb der Karte oder auf Touch-Geräten ohne Hover.
+  final ValueNotifier<({int x, int y})?> hoveredTile = ValueNotifier(null);
+
+  /// Zuletzt angeklicktes Tile (Roadmap UI-03: Selected-Highlight +
+  /// Inspector). `null` bis zum ersten Klick — der Inspector fällt in dem
+  /// Fall auf die Spielerposition zurück, siehe [inspectedTile].
+  final ValueNotifier<({int x, int y})?> selectedTile = ValueNotifier(null);
 
   /// Erhöht sich periodisch (siehe [_hudTickInterval]) — das Flutter-HUD
   /// hört darauf, um Inventar/Status regelmäßig neu anzuzeigen, ohne dass
@@ -137,9 +171,20 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // Visuelle Entsprechung zum HUD-Interaktionshinweis: hebt das Tile
     // hervor, auf das sich currentInteractionHint() gerade bezieht.
     tileHighlight = TileHighlightComponent(
-      positionProvider: () => player.position,
-      isActiveProvider: () => currentInteractionHint() != null,
+      tileProvider: () =>
+          currentInteractionHint() == null ? null : _worldTileFor(player.position),
       tileSize: tileSize,
+    );
+
+    // Dünne Hover-Umrandung unter dem Mauszeiger (Roadmap UI-03) — bewusst
+    // eine eigene Komponente statt denselben Effekt wie tileHighlight zu
+    // teilen, damit Hover und tatsächliche Interaktion visuell klar
+    // unterscheidbar bleiben.
+    hoverHighlight = TileHighlightComponent(
+      tileProvider: () => hoveredTile.value,
+      tileSize: tileSize,
+      color: const Color(0x99FFFFFF),
+      strokeWidth: 2,
     );
 
     npcComponents = [
@@ -150,8 +195,15 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // dem Game) liegen, damit sie von der Kamera transformiert werden —
     // sonst folgt die Kamera dem Spieler, aber die Karte bleibt starr.
     // Reihenfolge = Zeichenreihenfolge: spriteMap zuunterst, Debug-Overlay
-    // und Tile-Hervorhebung direkt darüber, NPCs/Spieler obenauf.
-    await world.addAll([spriteMap, map, tileHighlight, player, ...npcComponents]);
+    // und Tile-Hervorhebungen direkt darüber, NPCs/Spieler obenauf.
+    await world.addAll([
+      spriteMap,
+      map,
+      hoverHighlight,
+      tileHighlight,
+      player,
+      ...npcComponents,
+    ]);
 
     // snap: true hält den Spieler von Anfang an exakt im Bildmittelpunkt,
     // statt sich der Position erst über die erste(n) Frame(s) anzunähern.
@@ -163,6 +215,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     super.update(dt);
 
     dayNightCycle.update(dt);
+    weather.update(dt);
     for (final npc in npcs) {
       npc.tick(dt, isDaytime: dayNightCycle.isDay);
     }
@@ -184,6 +237,167 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       width: _viewRadius * 2 + 1,
       height: _viewRadius * 2 + 1,
     );
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    super.onTapDown(event);
+    final worldPosition = camera.globalToLocal(event.canvasPosition);
+    selectedTile.value = _worldTileFor(worldPosition);
+    performActionAt(worldPosition);
+  }
+
+  @override
+  void onPointerMove(PointerMoveEvent event) {
+    super.onPointerMove(event);
+    final worldPosition = camera.globalToLocal(event.canvasPosition);
+    hoveredTile.value = _worldTileFor(worldPosition);
+  }
+
+  /// Führt die durch [activeTool] bestimmte Aktion an [worldPosition] aus
+  /// (Roadmap UI-04: "Toolbelt-Auswahl bestimmt, was Klick/Leertaste tut").
+  /// Ruft dieselben Aktionsmethoden wie die Tastatursteuerung auf — Maus/
+  /// Touch und Tastatur lösen also garantiert dasselbe Verhalten aus.
+  void performActionAt(Vector2 worldPosition) {
+    switch (activeTool.value) {
+      case ToolMode.inspect:
+        break;
+      case ToolMode.dig:
+        digAt(worldPosition);
+      case ToolMode.build:
+        final type = selectedBuildingType.value;
+        if (type == null) {
+          feedbackMessage.value = 'Zuerst ein Gebäude im Baumenü wählen.';
+        } else {
+          buildAt(worldPosition, type);
+        }
+      case ToolMode.craft:
+        craftAt(worldPosition);
+      case ToolMode.sell:
+        sellAllAt(worldPosition);
+      case ToolMode.cargo:
+        loadCargoAt(worldPosition);
+    }
+  }
+
+  /// Welches Tile der Inspector gerade zeigen soll: das zuletzt
+  /// angeklickte, sonst das unter dem Spieler.
+  ({int x, int y}) get inspectedTile => selectedTile.value ?? _worldTileFor(player.position);
+
+  /// Baut die Inspector-Information für ein beliebiges Welt-Tile (Roadmap
+  /// UI-03) — unabhängig davon, ob der Spieler dort gerade steht. Zeigt bei
+  /// [ToolMode.build] zusätzlich eine Bauvorschau für
+  /// [selectedBuildingType], falls dort eines ausgewählt ist.
+  TileInspectorInfo inspectTile(int worldX, int worldY) {
+    const z = vt_world.ZLevel.surface;
+    final tile = simulationWorld.tileAt(worldX, worldY, z);
+    final building = simulationWorld.buildingAt(worldX, worldY, z);
+
+    final details = <String>[
+      tile.isWalkable ? 'Begehbar' : 'Nicht begehbar',
+      if (tile.waterLevel > 0)
+        'Wasserstand: ${(tile.waterLevel.clamp(0.0, 1.0) * 100).round()}%',
+    ];
+
+    final actions = <InspectorActionInfo>[];
+    final String title;
+
+    if (building != null) {
+      final definition = buildingDefinitionFor(building);
+      title = definition.name;
+      switch (building) {
+        case BuildingType.workbench:
+          final available = inventory.hasAll(basicComponentRecipe.input);
+          actions.add(
+            InspectorActionInfo(
+              label: 'Craften: ${basicComponentRecipe.name}',
+              keyHint: 'C',
+              available: available,
+              blockedReason: available ? null : 'Nicht genug Rohstoffe',
+            ),
+          );
+        case BuildingType.market:
+          final canSell = sellPrices.keys.any((r) => inventory.count(r) > 0);
+          actions.add(
+            InspectorActionInfo(
+              label: 'Verkaufen',
+              keyHint: 'V',
+              available: canSell,
+              blockedReason: canSell ? null : 'Nichts zu verkaufen',
+            ),
+          );
+        case BuildingType.landingPad:
+          final canLoad = Resource.values.any(
+            (r) => r != Resource.credits && inventory.count(r) > 0,
+          );
+          actions.add(
+            InspectorActionInfo(
+              label: 'Fracht laden',
+              keyHint: 'L',
+              available: canLoad,
+              blockedReason: canLoad ? null : 'Nichts zu verladen',
+            ),
+          );
+        case BuildingType.wall:
+          break;
+      }
+    } else {
+      title = tileTypeLabel(tile.type);
+      if (tile.type.isMinable) {
+        actions.add(
+          const InspectorActionInfo(label: 'Abbauen', keyHint: 'Leertaste', available: true),
+        );
+      }
+    }
+
+    if (building == null &&
+        activeTool.value == ToolMode.build &&
+        selectedBuildingType.value != null) {
+      final type = selectedBuildingType.value!;
+      final definition = buildingDefinitionFor(type);
+      final canAfford = inventory.hasAll(definition.buildCost);
+      final available = tile.isWalkable && canAfford;
+      actions.add(
+        InspectorActionInfo(
+          label: 'Bauen: ${definition.name}',
+          keyHint: 'Klick',
+          available: available,
+          blockedReason: !tile.isWalkable
+              ? 'Nicht begehbar'
+              : (canAfford ? null : 'Nicht genug Rohstoffe'),
+        ),
+      );
+    }
+
+    return TileInspectorInfo(title: title, details: details, actions: actions);
+  }
+
+  /// Deutsches Label für einen Tile-Typ, fürs Inspector-Panel.
+  static String tileTypeLabel(vt_world.TileType type) {
+    switch (type) {
+      case vt_world.TileType.grass:
+        return 'Wiese';
+      case vt_world.TileType.dirt:
+        return 'Erde';
+      case vt_world.TileType.stone:
+        return 'Stein';
+      case vt_world.TileType.water:
+        return 'Wasser';
+      case vt_world.TileType.forest:
+        return 'Wald';
+      case vt_world.TileType.farmland:
+        return 'Ackerboden';
+      case vt_world.TileType.path:
+        return 'Weg';
+      case vt_world.TileType.rockWall:
+        return 'Felswand';
+      case vt_world.TileType.empty:
+        return 'Leerfläche';
+      case vt_world.TileType.caveEntrance:
+        return 'Höhleneingang';
+      case vt_world.TileType.ore:
+        return 'Erzader';
+    }
   }
 
   /// Menschenlesbarer Hinweis, was der Spieler an seiner aktuellen Position
@@ -298,6 +512,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     }
 
     inventory.removeAll(definition.buildCost);
+    builtBuildingTypes.add(type);
     feedbackMessage.value = '${definition.name} gebaut.';
     return true;
   }
@@ -322,6 +537,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       basicComponentRecipe.output,
       outputAmount: basicComponentRecipe.outputAmount,
     );
+    totalCrafted += basicComponentRecipe.outputAmount;
     feedbackMessage.value = '${basicComponentRecipe.name} gecraftet.';
     return true;
   }
@@ -376,6 +592,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       totalLoaded += amount;
     }
 
+    if (totalLoaded > 0) cargoEverLoaded = true;
     feedbackMessage.value = totalLoaded > 0
         ? '$totalLoaded Einheiten Fracht verladen.'
         : 'Nichts zu verladen.';
