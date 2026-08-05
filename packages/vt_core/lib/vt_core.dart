@@ -1,8 +1,7 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// Reine Dart-Simulation für Void Trader: Ressourcen, Inventar und weitere
+/// spielregel-tragende Systeme ohne Flutter-/Flame-Abhängigkeiten (siehe
+/// docs/ARCHITECTURE.md: "Dart-Core zuerst").
 library;
 
-export 'src/vt_core_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/inventory.dart';
+export 'src/resource.dart';
