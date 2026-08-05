@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:vt_content/vt_content.dart';
 // Alias nötig: flame/components.dart bringt über die Kamera ebenfalls eine
 // Klasse `World` mit — Namenskollision mit vt_world.World. Component/
 // FlameGame definieren zudem einen `world`-Getter, daher heißt das Feld
@@ -38,12 +39,15 @@ class DebugMapComponent extends PositionComponent {
 
   final Paint _tilePaint = Paint();
   final Paint _waterPaint = Paint();
+  final Paint _buildingPaint = Paint()..style = PaintingStyle.stroke..strokeWidth = 2;
 
   @override
   void render(Canvas canvas) {
     for (var y = 0; y < tileHeight; y++) {
       for (var x = 0; x < tileWidth; x++) {
-        final tile = gameWorld.tileAt(originX + x, originY + y, z);
+        final worldX = originX + x;
+        final worldY = originY + y;
+        final tile = gameWorld.tileAt(worldX, worldY, z);
         final rect = Rect.fromLTWH(
           x * tileSize,
           y * tileSize,
@@ -58,6 +62,12 @@ class DebugMapComponent extends PositionComponent {
           final alpha = (tile.waterLevel.clamp(0.0, 1.0) * 200).round();
           _waterPaint.color = Color.fromARGB(alpha, 0x21, 0x96, 0xF3);
           canvas.drawRect(rect, _waterPaint);
+        }
+
+        final building = gameWorld.buildingAt(worldX, worldY, z);
+        if (building != null) {
+          _buildingPaint.color = buildingColor(building);
+          canvas.drawRect(rect.deflate(1), _buildingPaint);
         }
       }
     }
@@ -89,6 +99,17 @@ class DebugMapComponent extends PositionComponent {
         return const Color(0xFF6A1B9A);
       case vt_world.TileType.ore:
         return const Color(0xFFFFA000);
+    }
+  }
+
+  /// Debug-Umrandungsfarbe je Gebäudetyp. Wird durch echte Pixel-Art in
+  /// einer späteren Phase ersetzt.
+  static Color buildingColor(BuildingType type) {
+    switch (type) {
+      case BuildingType.wall:
+        return const Color(0xFF3E2723);
+      case BuildingType.workbench:
+        return const Color(0xFFFFEB3B);
     }
   }
 }

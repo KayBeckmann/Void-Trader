@@ -13,16 +13,30 @@ class PlayerComponent extends PositionComponent with KeyboardHandler {
   final double speed;
   Vector2 velocity = Vector2.zero();
 
-  /// Wird einmalig beim Drücken der Grab-/Abbau-Taste (Leertaste/E) mit der
-  /// aktuellen Spielerposition aufgerufen. Die eigentliche Abbau-Logik lebt
-  /// bewusst außerhalb dieser Komponente (siehe VoidTraderGame.digAt), damit
-  /// PlayerComponent unabhängig vom Spiel testbar bleibt.
-  final bool Function(Vector2 position)? onDig;
+  /// Wird einmalig beim Drücken einer Aktionstaste (jede Taste außer den
+  /// Bewegungstasten) mit der gedrückten Taste und der aktuellen
+  /// Spielerposition aufgerufen. Welche Taste welche Aktion auslöst (Graben,
+  /// Bauen, Craften, …) entscheidet bewusst VoidTraderGame, nicht diese
+  /// Komponente — PlayerComponent bleibt so unabhängig vom Spiel testbar.
+  final void Function(LogicalKeyboardKey key, Vector2 position)? onAction;
 
-  PlayerComponent({required Vector2 position, this.speed = 120, this.onDig})
+  PlayerComponent({required Vector2 position, this.speed = 120, this.onAction})
     : super(position: position, size: Vector2.all(12), anchor: Anchor.center);
 
   final Paint _paint = Paint()..color = const Color(0xFFFFC107);
+
+  // Kein `const Set`: LogicalKeyboardKey überschreibt ==/hashCode, was in
+  // konstanten Set-Literalen vom Analyzer abgelehnt wird.
+  static final Set<LogicalKeyboardKey> _movementKeys = {
+    LogicalKeyboardKey.arrowUp,
+    LogicalKeyboardKey.arrowDown,
+    LogicalKeyboardKey.arrowLeft,
+    LogicalKeyboardKey.arrowRight,
+    LogicalKeyboardKey.keyW,
+    LogicalKeyboardKey.keyA,
+    LogicalKeyboardKey.keyS,
+    LogicalKeyboardKey.keyD,
+  };
 
   @override
   void render(Canvas canvas) {
@@ -49,17 +63,14 @@ class PlayerComponent extends PositionComponent with KeyboardHandler {
 
     velocity = direction.length2 > 0 ? (direction.normalized() * speed) : Vector2.zero();
 
-    // Nur bei KeyDownEvent auslösen, sonst würde Gedrückthalten den Abbau
-    // jeden Frame erneut triggern.
-    if (event is KeyDownEvent && _isDigKey(event.logicalKey)) {
-      onDig?.call(position);
+    // Nur bei KeyDownEvent auslösen, sonst würde Gedrückthalten die Aktion
+    // jeden Frame erneut triggern. Bewegungstasten lösen keine Aktion aus.
+    if (event is KeyDownEvent && !_movementKeys.contains(event.logicalKey)) {
+      onAction?.call(event.logicalKey, position);
     }
 
     return true;
   }
-
-  bool _isDigKey(LogicalKeyboardKey key) =>
-      key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyE;
 
   bool _pressed(
     Set<LogicalKeyboardKey> keysPressed,

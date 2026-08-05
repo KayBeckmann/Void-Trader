@@ -1,5 +1,8 @@
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flutter/services.dart';
+import 'package:vt_content/vt_content.dart';
+import 'package:vt_core/vt_core.dart';
 import 'package:vt_physics/vt_physics.dart';
 // Alias nötig: FlameGame definiert selbst einen `world`-Getter/Kamera-World —
 // Namenskollision mit vt_world.World.
@@ -12,10 +15,11 @@ import 'player_component.dart';
 ///
 /// Zeigt die [DebugMapComponent] (Tiles + Wasserzustand rund um den
 /// Weltursprung, dort liegt die sichere Startzone aus vt_world) plus eine
-/// steuerbare [PlayerComponent] mit Kamera-Follow und einem ersten
-/// Interaktionswerkzeug (Graben/Abbauen) — Phase 1/2 der Reboot-Roadmap.
-/// Ein periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
-/// vt_world im sichtbaren Fenster fließen (Phase 3).
+/// steuerbare [PlayerComponent] mit Kamera-Follow. Interaktionen: Graben/
+/// Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank) und Craften
+/// (C an einer Werkbank) — Phase 4. Ein periodischer Fluid-Tick
+/// ([WorldFluidBridge]) lässt echtes Wasser aus vt_world im sichtbaren
+/// Fenster fließen (Phase 3).
 class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   VoidTraderGame({int seed = 1}) : simulationWorld = vt_world.World(seed) {
     // In der Initializer-Liste kann fluidBridge noch nicht auf
@@ -38,14 +42,15 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   static const double _fluidTickInterval = 0.5;
 
   final vt_world.World simulationWorld;
+  final Inventory inventory = Inventory();
   late final WorldFluidBridge fluidBridge;
   late final DebugMapComponent map;
   late final PlayerComponent player;
 
   double _fluidTickAccumulator = 0;
 
-  /// Zähler für erfolgreich abgebaute Tiles (Platzhalter fürs Inventar,
-  /// echtes Ressourcensystem folgt in Phase 4).
+  /// Zähler für erfolgreich abgebaute Tiles (nützlich für UI/Debug,
+  /// unabhängig vom Inventarstand).
   int minedResourceCount = 0;
 
   @override
@@ -65,7 +70,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
 
     // map.size / 2 entspricht damit exakt Welt-Tile (0,0) — Mitte der
     // sicheren Startzone.
-    player = PlayerComponent(position: map.size / 2, onDig: digAt);
+    player = PlayerComponent(position: map.size / 2, onAction: _handleAction);
 
     // Wichtig: Komponenten müssen in `world` (nicht direkt via `add()` auf
     // dem Game) liegen, damit sie von der Kamera transformiert werden —
@@ -90,10 +95,26 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     );
   }
 
+  /// Ordnet Tastendrücke den Interaktionen zu. Lebt bewusst im Spiel statt
+  /// in [PlayerComponent], damit die Steuerung unabhängig von den
+  /// konkreten Interaktionen testbar bleibt.
+  void _handleAction(LogicalKeyboardKey key, Vector2 position) {
+    if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyE) {
+      digAt(position);
+    } else if (key == LogicalKeyboardKey.digit1) {
+      buildAt(position, BuildingType.wall);
+    } else if (key == LogicalKeyboardKey.digit2) {
+      buildAt(position, BuildingType.workbench);
+    } else if (key == LogicalKeyboardKey.keyC) {
+      craftAt(position);
+    }
+  }
+
   /// Versucht, das Tile unter [worldPosition] (Pixel-Koordinaten im
   /// `world`-Raum der Kamera) abzubauen. Die eigentliche Abbau-Regel lebt
   /// bewusst in vt_world (Dart-Core), hier wird nur Pixel- auf
-  /// Welt-Tile-Koordinaten umgerechnet und das Ergebnis gezählt.
+  /// Welt-Tile-Koordinaten umgerechnet, das Ergebnis gezählt und passende
+  /// Rohstoffe ins Inventar gelegt.
   bool digAt(Vector2 worldPosition) {
     final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
     final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
@@ -103,7 +124,65 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       vt_world.ZLevel.surface,
     );
     if (mined == null) return false;
+
     minedResourceCount++;
+    final resource = _resourceForMinedTile(mined);
+    if (resource != null) inventory.add(resource, 1);
     return true;
+  }
+
+  /// Versucht, [type] unter [worldPosition] zu platzieren — nur wenn die
+  /// Baukosten im Inventar vorhanden sind und vt_world die Platzierung
+  /// erlaubt (begehbares, unbelegtes Tile). Zieht die Kosten erst nach
+  /// erfolgreicher Platzierung ab.
+  bool buildAt(Vector2 worldPosition, BuildingType type) {
+    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
+    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
+    final cost = buildingDefinitionFor(type).buildCost;
+    if (!inventory.hasAll(cost)) return false;
+
+    final placed = simulationWorld.placeBuildingAt(
+      tileX,
+      tileY,
+      vt_world.ZLevel.surface,
+      type,
+    );
+    if (!placed) return false;
+
+    inventory.removeAll(cost);
+    return true;
+  }
+
+  /// Craftet [basicComponentRecipe], falls unter [worldPosition] eine
+  /// Werkbank steht und genug Rohstoffe vorhanden sind — die erste
+  /// vollständige "Sammeln → Verarbeiten"-Stufe der Produktionskette.
+  bool craftAt(Vector2 worldPosition) {
+    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
+    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
+    final building = simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface);
+    if (building != BuildingType.workbench) return false;
+    if (!inventory.hasAll(basicComponentRecipe.input)) return false;
+
+    inventory.craft(
+      basicComponentRecipe.input,
+      basicComponentRecipe.output,
+      outputAmount: basicComponentRecipe.outputAmount,
+    );
+    return true;
+  }
+
+  /// Welcher Rohstoff (falls überhaupt einer) beim Abbau von [type] anfällt.
+  /// Fels aus Bergen (`stone`) und Höhlenwänden (`rockWall`) liefert
+  /// dasselbe Material, nur Erzadern liefern `ore`.
+  Resource? _resourceForMinedTile(vt_world.TileType type) {
+    switch (type) {
+      case vt_world.TileType.stone:
+      case vt_world.TileType.rockWall:
+        return Resource.stone;
+      case vt_world.TileType.ore:
+        return Resource.ore;
+      default:
+        return null;
+    }
   }
 }

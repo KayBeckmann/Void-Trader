@@ -39,6 +39,10 @@ dependencies:
     path: ../../packages/vt_world
   vt_physics:
     path: ../../packages/vt_physics
+  vt_core:
+    path: ../../packages/vt_core
+  vt_content:
+    path: ../../packages/vt_content
 
 dev_dependencies:
   flutter_test:

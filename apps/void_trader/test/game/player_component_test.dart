@@ -49,56 +49,52 @@ void main() {
     });
   });
 
-  group('PlayerComponent Graben/Abbauen', () {
+  group('PlayerComponent Aktionstasten', () {
     const spaceDown = KeyDownEvent(
       physicalKey: PhysicalKeyboardKey.space,
       logicalKey: LogicalKeyboardKey.space,
       timeStamp: Duration.zero,
     );
-    const eDown = KeyDownEvent(
-      physicalKey: PhysicalKeyboardKey.keyE,
-      logicalKey: LogicalKeyboardKey.keyE,
+    const digit1Down = KeyDownEvent(
+      physicalKey: PhysicalKeyboardKey.digit1,
+      logicalKey: LogicalKeyboardKey.digit1,
       timeStamp: Duration.zero,
     );
 
-    test('Leertaste ruft onDig mit der aktuellen Position auf', () {
+    test('Leertaste ruft onAction mit Taste + aktueller Position auf', () {
+      LogicalKeyboardKey? capturedKey;
       Vector2? capturedPosition;
       final player = PlayerComponent(
         position: Vector2(5, 7),
-        onDig: (pos) {
+        onAction: (key, pos) {
+          capturedKey = key;
           capturedPosition = pos;
-          return true;
         },
       );
 
       player.onKeyEvent(spaceDown, {LogicalKeyboardKey.space});
 
+      expect(capturedKey, LogicalKeyboardKey.space);
       expect(capturedPosition, Vector2(5, 7));
     });
 
-    test('E-Taste ruft onDig ebenfalls auf', () {
-      var called = false;
+    test('weitere Aktionstasten (z.B. "1" fürs Bauen) lösen onAction ebenfalls aus', () {
+      LogicalKeyboardKey? capturedKey;
       final player = PlayerComponent(
         position: Vector2.zero(),
-        onDig: (pos) {
-          called = true;
-          return true;
-        },
+        onAction: (key, pos) => capturedKey = key,
       );
 
-      player.onKeyEvent(eDown, {LogicalKeyboardKey.keyE});
+      player.onKeyEvent(digit1Down, {LogicalKeyboardKey.digit1});
 
-      expect(called, isTrue);
+      expect(capturedKey, LogicalKeyboardKey.digit1);
     });
 
-    test('reine Bewegungstasten lösen onDig nicht aus', () {
+    test('reine Bewegungstasten lösen onAction nicht aus', () {
       var called = false;
       final player = PlayerComponent(
         position: Vector2.zero(),
-        onDig: (pos) {
-          called = true;
-          return true;
-        },
+        onAction: (key, pos) => called = true,
       );
 
       player.onKeyEvent(_dummyKeyEvent, {LogicalKeyboardKey.keyW});

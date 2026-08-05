@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vt_content/vt_content.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
 import 'package:void_trader/game/debug_map_component.dart';
 
@@ -7,6 +8,14 @@ void main() {
     test('liefert für jeden TileType eine Farbe', () {
       for (final type in vt_world.TileType.values) {
         expect(DebugMapComponent.tileColor(type), isNotNull);
+      }
+    });
+  });
+
+  group('DebugMapComponent.buildingColor', () {
+    test('liefert für jeden BuildingType eine Farbe', () {
+      for (final type in BuildingType.values) {
+        expect(DebugMapComponent.buildingColor(type), isNotNull);
       }
     });
   });
