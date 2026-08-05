@@ -14,6 +14,7 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 import 'debug_map_component.dart';
 import 'npc_component.dart';
 import 'player_component.dart';
+import 'tile_highlight_component.dart';
 import 'tile_sprite_map_component.dart';
 
 /// Startpositionen der ersten NPCs, relativ zum Weltursprung (in Tiles) —
@@ -78,6 +79,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   late final WorldFluidBridge fluidBridge;
   late final TileSpriteMapComponent spriteMap;
   late final DebugMapComponent map;
+  late final TileHighlightComponent tileHighlight;
   late final PlayerComponent player;
   late final List<NpcComponent> npcComponents;
 
@@ -132,6 +134,14 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       tileSize: tileSize,
     );
 
+    // Visuelle Entsprechung zum HUD-Interaktionshinweis: hebt das Tile
+    // hervor, auf das sich currentInteractionHint() gerade bezieht.
+    tileHighlight = TileHighlightComponent(
+      positionProvider: () => player.position,
+      isActiveProvider: () => currentInteractionHint() != null,
+      tileSize: tileSize,
+    );
+
     npcComponents = [
       for (final spawn in _npcSpawns) _spawnNpc(spawn.type, spawn.x, spawn.y),
     ];
@@ -140,8 +150,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // dem Game) liegen, damit sie von der Kamera transformiert werden —
     // sonst folgt die Kamera dem Spieler, aber die Karte bleibt starr.
     // Reihenfolge = Zeichenreihenfolge: spriteMap zuunterst, Debug-Overlay
-    // direkt darüber, NPCs/Spieler obenauf.
-    await world.addAll([spriteMap, map, player, ...npcComponents]);
+    // und Tile-Hervorhebung direkt darüber, NPCs/Spieler obenauf.
+    await world.addAll([spriteMap, map, tileHighlight, player, ...npcComponents]);
 
     // snap: true hält den Spieler von Anfang an exakt im Bildmittelpunkt,
     // statt sich der Position erst über die erste(n) Frame(s) anzunähern.
