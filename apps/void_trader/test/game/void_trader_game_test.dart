@@ -177,4 +177,44 @@ void main() {
       expect(game.inventory.count(Resource.component), 0);
     });
   });
+
+  group('VoidTraderGame NPCs + Tag/Nacht-Zyklus', () {
+    test('onLoad erzeugt mindestens 3 NPCs mit passenden Komponenten', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      expect(game.npcs.length, greaterThanOrEqualTo(3));
+      expect(game.npcComponents.length, game.npcs.length);
+      for (var i = 0; i < game.npcs.length; i++) {
+        expect(game.npcComponents[i].npc, same(game.npcs[i]));
+      }
+    });
+
+    test('update() lässt die Tageszeit voranschreiten', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final before = game.dayNightCycle.timeOfDay;
+
+      game.update(10);
+
+      expect(game.dayNightCycle.timeOfDay, isNot(before));
+    });
+
+    test('update() tickt alle NPCs, ihre Bedürfnisse verändern sich', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      for (var i = 0; i < 20; i++) {
+        game.update(1.0);
+      }
+
+      // Nach genug Zeit sollte sich mindestens ein Bedürfnis irgendeines
+      // NPCs von seinem vollen Startwert entfernt haben.
+      final anyChanged = game.npcs.any(
+        (npc) =>
+            npc.needs.hunger < 1.0 || npc.needs.thirst < 1.0 || npc.needs.tiredness < 1.0,
+      );
+      expect(anyChanged, isTrue);
+    });
+  });
 }

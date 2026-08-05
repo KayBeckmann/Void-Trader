@@ -238,6 +238,13 @@ packages:
       relative: true
     source: path
     version: "1.0.0"
+  vt_npc:
+    dependency: "direct main"
+    description:
+      path: "../../packages/vt_npc"
+      relative: true
+    source: path
+    version: "1.0.0"
   vt_physics:
     dependency: "direct main"
     description:

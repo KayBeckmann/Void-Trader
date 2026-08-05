@@ -43,6 +43,8 @@ dependencies:
     path: ../../packages/vt_core
   vt_content:
     path: ../../packages/vt_content
+  vt_npc:
+    path: ../../packages/vt_npc
 
 dev_dependencies:
   flutter_test:
