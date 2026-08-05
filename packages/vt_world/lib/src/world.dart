@@ -39,6 +39,11 @@ class World {
   /// Erzader. Hoch angesetzt, damit Erz selten bleibt.
   static const double _oreThreshold = 0.88;
 
+  /// Radius (Chebyshev-Abstand, in Tiles) der sicheren Startzone um den
+  /// Weltursprung. Innerhalb garantiert begehbare Wiese ohne Wasser/
+  /// Höhleneingang — der Startaußenposten aus der Roadmap.
+  static const int _spawnSafeRadius = 4;
+
   late final NoiseField _heightNoise;
   late final NoiseField _moistureNoise;
   late final NoiseField _temperatureNoise;
@@ -103,6 +108,9 @@ class World {
 
   static int _localCoord(int a) => a % Chunk.size;
 
+  static bool _isInSpawnSafeZone(int worldX, int worldY) =>
+      worldX.abs() <= _spawnSafeRadius && worldY.abs() <= _spawnSafeRadius;
+
   Chunk _generateChunk(ChunkCoord coord) {
     final layers = <int, ChunkLayer>{ZLevel.surface: _generateSurfaceLayer(coord)};
     for (final z in ZLevel.all) {
@@ -121,6 +129,13 @@ class World {
       (y) => List.generate(Chunk.size, (x) {
         final worldX = coord.x * Chunk.size + x;
         final worldY = coord.y * Chunk.size + y;
+
+        // Startaußenposten in sicherer Zone: unabhängig von Höhe/Feuchte/
+        // Höhleneingang immer begehbare Wiese, kein Wasser vor der Haustür.
+        if (_isInSpawnSafeZone(worldX, worldY)) {
+          return const Tile(TileType.grass);
+        }
+
         final biomeType = surfaceTileForBiome(
           height: _heightNoise.valueAt(worldX, worldY),
           moisture: _moistureNoise.valueAt(worldX, worldY),
