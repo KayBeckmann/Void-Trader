@@ -21,15 +21,23 @@ class World {
   static const int _heightChannel = 0x1000;
   static const int _moistureChannel = 0x2000;
   static const int _temperatureChannel = 0x3000;
+  static const int _caveEntranceChannel = 0x4000;
+
+  /// Ab diesem Noise-Wert entsteht ein Höhleneingang. Hoch angesetzt, damit
+  /// Eingänge selten und kleinflächig bleiben statt große Landstriche zu
+  /// bedecken.
+  static const double _caveEntranceThreshold = 0.86;
 
   late final NoiseField _heightNoise;
   late final NoiseField _moistureNoise;
   late final NoiseField _temperatureNoise;
+  late final NoiseField _caveEntranceNoise;
 
   World(this.seed) {
     _heightNoise = NoiseField(seed: seed ^ _heightChannel, scale: 40);
     _moistureNoise = NoiseField(seed: seed ^ _moistureChannel, scale: 28);
     _temperatureNoise = NoiseField(seed: seed ^ _temperatureChannel, scale: 60);
+    _caveEntranceNoise = NoiseField(seed: seed ^ _caveEntranceChannel, scale: 8);
   }
 
   /// Liefert den Chunk an [coord], generiert ihn deterministisch bei Bedarf.
@@ -95,20 +103,32 @@ class World {
       (y) => List.generate(Chunk.size, (x) {
         final worldX = coord.x * Chunk.size + x;
         final worldY = coord.y * Chunk.size + y;
-        final type = surfaceTileForBiome(
+        final biomeType = surfaceTileForBiome(
           height: _heightNoise.valueAt(worldX, worldY),
           moisture: _moistureNoise.valueAt(worldX, worldY),
           temperature: _temperatureNoise.valueAt(worldX, worldY),
         );
-        return Tile(type);
+
+        // Höhleneingänge nie auf Wasser platzieren — sonst müsste man erst
+        // tauchen, um in die erste Höhlenebene zu gelangen.
+        if (biomeType != TileType.water) {
+          final entranceValue = _caveEntranceNoise.valueAt(worldX, worldY);
+          if (entranceValue > _caveEntranceThreshold) {
+            return const Tile(TileType.caveEntrance);
+          }
+        }
+
+        return Tile(biomeType);
       }),
     );
     return ChunkLayer(ZLevel.surface, tiles);
   }
 
   /// Einfache, noch nicht durch Noise aufgelöste Ebenen: Berge/Hügel sind
-  /// durchgehend Stein, der Keller (erste Ebene unter der Oberfläche)
-  /// durchgehend Erde. Höhlen-Carving/Erzadern folgen als nächster Schritt.
+  /// durchgehend Stein. Der Keller (erste Ebene unter der Oberfläche) ist
+  /// durchgehend Erde, also von jedem Höhleneingang aus ohne Hindernis
+  /// betretbar — echtes Höhlen-Carving/Erzadern folgen für tiefere Ebenen
+  /// als nächster Schritt.
   ChunkLayer _generateUniformLayer(int z) {
     final type = z > ZLevel.surface
         ? TileType.stone

@@ -108,6 +108,7 @@ void main() {
         TileType.forest,
         TileType.stone,
         TileType.water,
+        TileType.caveEntrance,
       };
       for (var y = 0; y < Chunk.size; y++) {
         for (var x = 0; x < Chunk.size; x++) {

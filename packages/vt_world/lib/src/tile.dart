@@ -11,6 +11,10 @@ enum TileType {
   path,
   rockWall,
   empty,
+
+  /// Höhleneingang auf der Oberfläche (Phase 2: prozedurale Weltgeneration).
+  /// Begehbar — markiert den Übergang zur ersten Höhlenebene darunter.
+  caveEntrance,
 }
 
 /// Ein einzelnes Tile innerhalb einer [ChunkLayer].
