@@ -228,6 +228,38 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.loadCargoAt', () {
+    test('lädt Rohstoffe/Bauteile ins Schiff, Credits bleiben beim Spieler', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.inventory.add(Resource.stone, 5); // zusätzlich zu verladen
+      game.inventory.add(Resource.credits, 50);
+      game.buildAt(game.player.position, BuildingType.landingPad);
+
+      final loaded = game.loadCargoAt(game.player.position);
+
+      expect(loaded, 5);
+      expect(game.inventory.count(Resource.stone), 0);
+      expect(game.ship.cargo.count(Resource.stone), 5);
+      expect(game.inventory.count(Resource.credits), 50);
+      expect(game.ship.cargo.count(Resource.credits), 0);
+    });
+
+    test('liefert 0 ohne Landepad an der Position', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 5);
+
+      final loaded = game.loadCargoAt(game.player.position);
+
+      expect(loaded, 0);
+      expect(game.inventory.count(Resource.stone), 5);
+      expect(game.ship.cargo.count(Resource.stone), 0);
+    });
+  });
+
   group('VoidTraderGame NPCs + Tag/Nacht-Zyklus', () {
     test('onLoad erzeugt mindestens 3 NPCs mit passenden Komponenten', () async {
       final game = VoidTraderGame(seed: 1);

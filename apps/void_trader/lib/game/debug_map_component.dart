@@ -120,6 +120,8 @@ class DebugMapComponent extends PositionComponent {
         return const Color(0xFFFFEB3B);
       case BuildingType.market:
         return const Color(0xFF00BFA5);
+      case BuildingType.landingPad:
+        return const Color(0xFF607D8B);
     }
   }
 }

@@ -31,11 +31,11 @@ const _npcSpawns = [
 /// Kamera-Follow. [DebugMapComponent] liegt als schaltbares Debug-Overlay
 /// (F1) darüber — Sofort-Korrektur nach Webpreview 2026-08-05. Interaktionen:
 /// Graben/Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank, 3 =
-/// Marktkiosk), Craften (C an einer Werkbank) und Verkaufen (V an einem
-/// Marktkiosk) — Phase 4/6. Ein periodischer Fluid-Tick
-/// ([WorldFluidBridge]) lässt echtes Wasser aus vt_world im sichtbaren
-/// Fenster fließen (Phase 3). Ein [DayNightCycle] treibt drei NPCs mit
-/// einfacher Tagesroutine an (Phase 5).
+/// Marktkiosk, 4 = Landepad), Craften (C an einer Werkbank), Verkaufen (V an
+/// einem Marktkiosk) und Fracht laden (L an einem Landepad, Phase 7). Ein
+/// periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
+/// vt_world im sichtbaren Fenster fließen (Phase 3). Ein [DayNightCycle]
+/// treibt drei NPCs mit einfacher Tagesroutine an (Phase 5).
 class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   VoidTraderGame({int seed = 1}) : simulationWorld = vt_world.World(seed) {
     // In der Initializer-Liste kann fluidBridge noch nicht auf
@@ -64,6 +64,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
 
   final vt_world.World simulationWorld;
   final Inventory inventory = Inventory();
+  final Ship ship = Ship();
   final DayNightCycle dayNightCycle = DayNightCycle();
   final List<Npc> npcs = [];
   late final WorldFluidBridge fluidBridge;
@@ -175,10 +176,14 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       buildAt(position, BuildingType.workbench);
     } else if (key == LogicalKeyboardKey.digit3) {
       buildAt(position, BuildingType.market);
+    } else if (key == LogicalKeyboardKey.digit4) {
+      buildAt(position, BuildingType.landingPad);
     } else if (key == LogicalKeyboardKey.keyC) {
       craftAt(position);
     } else if (key == LogicalKeyboardKey.keyV) {
       sellAllAt(position);
+    } else if (key == LogicalKeyboardKey.keyL) {
+      loadCargoAt(position);
     } else if (key == LogicalKeyboardKey.f1) {
       map.enabled = !map.enabled;
     }
@@ -263,6 +268,30 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       totalEarned += sellResource(inventory, resource, amount) ?? 0;
     }
     return totalEarned;
+  }
+
+  /// Lädt alle Rohstoffe/Bauteile aus dem Spieler-Inventar ins Schiff,
+  /// sofern unter [worldPosition] ein Landepad steht — "Ressourcen vom
+  /// Planeten ins Schiff laden" aus Phase 7 (erste Oberfläche↔Orbit-
+  /// Brücke). Credits bleiben beim Spieler, sie sind keine physische
+  /// Fracht. Gibt die Gesamtmenge geladener Einheiten zurück (0, wenn kein
+  /// Landepad dort steht oder nichts zu laden war).
+  int loadCargoAt(Vector2 worldPosition) {
+    final tileX = map.originX + (worldPosition.x / map.tileSize).floor();
+    final tileY = map.originY + (worldPosition.y / map.tileSize).floor();
+    final building = simulationWorld.buildingAt(tileX, tileY, vt_world.ZLevel.surface);
+    if (building != BuildingType.landingPad) return 0;
+
+    var totalLoaded = 0;
+    for (final resource in Resource.values) {
+      if (resource == Resource.credits) continue;
+      final amount = inventory.count(resource);
+      if (amount <= 0) continue;
+      inventory.remove(resource, amount);
+      ship.cargo.add(resource, amount);
+      totalLoaded += amount;
+    }
+    return totalLoaded;
   }
 
   /// Welcher Rohstoff (falls überhaupt einer) beim Abbau von [type] anfällt.
