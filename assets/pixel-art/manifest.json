@@ -1,0 +1,24 @@
+{
+  "created": "2026-08-05",
+  "note": "V1-Sprite-Mapping (Sofort-Korrektur Pixel-Art-Pipeline). Einzelbilder statt gepackter Atlas-Textur — funktional äquivalent für die aktuelle Kachelanzahl, Packing folgt bei Bedarf später.",
+  "tileSize": 32,
+  "tiles": {
+    "grass": { "file": "tiles/grass.png", "source": "vault:2026-08-04_v2_detailed/meadow_tile", "status": "approved" },
+    "dirt": { "file": "tiles/dirt.png", "source": "vault:2026-08-04_startpack_sorted/field_soil", "status": "approved" },
+    "stone": { "file": "tiles/stone.png", "source": "vault:2026-08-04_v2_detailed/regolith_cracked", "status": "approved" },
+    "water": { "file": "tiles/water.png", "source": "generated-2026-08-05", "status": "placeholder" },
+    "forest": { "file": "tiles/forest.png", "source": "generated-2026-08-05", "status": "placeholder" },
+    "farmland": { "file": "tiles/farmland.png", "source": "vault:2026-08-04_v2_detailed/tilled_hydro_soil", "status": "approved" },
+    "path": { "file": "tiles/path.png", "source": "vault:2026-08-04_startpack_sorted/road_panel", "status": "approved" },
+    "rockWall": { "file": "tiles/rock_wall.png", "source": "generated-2026-08-05", "status": "placeholder" },
+    "caveEntrance": { "file": "tiles/cave_entrance.png", "source": "generated-2026-08-05", "status": "placeholder" },
+    "ore": { "file": "tiles/ore.png", "source": "vault:2026-08-04_v2_detailed/desert_ore", "status": "approved" },
+    "empty": { "file": "tiles/empty.png", "source": "generated-2026-08-05", "status": "placeholder" }
+  },
+  "characters": {
+    "player": { "file": "characters/colonist.png", "source": "vault:2026-08-04_v2_detailed/colonist", "status": "approved" }
+  },
+  "buildings": {
+    "market": { "file": "buildings/market_kiosk.png", "source": "vault:2026-08-04_startpack_sorted/market_kiosk", "status": "approved" }
+  }
+}
