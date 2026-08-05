@@ -10,14 +10,14 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 
 /// Rendert ein rechteckiges Fenster aus Welt-Tile-Koordinaten (eine
 /// z-Ebene) inklusive des dort persistierten Wasserstands
-/// ([vt_world.Tile.waterLevel]) als einfaches Debug-Grid.
+/// ([vt_world.Tile.waterLevel]) als einfaches Debug-Grid aus Farbflächen.
 ///
-/// Arbeitet bewusst in Welt- statt Chunk-Koordinaten: das Fenster kann so
-/// frei über Chunk-Grenzen hinweg positioniert werden, z.B. zentriert auf
-/// den Weltursprung (siehe VoidTraderGame) statt an eine einzelne
-/// Chunk-Kachel gebunden zu sein. Der Wasserstand kommt direkt aus der Welt
-/// (siehe `WorldFluidBridge` in vt_physics) statt aus einem separaten,
-/// losgelösten Demo-Grid.
+/// Seit der Sofort-Korrektur nach Webpreview 2026-08-05 ist dies **nicht
+/// mehr die normale Spielansicht** (das übernimmt
+/// [TileSpriteMapComponent]), sondern ein schaltbares Debug-Overlay —
+/// siehe [enabled]. Arbeitet wie [TileSpriteMapComponent] bewusst in
+/// Welt- statt Chunk-Koordinaten, damit beide exakt dasselbe Fenster
+/// zeigen können.
 class DebugMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
   final int originX;
@@ -27,6 +27,11 @@ class DebugMapComponent extends PositionComponent {
   final int z;
   final double tileSize;
 
+  /// Ob das Debug-Overlay (Tile-Farben + Wasser + Gebäude-Umrandung)
+  /// gezeichnet wird. Standardmäßig aus, da die normale Ansicht jetzt
+  /// [TileSpriteMapComponent] ist — per Taste umschaltbar (VoidTraderGame).
+  bool enabled;
+
   DebugMapComponent({
     required this.gameWorld,
     required this.originX,
@@ -35,6 +40,7 @@ class DebugMapComponent extends PositionComponent {
     required this.tileHeight,
     required this.z,
     this.tileSize = 16,
+    this.enabled = false,
   }) : super(size: Vector2(tileWidth * tileSize, tileHeight * tileSize));
 
   final Paint _tilePaint = Paint();
@@ -43,6 +49,8 @@ class DebugMapComponent extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
+    if (!enabled) return;
+
     for (var y = 0; y < tileHeight; y++) {
       for (var x = 0; x < tileWidth; x++) {
         final worldX = originX + x;

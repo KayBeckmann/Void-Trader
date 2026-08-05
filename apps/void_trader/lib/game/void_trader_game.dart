@@ -1,3 +1,4 @@
+import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 import 'debug_map_component.dart';
 import 'npc_component.dart';
 import 'player_component.dart';
+import 'tile_sprite_map_component.dart';
 
 /// Startpositionen der ersten NPCs, relativ zum Weltursprung (in Tiles) —
 /// alle innerhalb der sicheren Startzone aus vt_world.
@@ -23,10 +25,12 @@ const _npcSpawns = [
 
 /// Root Flame game.
 ///
-/// Zeigt die [DebugMapComponent] (Tiles + Wasserzustand rund um den
-/// Weltursprung, dort liegt die sichere Startzone aus vt_world) plus eine
-/// steuerbare [PlayerComponent] mit Kamera-Follow. Interaktionen: Graben/
-/// Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank, 3 =
+/// Zeigt [TileSpriteMapComponent] (Pixel-Art-Tiles + Wasserzustand rund um
+/// den Weltursprung, dort liegt die sichere Startzone aus vt_world) als
+/// normale Ansicht plus eine steuerbare [PlayerComponent] mit
+/// Kamera-Follow. [DebugMapComponent] liegt als schaltbares Debug-Overlay
+/// (F1) darüber — Sofort-Korrektur nach Webpreview 2026-08-05. Interaktionen:
+/// Graben/Abbauen (Space/E, Phase 1), Bauen (1 = Mauer, 2 = Werkbank, 3 =
 /// Marktkiosk), Craften (C an einer Werkbank) und Verkaufen (V an einem
 /// Marktkiosk) — Phase 4/6. Ein periodischer Fluid-Tick
 /// ([WorldFluidBridge]) lässt echtes Wasser aus vt_world im sichtbaren
@@ -53,11 +57,17 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Designregel Phase 3) statt jeden Tick das ganze Fenster neu zu bauen.
   static const double _fluidTickInterval = 0.5;
 
+  /// Kachelgröße in Pixeln — an die importierten Pixel-Art-Assets angelehnt
+  /// (siehe assets/pixel-art/manifest.json), von Sprite- und Debug-Karte
+  /// gemeinsam genutzt, damit beide exakt dasselbe Fenster zeigen.
+  static const double _tileSize = 32;
+
   final vt_world.World simulationWorld;
   final Inventory inventory = Inventory();
   final DayNightCycle dayNightCycle = DayNightCycle();
   final List<Npc> npcs = [];
   late final WorldFluidBridge fluidBridge;
+  late final TileSpriteMapComponent spriteMap;
   late final DebugMapComponent map;
   late final PlayerComponent player;
   late final List<NpcComponent> npcComponents;
@@ -72,8 +82,24 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   Future<void> onLoad() async {
     await super.onLoad();
 
+    // Flame sucht Bilder standardmäßig unter "assets/images/" — unsere
+    // Pixel-Art liegt unter "assets/pixel-art/" (siehe Manifest dort).
+    Flame.images.prefix = 'assets/pixel-art/';
+
     const viewSize = _viewRadius * 2;
 
+    spriteMap = TileSpriteMapComponent(
+      gameWorld: simulationWorld,
+      originX: -_viewRadius,
+      originY: -_viewRadius,
+      tileWidth: viewSize,
+      tileHeight: viewSize,
+      z: vt_world.ZLevel.surface,
+      tileSize: _tileSize,
+    );
+
+    // Schaltbares Debug-Overlay (F1) — dasselbe Fenster wie spriteMap,
+    // standardmäßig aus (siehe DebugMapComponent-Doc).
     map = DebugMapComponent(
       gameWorld: simulationWorld,
       originX: -_viewRadius,
@@ -81,6 +107,7 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       tileWidth: viewSize,
       tileHeight: viewSize,
       z: vt_world.ZLevel.surface,
+      tileSize: _tileSize,
     );
 
     // map.size / 2 entspricht damit exakt Welt-Tile (0,0) — Mitte der
@@ -94,7 +121,9 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // Wichtig: Komponenten müssen in `world` (nicht direkt via `add()` auf
     // dem Game) liegen, damit sie von der Kamera transformiert werden —
     // sonst folgt die Kamera dem Spieler, aber die Karte bleibt starr.
-    await world.addAll([map, player, ...npcComponents]);
+    // Reihenfolge = Zeichenreihenfolge: spriteMap zuunterst, Debug-Overlay
+    // direkt darüber, NPCs/Spieler obenauf.
+    await world.addAll([spriteMap, map, player, ...npcComponents]);
     camera.follow(player);
   }
 
@@ -150,6 +179,8 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       craftAt(position);
     } else if (key == LogicalKeyboardKey.keyV) {
       sellAllAt(position);
+    } else if (key == LogicalKeyboardKey.f1) {
+      map.enabled = !map.enabled;
     }
   }
 

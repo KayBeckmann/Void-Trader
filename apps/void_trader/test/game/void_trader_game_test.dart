@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
@@ -5,6 +6,27 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 import 'package:void_trader/game/void_trader_game.dart';
 
 void main() {
+  group('VoidTraderGame Sprite-/Debug-Ansicht', () {
+    test('onLoad erzeugt spriteMap als Standardansicht, Debug-Overlay ist aus', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      expect(game.spriteMap, isNotNull);
+      expect(game.map.enabled, isFalse);
+    });
+
+    test('F1 schaltet das Debug-Overlay um', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      game.player.onAction?.call(LogicalKeyboardKey.f1, game.player.position);
+      expect(game.map.enabled, isTrue);
+
+      game.player.onAction?.call(LogicalKeyboardKey.f1, game.player.position);
+      expect(game.map.enabled, isFalse);
+    });
+  });
+
   group('VoidTraderGame.digAt', () {
     test('baut ein Stein-Tile ab und legt Stein ins Inventar', () async {
       final game = VoidTraderGame(seed: 1);

@@ -36,5 +36,22 @@ void main() {
       expect(component.size.x, 20 * component.tileSize);
       expect(component.size.y, 10 * component.tileSize);
     });
+
+    test('enabled ist standardmäßig aus (Overlay statt Standardansicht)', () {
+      final world = vt_world.World(1);
+
+      final component = DebugMapComponent(
+        gameWorld: world,
+        originX: 0,
+        originY: 0,
+        tileWidth: 4,
+        tileHeight: 4,
+        z: vt_world.ZLevel.surface,
+      );
+
+      expect(component.enabled, isFalse);
+      component.enabled = true;
+      expect(component.enabled, isTrue);
+    });
   });
 }
