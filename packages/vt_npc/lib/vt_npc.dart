@@ -1,8 +1,9 @@
-/// Support for doing something awesome.
+/// NPC-Zustände, Bedürfnisse, Arbeit, Tagesabläufe für Void Trader.
 ///
-/// More dartdocs go here.
+/// Reine Dart-Simulation ohne Flutter-/Flame-Abhängigkeiten (siehe
+/// docs/ARCHITECTURE.md: "Dart-Core zuerst").
 library;
 
-export 'src/vt_npc_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/npc.dart';
+export 'src/npc_needs.dart';
+export 'src/npc_type.dart';
