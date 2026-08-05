@@ -5,6 +5,8 @@
 /// liefert zunächst die Wasser-Grundlage (`WaterCell` + `FluidGrid`).
 library;
 
+export 'src/day_night_cycle.dart';
 export 'src/fluid_grid.dart';
 export 'src/water_cell.dart';
+export 'src/weather_system.dart';
 export 'src/world_fluid_bridge.dart';
