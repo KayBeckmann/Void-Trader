@@ -323,4 +323,80 @@ void main() {
       expect(anyChanged, isTrue);
     });
   });
+
+  group('VoidTraderGame.resourceLabel', () {
+    test('liefert für jede Resource ein Label', () {
+      for (final resource in Resource.values) {
+        expect(VoidTraderGame.resourceLabel(resource), isNotEmpty);
+      }
+    });
+  });
+
+  group('VoidTraderGame.currentInteractionHint', () {
+    test('ist null ohne Gebäude auf nicht abbaubarem Tile', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.grass),
+      );
+
+      expect(game.currentInteractionHint(), isNull);
+    });
+
+    test('zeigt Abbau-Hinweis auf abbaubarem Tile', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+
+      expect(game.currentInteractionHint(), contains('Abbauen'));
+    });
+
+    test('zeigt Craft-Hinweis an einer Werkbank', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 2);
+      game.inventory.add(Resource.ore, 1);
+      game.buildAt(game.player.position, BuildingType.workbench);
+
+      expect(game.currentInteractionHint(), contains('Craften'));
+    });
+  });
+
+  group('VoidTraderGame.feedbackMessage', () {
+    test('meldet Erfolg und Misserfolg beim Bauen', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      game.buildAt(game.player.position, BuildingType.wall);
+      expect(game.feedbackMessage.value, contains('Nicht genug'));
+
+      game.inventory.add(Resource.stone, 3);
+      game.buildAt(game.player.position, BuildingType.wall);
+      expect(game.feedbackMessage.value, contains('gebaut'));
+    });
+
+    test('meldet erfolgreichen Abbau mit Ressourcenname', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+      game.player.position = Vector2.zero();
+
+      game.digAt(game.player.position);
+
+      expect(game.feedbackMessage.value, contains('Stein'));
+    });
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
@@ -59,6 +60,11 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// Designregel Phase 3) statt jeden Tick das ganze Fenster neu zu bauen.
   static const double _fluidTickInterval = 0.5;
 
+  /// Sekunden zwischen zwei HUD-Aktualisierungen. Das Flutter-Overlay muss
+  /// nicht jeden Frame neu bauen, nur oft genug für ein reaktionsfreudiges
+  /// Interface.
+  static const double _hudTickInterval = 0.2;
+
   /// Kachelgröße in Pixeln — an die importierten Pixel-Art-Assets angelehnt
   /// (siehe assets/pixel-art/manifest.json), von Sprite- und Debug-Karte
   /// gemeinsam genutzt, damit beide exakt dasselbe Fenster zeigen.
@@ -76,10 +82,21 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   late final List<NpcComponent> npcComponents;
 
   double _fluidTickAccumulator = 0;
+  double _hudTickAccumulator = 0;
 
   /// Zähler für erfolgreich abgebaute Tiles (nützlich für UI/Debug,
   /// unabhängig vom Inventarstand).
   int minedResourceCount = 0;
+
+  /// Erhöht sich periodisch (siehe [_hudTickInterval]) — das Flutter-HUD
+  /// hört darauf, um Inventar/Status regelmäßig neu anzuzeigen, ohne dass
+  /// jede einzelne Änderung explizit gemeldet werden muss.
+  final ValueNotifier<int> hudTick = ValueNotifier(0);
+
+  /// Letzte Rückmeldung zu einer Spieleraktion (Erfolg oder Misserfolg),
+  /// für das HUD gedacht — "der Spieler muss mit der Umwelt interagieren
+  /// können" heißt auch: er muss sehen, was dabei passiert.
+  final ValueNotifier<String?> feedbackMessage = ValueNotifier(null);
 
   @override
   Future<void> onLoad() async {
@@ -140,6 +157,12 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       npc.tick(dt, isDaytime: dayNightCycle.isDay);
     }
 
+    _hudTickAccumulator += dt;
+    if (_hudTickAccumulator >= _hudTickInterval) {
+      _hudTickAccumulator -= _hudTickInterval;
+      hudTick.value++;
+    }
+
     _fluidTickAccumulator += dt;
     if (_fluidTickAccumulator < _fluidTickInterval) return;
     _fluidTickAccumulator -= _fluidTickInterval;
@@ -151,6 +174,25 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       width: _viewRadius * 2 + 1,
       height: _viewRadius * 2 + 1,
     );
+  }
+
+  /// Menschenlesbarer Hinweis, was der Spieler an seiner aktuellen Position
+  /// gerade tun kann (fürs HUD) — "der Spieler muss mit der Umwelt
+  /// interagieren können" heißt auch: er muss sehen, *womit* gerade.
+  /// `null`, wenn hier nichts Interaktives ist.
+  String? currentInteractionHint() {
+    final tile = _worldTileFor(player.position);
+    const z = vt_world.ZLevel.surface;
+    final building = simulationWorld.buildingAt(tile.x, tile.y, z);
+
+    if (building == BuildingType.workbench) return '[C] Craften';
+    if (building == BuildingType.market) return '[V] Verkaufen';
+    if (building == BuildingType.landingPad) return '[L] Fracht laden';
+
+    final tileType = simulationWorld.tileAt(tile.x, tile.y, z).type;
+    if (tileType.isMinable) return '[Leertaste] Abbauen';
+
+    return null;
   }
 
   /// Erzeugt einen [Npc] + zugehörige [NpcComponent] an einer Welt-Tile-
@@ -208,11 +250,17 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   bool digAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
     final mined = simulationWorld.mineTileAt(tile.x, tile.y, vt_world.ZLevel.surface);
-    if (mined == null) return false;
+    if (mined == null) {
+      feedbackMessage.value = 'Hier gibt es nichts abzubauen.';
+      return false;
+    }
 
     minedResourceCount++;
     final resource = _resourceForMinedTile(mined);
-    if (resource != null) inventory.add(resource, 1);
+    if (resource != null) {
+      inventory.add(resource, 1);
+      feedbackMessage.value = '+1 ${resourceLabel(resource)}';
+    }
     return true;
   }
 
@@ -222,8 +270,11 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   /// erfolgreicher Platzierung ab.
   bool buildAt(Vector2 worldPosition, BuildingType type) {
     final tile = _worldTileFor(worldPosition);
-    final cost = buildingDefinitionFor(type).buildCost;
-    if (!inventory.hasAll(cost)) return false;
+    final definition = buildingDefinitionFor(type);
+    if (!inventory.hasAll(definition.buildCost)) {
+      feedbackMessage.value = 'Nicht genug Rohstoffe für ${definition.name}.';
+      return false;
+    }
 
     final placed = simulationWorld.placeBuildingAt(
       tile.x,
@@ -231,9 +282,13 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       vt_world.ZLevel.surface,
       type,
     );
-    if (!placed) return false;
+    if (!placed) {
+      feedbackMessage.value = 'Hier kann nicht gebaut werden.';
+      return false;
+    }
 
-    inventory.removeAll(cost);
+    inventory.removeAll(definition.buildCost);
+    feedbackMessage.value = '${definition.name} gebaut.';
     return true;
   }
 
@@ -243,14 +298,21 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   bool craftAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
     final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
-    if (building != BuildingType.workbench) return false;
-    if (!inventory.hasAll(basicComponentRecipe.input)) return false;
+    if (building != BuildingType.workbench) {
+      feedbackMessage.value = 'Hier steht keine Werkbank.';
+      return false;
+    }
+    if (!inventory.hasAll(basicComponentRecipe.input)) {
+      feedbackMessage.value = 'Nicht genug Rohstoffe zum Craften.';
+      return false;
+    }
 
     inventory.craft(
       basicComponentRecipe.input,
       basicComponentRecipe.output,
       outputAmount: basicComponentRecipe.outputAmount,
     );
+    feedbackMessage.value = '${basicComponentRecipe.name} gecraftet.';
     return true;
   }
 
@@ -262,7 +324,10 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   int sellAllAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
     final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
-    if (building != BuildingType.market) return 0;
+    if (building != BuildingType.market) {
+      feedbackMessage.value = 'Hier steht kein Marktkiosk.';
+      return 0;
+    }
 
     var totalEarned = 0;
     for (final resource in sellPrices.keys) {
@@ -270,6 +335,10 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       if (amount <= 0) continue;
       totalEarned += sellResource(inventory, resource, amount) ?? 0;
     }
+
+    feedbackMessage.value = totalEarned > 0
+        ? 'Verkauft für $totalEarned Credits.'
+        : 'Nichts zu verkaufen.';
     return totalEarned;
   }
 
@@ -282,7 +351,10 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
   int loadCargoAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
     final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
-    if (building != BuildingType.landingPad) return 0;
+    if (building != BuildingType.landingPad) {
+      feedbackMessage.value = 'Hier steht kein Landepad.';
+      return 0;
+    }
 
     var totalLoaded = 0;
     for (final resource in Resource.values) {
@@ -293,6 +365,10 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       ship.cargo.add(resource, amount);
       totalLoaded += amount;
     }
+
+    feedbackMessage.value = totalLoaded > 0
+        ? '$totalLoaded Einheiten Fracht verladen.'
+        : 'Nichts zu verladen.';
     return totalLoaded;
   }
 
@@ -308,6 +384,20 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
         return Resource.ore;
       default:
         return null;
+    }
+  }
+
+  /// Deutsches Label für eine Ressource, fürs HUD.
+  static String resourceLabel(Resource resource) {
+    switch (resource) {
+      case Resource.stone:
+        return 'Stein';
+      case Resource.ore:
+        return 'Erz';
+      case Resource.component:
+        return 'Bauteil';
+      case Resource.credits:
+        return 'Credits';
     }
   }
 }

@@ -5,7 +5,7 @@ import 'package:void_trader/app/void_trader_app.dart';
 
 void main() {
   testWidgets('VoidTraderApp startet ohne Fehler', (WidgetTester tester) async {
-    await tester.pumpWidget(const VoidTraderApp());
+    await tester.pumpWidget(VoidTraderApp());
     await tester.pump();
 
     expect(find.byType(MaterialApp), findsOneWidget);
