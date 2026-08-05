@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:vt_core/vt_core.dart';
 
 import '../game/void_trader_game.dart';
+import 'game_ui_state.dart';
+import 'widgets/feedback_toast.dart';
+import 'widgets/hud_panel.dart';
+import 'widgets/inspector_panel.dart';
+import 'widgets/objective_panel.dart';
+import 'widgets/resource_bar.dart';
+import 'widgets/toolbelt_panel.dart';
+import 'widgets/top_status_bar.dart';
 
-/// Flutter-HUD-Overlay für [VoidTraderGame] — echtes Interface statt
-/// stummer Tastatursteuerung: Inventar, Tageszeit, ein Hinweis, was an der
-/// aktuellen Position möglich ist, Rückmeldung zur letzten Aktion und eine
-/// kompakte Steuerungs-Legende.
+/// Flutter-HUD-Overlay für [VoidTraderGame] — komponiert aus eigenständigen
+/// Panels (Roadmap UI-02) statt einer monolithischen Widget-Datei. Jedes
+/// Panel bekommt reine Daten aus einem [GameUiState]-Snapshot, nicht die
+/// [VoidTraderGame]-Instanz selbst — das macht die Panels ohne echtes Spiel
+/// mit Beispielzustand testbar (siehe test/ui/widgets/).
 ///
-/// Rein informativ (kein eigener Touch-Input) — [IgnorePointer] sorgt
-/// dafür, dass Klicks/Taps weiterhin beim darunterliegenden [GameWidget]
-/// ankommen.
+/// Nur die reinen Info-Panels (Topbar/Ressourcen/Inspector/Feedback/Ziele)
+/// stecken in [IgnorePointer] — [ToolbeltPanel] braucht echten Touch-Input,
+/// um Klicks in Modus-Wechsel zu übersetzen (Roadmap UI-04).
 class GameHud extends StatelessWidget {
   final VoidTraderGame game;
 
@@ -18,157 +26,67 @@ class GameHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _InventoryPanel(game: game),
-                  _StatusPanel(game: game),
-                ],
-              ),
-              const Spacer(),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _InteractionHint(game: game),
-                  const SizedBox(height: 6),
-                  _FeedbackBanner(game: game),
-                  const SizedBox(height: 6),
-                  const _ControlsLegend(),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Gemeinsame Optik für alle HUD-Kacheln.
-class _HudPanel extends StatelessWidget {
-  final Widget child;
-  final Color color;
-
-  const _HudPanel({required this.child, this.color = const Color(0xB0000000)});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
-      child: child,
-    );
-  }
-}
-
-class _InventoryPanel extends StatelessWidget {
-  final VoidTraderGame game;
-
-  const _InventoryPanel({required this.game});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: game.hudTick,
-      builder: (context, _, _) => _HudPanel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final resource in Resource.values)
-              Text(
-                '${VoidTraderGame.resourceLabel(resource)}: ${game.inventory.count(resource)}',
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusPanel extends StatelessWidget {
-  final VoidTraderGame game;
-
-  const _StatusPanel({required this.game});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: game.hudTick,
-      builder: (context, _, _) {
-        final cycle = game.dayNightCycle;
-        final totalMinutes = (cycle.timeOfDay * 24 * 60).floor();
-        final hours = (totalMinutes ~/ 60).toString().padLeft(2, '0');
-        final minutes = (totalMinutes % 60).toString().padLeft(2, '0');
-
-        return _HudPanel(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                cycle.isDay ? Icons.wb_sunny : Icons.nightlight_round,
-                color: Colors.white,
-                size: 16,
-              ),
-              const SizedBox(width: 6),
-              Text('$hours:$minutes', style: const TextStyle(color: Colors.white, fontSize: 14)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InteractionHint extends StatelessWidget {
-  final VoidTraderGame game;
-
-  const _InteractionHint({required this.game});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<int>(
-      valueListenable: game.hudTick,
-      builder: (context, _, _) {
-        final hint = game.currentInteractionHint();
-        if (hint == null) return const SizedBox.shrink();
-        return _HudPanel(
-          child: Text(
-            hint,
-            style: const TextStyle(
-              color: Colors.amberAccent,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        game.hudTick,
+        game.activeTool,
+        game.selectedBuildingType,
+        game.selectedTile,
+        game.feedbackMessage,
+      ]),
+      builder: (context, _) {
+        final state = GameUiState.from(game);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                IgnorePointer(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TopStatusBar(
+                            isDay: state.isDay,
+                            timeLabel: state.timeLabel,
+                            weather: state.weather,
+                          ),
+                          const SizedBox(height: 6),
+                          ResourceBar(inventory: state.inventory),
+                        ],
+                      ),
+                      ObjectivePanel(objectives: state.objectives),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                IgnorePointer(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InspectorPanel(info: state.inspector),
+                      const SizedBox(height: 6),
+                      FeedbackToast(message: state.feedbackMessage),
+                      const SizedBox(height: 6),
+                      const _ControlsLegend(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  child: ToolbeltPanel(
+                    activeTool: state.activeTool,
+                    onSelect: (mode) => game.activeTool.value = mode,
+                  ),
+                ),
+              ],
             ),
           ),
-        );
-      },
-    );
-  }
-}
-
-class _FeedbackBanner extends StatelessWidget {
-  final VoidTraderGame game;
-
-  const _FeedbackBanner({required this.game});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<String?>(
-      valueListenable: game.feedbackMessage,
-      builder: (context, message, _) {
-        if (message == null) return const SizedBox.shrink();
-        return _HudPanel(
-          child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13)),
         );
       },
     );
@@ -180,11 +98,11 @@ class _ControlsLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _HudPanel(
+    return const HudPanel(
       color: Color(0x80000000),
       child: Text(
-        'WASD/Pfeile Bewegen · Leertaste/E Graben · 1-4 Bauen · '
-        'C Craften · V Verkaufen · L Fracht laden · F1 Debug-Ansicht',
+        'WASD/Pfeile Bewegen · Werkzeug per Klick oder Taste wählen · '
+        'Klick auf die Karte wirkt am Zieltile · F1 Debug-Ansicht',
         style: TextStyle(color: Colors.white70, fontSize: 11),
         textAlign: TextAlign.center,
       ),
