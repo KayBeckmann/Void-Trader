@@ -8,8 +8,8 @@ void main() {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
 
-      final tileX = (game.player.position.x / game.map.tileSize).floor();
-      final tileY = (game.player.position.y / game.map.tileSize).floor();
+      final tileX = game.map.originX + (game.player.position.x / game.map.tileSize).floor();
+      final tileY = game.map.originY + (game.player.position.y / game.map.tileSize).floor();
       game.simulationWorld.setTileAt(
         tileX,
         tileY,
@@ -31,8 +31,8 @@ void main() {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
 
-      final tileX = (game.player.position.x / game.map.tileSize).floor();
-      final tileY = (game.player.position.y / game.map.tileSize).floor();
+      final tileX = game.map.originX + (game.player.position.x / game.map.tileSize).floor();
+      final tileY = game.map.originY + (game.player.position.y / game.map.tileSize).floor();
       game.simulationWorld.setTileAt(
         tileX,
         tileY,

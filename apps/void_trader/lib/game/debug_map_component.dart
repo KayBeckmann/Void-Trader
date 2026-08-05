@@ -8,43 +8,47 @@ import 'package:vt_physics/vt_physics.dart';
 // unten bewusst `gameWorld` statt `world`.
 import 'package:vt_world/vt_world.dart' as vt_world;
 
-/// Rendert einen einzelnen Chunk (eine z-Ebene) plus den zugehörigen
-/// [FluidGrid]-Wasserzustand als einfaches Debug-Grid.
+/// Rendert ein rechteckiges Fenster aus Welt-Tile-Koordinaten (eine
+/// z-Ebene) plus den zugehörigen [FluidGrid]-Wasserzustand als einfaches
+/// Debug-Grid.
 ///
-/// Dient laut Roadmap-Empfehlung als Zwischenschritt vor Spielerfigur und
-/// echten Sprites: erst sehen, dass Tiles + Wasser korrekt zusammenspielen,
-/// bevor Steuerung und Grafik dazukommen.
+/// Arbeitet bewusst in Welt- statt Chunk-Koordinaten: das Fenster kann so
+/// frei über Chunk-Grenzen hinweg positioniert werden, z.B. zentriert auf
+/// den Weltursprung (siehe VoidTraderGame) statt an eine einzelne
+/// Chunk-Kachel gebunden zu sein.
 class DebugMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
-  final vt_world.ChunkCoord chunkCoord;
+  final int originX;
+  final int originY;
+  final int tileWidth;
+  final int tileHeight;
   final int z;
   final FluidGrid fluidGrid;
   final double tileSize;
 
   DebugMapComponent({
     required this.gameWorld,
-    required this.chunkCoord,
+    required this.originX,
+    required this.originY,
+    required this.tileWidth,
+    required this.tileHeight,
     required this.z,
     required this.fluidGrid,
     this.tileSize = 16,
   }) : assert(
-         fluidGrid.width == vt_world.Chunk.size &&
-             fluidGrid.height == vt_world.Chunk.size,
-         'fluidGrid muss dieselbe Größe wie ein Chunk haben '
-         '(${vt_world.Chunk.size}x${vt_world.Chunk.size})',
+         fluidGrid.width == tileWidth && fluidGrid.height == tileHeight,
+         'fluidGrid ($tileWidth x $tileHeight erwartet) passt nicht zur Fenstergröße',
        ),
-       super(size: Vector2.all(vt_world.Chunk.size * tileSize));
+       super(size: Vector2(tileWidth * tileSize, tileHeight * tileSize));
 
   final Paint _tilePaint = Paint();
   final Paint _waterPaint = Paint();
 
   @override
   void render(Canvas canvas) {
-    final chunk = gameWorld.getOrCreateChunk(chunkCoord);
-    final layer = chunk.layerAt(z);
-
-    for (var y = 0; y < vt_world.Chunk.size; y++) {
-      for (var x = 0; x < vt_world.Chunk.size; x++) {
+    for (var y = 0; y < tileHeight; y++) {
+      for (var x = 0; x < tileWidth; x++) {
+        final tile = gameWorld.tileAt(originX + x, originY + y, z);
         final rect = Rect.fromLTWH(
           x * tileSize,
           y * tileSize,
@@ -52,7 +56,7 @@ class DebugMapComponent extends PositionComponent {
           tileSize,
         );
 
-        _tilePaint.color = tileColor(layer.tileAt(x, y).type);
+        _tilePaint.color = tileColor(tile.type);
         canvas.drawRect(rect, _tilePaint);
 
         final waterLevel = fluidGrid.cellAt(x, y).waterLevel;

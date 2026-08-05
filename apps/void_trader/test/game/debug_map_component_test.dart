@@ -13,19 +13,22 @@ void main() {
   });
 
   group('DebugMapComponent Konstruktion', () {
-    test('akzeptiert ein FluidGrid in Chunk-Größe', () {
+    test('akzeptiert ein FluidGrid in Fenstergröße', () {
       final world = vt_world.World(1);
-      final fluidGrid = FluidGrid(vt_world.Chunk.size, vt_world.Chunk.size);
+      final fluidGrid = FluidGrid(20, 10);
 
       final component = DebugMapComponent(
         gameWorld: world,
-        chunkCoord: const vt_world.ChunkCoord(0, 0),
+        originX: -5,
+        originY: -5,
+        tileWidth: 20,
+        tileHeight: 10,
         z: vt_world.ZLevel.surface,
         fluidGrid: fluidGrid,
       );
 
-      expect(component.size.x, vt_world.Chunk.size * component.tileSize);
-      expect(component.size.y, vt_world.Chunk.size * component.tileSize);
+      expect(component.size.x, 20 * component.tileSize);
+      expect(component.size.y, 10 * component.tileSize);
     });
 
     test('wirft bei abweichender FluidGrid-Größe', () {
@@ -35,7 +38,10 @@ void main() {
       expect(
         () => DebugMapComponent(
           gameWorld: world,
-          chunkCoord: const vt_world.ChunkCoord(0, 0),
+          originX: 0,
+          originY: 0,
+          tileWidth: 32,
+          tileHeight: 32,
           z: vt_world.ZLevel.surface,
           fluidGrid: wrongGrid,
         ),
