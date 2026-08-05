@@ -5,3 +5,4 @@ library;
 
 export 'src/building.dart';
 export 'src/crafting_recipe.dart';
+export 'src/market.dart';

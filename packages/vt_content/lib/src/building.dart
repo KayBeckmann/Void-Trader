@@ -3,7 +3,7 @@ import 'package:vt_core/vt_core.dart';
 /// Baubare Objekte (Roadmap Phase 4: Baublöcke). Startet schmal mit zwei
 /// Bausteinen, die zusammen "Sammeln → Verarbeiten → Ausbauen" zeigen —
 /// weitere Baublöcke (Zäune, Lagerkisten, Pumpe, …) folgen später.
-enum BuildingType { wall, workbench }
+enum BuildingType { wall, workbench, market }
 
 /// Balancing-Daten für einen [BuildingType]: Name + Baukosten in
 /// Rohstoffen.
@@ -30,6 +30,11 @@ const Map<BuildingType, BuildingDefinition> buildingDefinitions = {
     type: BuildingType.workbench,
     name: 'Werkbank',
     buildCost: {Resource.stone: 2, Resource.ore: 1},
+  ),
+  BuildingType.market: BuildingDefinition(
+    type: BuildingType.market,
+    name: 'Marktkiosk',
+    buildCost: {Resource.stone: 5, Resource.ore: 2},
   ),
 };
 
