@@ -40,10 +40,31 @@ class ValueNoise2D {
     return h / 0xFFFFFF;
   }
 
+  /// Bewusst KEIN `Object.hash(seed, x, y)`: Dart mischt dort einen pro
+  /// Isolate zufälligen Seed ein (Schutz vor Hash-Flooding-Angriffen auf
+  /// Hash-Maps), der bei jedem Programmstart anders ausfällt. Für uns hieße
+  /// das: derselbe Welt-Seed erzeugt bei jedem Neustart eine andere Welt —
+  /// ein Bruch des in dieser Klasse dokumentierten Kernversprechens
+  /// "gleicher Seed erzeugt immer denselben Inhalt". Innerhalb eines
+  /// einzelnen Programmlaufs bleibt `Object.hash` stabil (deshalb ist der
+  /// Bug lange unbemerkt geblieben), zwischen zwei Läufen aber nicht — siehe
+  /// Bautagebuch-Eintrag zu diesem Fund. Stattdessen ein reiner, prozess-
+  /// unabhängiger Ganzzahl-Mix (MurmurHash3-Finalizer-artig, zweimal
+  /// angewendet für x und y).
   int _hash(int x, int y) {
-    final h = Object.hash(seed, x, y);
-    // Vorzeichen entfernen, ohne die Verteilung zu verzerren.
+    var h = (0x811c9dc5 ^ seed) & 0xFFFFFFFF;
+    h = _mixIn(h, x);
+    h = _mixIn(h, y);
     return h & 0x7FFFFFFF;
+  }
+
+  int _mixIn(int h, int value) {
+    h = (h ^ value) & 0xFFFFFFFF;
+    h = (h * 0x85ebca6b) & 0xFFFFFFFF;
+    h = (h ^ (h >> 13)) & 0xFFFFFFFF;
+    h = (h * 0xc2b2ae35) & 0xFFFFFFFF;
+    h = (h ^ (h >> 16)) & 0xFFFFFFFF;
+    return h;
   }
 }
 
