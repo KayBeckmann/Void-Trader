@@ -3,9 +3,10 @@ import 'package:vt_world/vt_world.dart';
 
 void main() {
   group('TileMining', () {
-    test('Stein und Felswand sind abbaubar', () {
+    test('Stein, Felswand und Erz sind abbaubar', () {
       expect(TileType.stone.isMinable, isTrue);
       expect(TileType.rockWall.isMinable, isTrue);
+      expect(TileType.ore.isMinable, isTrue);
     });
 
     test('Gras, Erde, Wasser etc. sind nicht abbaubar', () {
@@ -17,6 +18,7 @@ void main() {
         TileType.farmland,
         TileType.path,
         TileType.empty,
+        TileType.caveEntrance,
       ]) {
         expect(type.isMinable, isFalse, reason: '$type sollte nicht abbaubar sein');
       }

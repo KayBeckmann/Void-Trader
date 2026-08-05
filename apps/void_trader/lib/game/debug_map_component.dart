@@ -89,6 +89,8 @@ class DebugMapComponent extends PositionComponent {
         return const Color(0xFF000000);
       case vt_world.TileType.caveEntrance:
         return const Color(0xFF6A1B9A);
+      case vt_world.TileType.ore:
+        return const Color(0xFFFFA000);
     }
   }
 }

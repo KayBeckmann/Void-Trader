@@ -15,6 +15,10 @@ enum TileType {
   /// Höhleneingang auf der Oberfläche (Phase 2: prozedurale Weltgeneration).
   /// Begehbar — markiert den Übergang zur ersten Höhlenebene darunter.
   caveEntrance,
+
+  /// Erzader in tieferen Ebenen (Phase 2). Solide wie Fels, aber abbaubar
+  /// und liefert einen eigenen Ressourcentyp statt gewöhnlichem Gestein.
+  ore,
 }
 
 /// Ein einzelnes Tile innerhalb einer [ChunkLayer].
@@ -27,7 +31,8 @@ class Tile {
   const Tile(this.type);
 
   /// Felsige/undurchdringliche Tiles blockieren Bewegung und Sichtlinien.
-  bool get isSolid => type == TileType.stone || type == TileType.rockWall;
+  bool get isSolid =>
+      type == TileType.stone || type == TileType.rockWall || type == TileType.ore;
 
   bool get isWalkable => !isSolid;
 
@@ -50,7 +55,8 @@ class Tile {
 /// docs/ARCHITECTURE.md: "Dart-Core zuerst").
 extension TileMining on TileType {
   /// Ob dieses Tile mit dem Graben/Abbauen-Werkzeug entfernt werden kann.
-  bool get isMinable => this == TileType.stone || this == TileType.rockWall;
+  bool get isMinable =>
+      this == TileType.stone || this == TileType.rockWall || this == TileType.ore;
 
   /// Tile-Typ, der nach erfolgreichem Abbau zurückbleibt.
   TileType get minedResult {
