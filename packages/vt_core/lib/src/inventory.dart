@@ -48,6 +48,16 @@ class Inventory {
     costs.forEach(remove);
   }
 
+  /// Wandelt Rohstoffe gemäß eines Rezepts um: zieht [input] ab und fügt
+  /// [outputAmount] von [output] hinzu (Roadmap Phase 4: Werkbank/
+  /// Schmelzer). Alles-oder-nichts wie [removeAll] — wirft ohne etwas zu
+  /// verändern, wenn [input] nicht vollständig vorhanden ist.
+  void craft(Map<Resource, int> input, Resource output, {int outputAmount = 1}) {
+    assert(outputAmount > 0, 'outputAmount muss positiv sein');
+    removeAll(input);
+    add(output, outputAmount);
+  }
+
   /// Unveränderliche Momentaufnahme aller aktuell gehaltenen Mengen.
   Map<Resource, int> get snapshot => Map.unmodifiable(_counts);
 }

@@ -1,8 +1,7 @@
-/// Support for doing something awesome.
-///
-/// More dartdocs go here.
+/// Startdaten/Balancing für Void Trader: Gebäude-Definitionen,
+/// Crafting-Rezepte und weitere Content-Tabellen (siehe
+/// docs/ARCHITECTURE.md).
 library;
 
-export 'src/vt_content_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/building.dart';
+export 'src/crafting_recipe.dart';

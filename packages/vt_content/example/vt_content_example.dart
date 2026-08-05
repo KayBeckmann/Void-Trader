@@ -1,6 +1,7 @@
 import 'package:vt_content/vt_content.dart';
 
 void main() {
-  var awesome = Awesome();
-  print('awesome: ${awesome.isAwesome}');
+  final workbench = buildingDefinitionFor(BuildingType.workbench);
+  print('${workbench.name} kostet: ${workbench.buildCost}');
+  print('Rezept "${basicComponentRecipe.name}": ${basicComponentRecipe.input} -> ${basicComponentRecipe.output}');
 }

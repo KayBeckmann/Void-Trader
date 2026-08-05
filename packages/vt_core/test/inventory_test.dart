@@ -72,6 +72,30 @@ void main() {
       expect(inventory.count(Resource.ore), 1);
     });
 
+    test('craft zieht Input ab und fügt Output hinzu', () {
+      final inventory = Inventory();
+      inventory.add(Resource.stone, 2);
+      inventory.add(Resource.ore, 1);
+
+      inventory.craft({Resource.stone: 2, Resource.ore: 1}, Resource.component);
+
+      expect(inventory.count(Resource.stone), 0);
+      expect(inventory.count(Resource.ore), 0);
+      expect(inventory.count(Resource.component), 1);
+    });
+
+    test('craft wirft ohne Änderung bei unzureichendem Input', () {
+      final inventory = Inventory();
+      inventory.add(Resource.stone, 1);
+
+      expect(
+        () => inventory.craft({Resource.stone: 2}, Resource.component),
+        throwsStateError,
+      );
+      expect(inventory.count(Resource.stone), 1);
+      expect(inventory.count(Resource.component), 0);
+    });
+
     test('snapshot ist unveränderlich', () {
       final inventory = Inventory();
       inventory.add(Resource.stone, 1);
