@@ -14,18 +14,35 @@ import 'player_component.dart';
 /// Weltursprung, dort liegt die sichere Startzone aus vt_world) plus eine
 /// steuerbare [PlayerComponent] mit Kamera-Follow und einem ersten
 /// Interaktionswerkzeug (Graben/Abbauen) — Phase 1/2 der Reboot-Roadmap.
+/// Ein periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
+/// vt_world im sichtbaren Fenster fließen (Phase 3).
 class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
-  VoidTraderGame({int seed = 1}) : simulationWorld = vt_world.World(seed);
+  VoidTraderGame({int seed = 1}) : simulationWorld = vt_world.World(seed) {
+    // In der Initializer-Liste kann fluidBridge noch nicht auf
+    // simulationWorld verweisen (Felder dürfen sich dort nicht gegenseitig
+    // referenzieren) — daher hier im Konstruktor-Body zugewiesen, wo
+    // simulationWorld bereits gesetzt ist. Beide müssen zwingend dieselbe
+    // World-Instanz teilen, sonst simuliert die Fluid-Brücke eine andere
+    // Welt als die, in der der Spieler tatsächlich gräbt/läuft.
+    fluidBridge = WorldFluidBridge(simulationWorld, vt_world.ZLevel.surface);
+  }
 
   /// Radius des Debug-Fensters um den Weltursprung (in Tiles). Das Fenster
   /// ist damit `2 * _viewRadius` Tiles breit/hoch und zentriert auf (0,0) —
   /// dieselbe sichere Startzone, die vt_world garantiert.
   static const int _viewRadius = 16;
 
+  /// Sekunden zwischen zwei Fluid-Simulationsschritten. Nicht jeden Frame,
+  /// damit die Simulation chunk-basiert budgetiert bleibt (Roadmap
+  /// Designregel Phase 3) statt jeden Tick das ganze Fenster neu zu bauen.
+  static const double _fluidTickInterval = 0.5;
+
   final vt_world.World simulationWorld;
-  late final FluidGrid debugFluidGrid;
+  late final WorldFluidBridge fluidBridge;
   late final DebugMapComponent map;
   late final PlayerComponent player;
+
+  double _fluidTickAccumulator = 0;
 
   /// Zähler für erfolgreich abgebaute Tiles (Platzhalter fürs Inventar,
   /// echtes Ressourcensystem folgt in Phase 4).
@@ -36,10 +53,6 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     await super.onLoad();
 
     const viewSize = _viewRadius * 2;
-    debugFluidGrid = FluidGrid(viewSize, viewSize);
-    // Demo-Wasserquelle für den Debug-Screen. Phase 3 koppelt das Fluid-Grid
-    // an echte Gelände-Höhen aus vt_world statt an ein leeres Demo-Grid.
-    debugFluidGrid.addWater(_viewRadius + 6, _viewRadius + 6, 6);
 
     map = DebugMapComponent(
       gameWorld: simulationWorld,
@@ -48,7 +61,6 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
       tileWidth: viewSize,
       tileHeight: viewSize,
       z: vt_world.ZLevel.surface,
-      fluidGrid: debugFluidGrid,
     );
 
     // map.size / 2 entspricht damit exakt Welt-Tile (0,0) — Mitte der
@@ -60,6 +72,22 @@ class VoidTraderGame extends FlameGame with HasKeyboardHandlerComponents {
     // sonst folgt die Kamera dem Spieler, aber die Karte bleibt starr.
     await world.addAll([map, player]);
     camera.follow(player);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    _fluidTickAccumulator += dt;
+    if (_fluidTickAccumulator < _fluidTickInterval) return;
+    _fluidTickAccumulator -= _fluidTickInterval;
+
+    fluidBridge.step(
+      originX: map.originX,
+      originY: map.originY,
+      width: map.tileWidth,
+      height: map.tileHeight,
+    );
   }
 
   /// Versucht, das Tile unter [worldPosition] (Pixel-Koordinaten im

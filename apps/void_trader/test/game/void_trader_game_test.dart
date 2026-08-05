@@ -46,4 +46,45 @@ void main() {
       expect(game.minedResourceCount, 0);
     });
   });
+
+  group('VoidTraderGame Fluid-Tick', () {
+    test('update() lässt Wasser über die Zeit ins Nachbar-Tile fließen', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      const z = vt_world.ZLevel.surface;
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        z,
+        const vt_world.Tile(vt_world.TileType.water, waterLevel: 1.0),
+      );
+      game.simulationWorld.setTileAt(1, 0, z, const vt_world.Tile(vt_world.TileType.path));
+
+      // Genug Zeit für mehrere Fluid-Ticks (Intervall 0.5s) simulieren.
+      for (var i = 0; i < 10; i++) {
+        game.update(0.5);
+      }
+
+      expect(game.simulationWorld.tileAt(1, 0, z).waterLevel, greaterThan(0));
+    });
+
+    test('update() unterhalb des Tick-Intervalls simuliert noch nichts', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      const z = vt_world.ZLevel.surface;
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        z,
+        const vt_world.Tile(vt_world.TileType.water, waterLevel: 1.0),
+      );
+      game.simulationWorld.setTileAt(1, 0, z, const vt_world.Tile(vt_world.TileType.path));
+
+      game.update(0.1);
+
+      expect(game.simulationWorld.tileAt(1, 0, z).waterLevel, 0);
+    });
+  });
 }

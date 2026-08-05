@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:vt_physics/vt_physics.dart';
 // Alias nötig: flame/components.dart bringt über die Kamera ebenfalls eine
 // Klasse `World` mit — Namenskollision mit vt_world.World. Component/
 // FlameGame definieren zudem einen `world`-Getter, daher heißt das Feld
@@ -9,13 +8,15 @@ import 'package:vt_physics/vt_physics.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
 
 /// Rendert ein rechteckiges Fenster aus Welt-Tile-Koordinaten (eine
-/// z-Ebene) plus den zugehörigen [FluidGrid]-Wasserzustand als einfaches
-/// Debug-Grid.
+/// z-Ebene) inklusive des dort persistierten Wasserstands
+/// ([vt_world.Tile.waterLevel]) als einfaches Debug-Grid.
 ///
 /// Arbeitet bewusst in Welt- statt Chunk-Koordinaten: das Fenster kann so
 /// frei über Chunk-Grenzen hinweg positioniert werden, z.B. zentriert auf
 /// den Weltursprung (siehe VoidTraderGame) statt an eine einzelne
-/// Chunk-Kachel gebunden zu sein.
+/// Chunk-Kachel gebunden zu sein. Der Wasserstand kommt direkt aus der Welt
+/// (siehe `WorldFluidBridge` in vt_physics) statt aus einem separaten,
+/// losgelösten Demo-Grid.
 class DebugMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
   final int originX;
@@ -23,7 +24,6 @@ class DebugMapComponent extends PositionComponent {
   final int tileWidth;
   final int tileHeight;
   final int z;
-  final FluidGrid fluidGrid;
   final double tileSize;
 
   DebugMapComponent({
@@ -33,13 +33,8 @@ class DebugMapComponent extends PositionComponent {
     required this.tileWidth,
     required this.tileHeight,
     required this.z,
-    required this.fluidGrid,
     this.tileSize = 16,
-  }) : assert(
-         fluidGrid.width == tileWidth && fluidGrid.height == tileHeight,
-         'fluidGrid ($tileWidth x $tileHeight erwartet) passt nicht zur Fenstergröße',
-       ),
-       super(size: Vector2(tileWidth * tileSize, tileHeight * tileSize));
+  }) : super(size: Vector2(tileWidth * tileSize, tileHeight * tileSize));
 
   final Paint _tilePaint = Paint();
   final Paint _waterPaint = Paint();
@@ -59,9 +54,8 @@ class DebugMapComponent extends PositionComponent {
         _tilePaint.color = tileColor(tile.type);
         canvas.drawRect(rect, _tilePaint);
 
-        final waterLevel = fluidGrid.cellAt(x, y).waterLevel;
-        if (waterLevel > 0) {
-          final alpha = (waterLevel.clamp(0.0, 1.0) * 200).round();
+        if (tile.waterLevel > 0) {
+          final alpha = (tile.waterLevel.clamp(0.0, 1.0) * 200).round();
           _waterPaint.color = Color.fromARGB(alpha, 0x21, 0x96, 0xF3);
           canvas.drawRect(rect, _waterPaint);
         }
