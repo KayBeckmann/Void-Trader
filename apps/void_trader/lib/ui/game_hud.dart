@@ -8,6 +8,7 @@ import 'widgets/build_menu.dart';
 import 'widgets/feedback_toast.dart';
 import 'widgets/hud_panel.dart';
 import 'widgets/inspector_panel.dart';
+import 'widgets/minimap_panel.dart';
 import 'widgets/objective_panel.dart';
 import 'widgets/resource_bar.dart';
 import 'widgets/toolbelt_panel.dart';
@@ -69,7 +70,22 @@ class GameHud extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ResourceBar(inventory: state.inventory),
-                      ObjectivePanel(objectives: state.objectives),
+                      // Minimap "rechts oben unter/innerhalb der Topbar"
+                      // (Roadmap HUD-13), Zielkette direkt darunter im
+                      // selben rechten Streifen.
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          MinimapPanel(
+                            grid: state.minimapGrid,
+                            facingX: state.facingX,
+                            facingY: state.facingY,
+                          ),
+                          const SizedBox(height: 6),
+                          ObjectivePanel(objectives: state.objectives),
+                        ],
+                      ),
                     ],
                   ),
                 ),
