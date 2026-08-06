@@ -15,6 +15,7 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 import '../ui/tile_inspector_info.dart';
 import '../ui/tool_mode.dart';
 import 'debug_map_component.dart';
+import 'fog_of_war_component.dart';
 import 'npc_component.dart';
 import 'player_component.dart';
 import 'tile_highlight_component.dart';
@@ -89,10 +90,22 @@ class VoidTraderGame extends FlameGame
   late final WorldFluidBridge fluidBridge;
   late final TileSpriteMapComponent spriteMap;
   late final DebugMapComponent map;
+  late final FogOfWarComponent fogOfWar;
   late final TileHighlightComponent tileHighlight;
   late final TileHighlightComponent hoverHighlight;
   late final PlayerComponent player;
   late final List<NpcComponent> npcComponents;
+
+  /// Welche Tiles der Spieler entdeckt hat/gerade sieht (Roadmap FOW-01
+  /// bis FOW-03) — von [fogOfWar] gerendert, von [_updateFieldOfView]
+  /// periodisch aktualisiert.
+  final vt_world.ExplorationTracker explorationTracker = vt_world.ExplorationTracker();
+
+  /// Sekunden zwischen zwei Sichtfeld-Berechnungen — budgetiert statt jeden
+  /// Frame neu zu berechnen (Roadmap FOW-02: "FOV-Berechnung muss
+  /// budgetiert ... sein").
+  static const double _visibilityTickInterval = 0.15;
+  double _visibilityTickAccumulator = 0;
 
   double _fluidTickAccumulator = 0;
   double _hudTickAccumulator = 0;
@@ -182,6 +195,16 @@ class VoidTraderGame extends FlameGame
       tileSize: tileSize,
     );
 
+    // Fog of War (Roadmap FOW-04) — liegt über der Karte, aber unter
+    // Tile-Hervorhebung/Spieler/NPCs (siehe addAll unten), damit die
+    // eigene Figur nie im Nebel verschwindet.
+    fogOfWar = FogOfWarComponent(
+      explorationTracker: explorationTracker,
+      centerProvider: () => player.position,
+      viewRadiusTiles: _viewRadius,
+      tileSize: tileSize,
+    );
+
     // Visuelle Entsprechung zum HUD-Interaktionshinweis: hebt das Tile
     // hervor, auf das sich currentInteractionHint() gerade bezieht.
     tileHighlight = TileHighlightComponent(
@@ -209,10 +232,12 @@ class VoidTraderGame extends FlameGame
     // dem Game) liegen, damit sie von der Kamera transformiert werden —
     // sonst folgt die Kamera dem Spieler, aber die Karte bleibt starr.
     // Reihenfolge = Zeichenreihenfolge: spriteMap zuunterst, Debug-Overlay
-    // und Tile-Hervorhebungen direkt darüber, NPCs/Spieler obenauf.
+    // und Fog of War direkt darüber, Tile-Hervorhebungen/NPCs/Spieler
+    // obenauf (Fog darf die eigene Figur nie verdecken).
     await world.addAll([
       spriteMap,
       map,
+      fogOfWar,
       hoverHighlight,
       tileHighlight,
       player,
@@ -222,6 +247,11 @@ class VoidTraderGame extends FlameGame
     // snap: true hält den Spieler von Anfang an exakt im Bildmittelpunkt,
     // statt sich der Position erst über die erste(n) Frame(s) anzunähern.
     camera.follow(player, snap: true);
+
+    // Sofort einmal berechnen, statt bis zum ersten Visibility-Tick zu
+    // warten — sonst wäre der allererste Frame komplett schwarz (Fog of
+    // War, Roadmap FOW-04).
+    _updateFieldOfView();
   }
 
   @override
@@ -240,6 +270,12 @@ class VoidTraderGame extends FlameGame
     if (_hudTickAccumulator >= _hudTickInterval) {
       _hudTickAccumulator -= _hudTickInterval;
       hudTick.value++;
+    }
+
+    _visibilityTickAccumulator += dt;
+    if (_visibilityTickAccumulator >= _visibilityTickInterval) {
+      _visibilityTickAccumulator -= _visibilityTickInterval;
+      _updateFieldOfView();
     }
 
     _fluidTickAccumulator += dt;
@@ -479,6 +515,26 @@ class VoidTraderGame extends FlameGame
     feedbackMessage.value = wasOnSurface
         ? 'Rampe erklommen — jetzt auf den Hügeln.'
         : 'Rampe hinabgestiegen — zurück auf der Oberfläche.';
+  }
+
+  /// Berechnet das aktuelle Sichtfeld neu und aktualisiert
+  /// [explorationTracker] (Roadmap FOW-02/FOW-03) — periodisch statt jeden
+  /// Frame, siehe [_visibilityTickInterval]. Nutzt [PlayerComponent.
+  /// facingDirection] als Blickrichtung und die aktuelle z-Ebene
+  /// (Roadmap MOV-03), damit Sichtfeld und Kollision immer zur selben
+  /// Ebene gehören.
+  void _updateFieldOfView() {
+    final tile = _worldTileFor(player.position);
+    final visible = vt_world.computeFieldOfView(
+      world: simulationWorld,
+      originX: tile.x,
+      originY: tile.y,
+      z: currentZLevel.value,
+      facingX: player.facingDirection.x,
+      facingY: player.facingDirection.y,
+      viewRadius: _viewRadius,
+    );
+    explorationTracker.update(visible);
   }
 
   /// Prüft für [PlayerComponent], ob eine Zielposition betreten werden darf

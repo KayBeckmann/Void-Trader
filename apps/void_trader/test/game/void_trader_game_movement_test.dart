@@ -175,4 +175,47 @@ void main() {
       expect(VoidTraderGame.zLevelLabel(vt_world.ZLevel.cellar), 'Keller');
     });
   });
+
+  group('VoidTraderGame Fog of War (Roadmap FOW-04)', () {
+    test('onLoad() berechnet das Sichtfeld sofort, kein leerer erster Frame', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      final tile = (
+        x: (game.player.position.x / VoidTraderGame.tileSize).floor(),
+        y: (game.player.position.y / VoidTraderGame.tileSize).floor(),
+      );
+      expect(game.explorationTracker.stateAt(tile.x, tile.y), vt_world.VisibilityState.visible);
+    });
+
+    test('update() aktualisiert das Sichtfeld periodisch, wenn sich der Spieler bewegt', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      game.player.position = Vector2(20 * VoidTraderGame.tileSize, 20 * VoidTraderGame.tileSize);
+      // Über den Visibility-Tick-Intervall hinaus simulieren.
+      game.update(0.2);
+
+      expect(game.explorationTracker.stateAt(20, 20), vt_world.VisibilityState.visible);
+    });
+
+    test('einmal entdeckte Tiles bleiben seenButNotVisible, wenn der Spieler weiterzieht', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.update(0.2);
+
+      final startTile = (
+        x: (game.player.position.x / VoidTraderGame.tileSize).floor(),
+        y: (game.player.position.y / VoidTraderGame.tileSize).floor(),
+      );
+
+      game.player.position = Vector2(40 * VoidTraderGame.tileSize, 40 * VoidTraderGame.tileSize);
+      game.update(0.2);
+
+      expect(
+        game.explorationTracker.stateAt(startTile.x, startTile.y),
+        vt_world.VisibilityState.seenButNotVisible,
+      );
+    });
+  });
 }
