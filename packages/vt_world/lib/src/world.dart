@@ -75,6 +75,13 @@ class World {
     (x: -(_spawnSafeRadius + 2), y: 0),
   ];
 
+  /// Ab diesem Höhen-Noise-Wert liegt eine Rampe zu den Hügeln statt
+  /// normalem Gelände (Roadmap MOV-03: "Berge/Hügel sind begehbar, aber
+  /// verändern die z-Achse"). Knapp unter der Stein-Schwelle in
+  /// [surfaceTileForBiome] (0.85) — Rampen liegen so am Rand der ohnehin
+  /// schon hochländischen Bereiche, statt zufällig verteilt zu sein.
+  static const double _slopeHeightMin = 0.78;
+
   late final NoiseField _heightNoise;
   late final NoiseField _moistureNoise;
   late final NoiseField _temperatureNoise;
@@ -247,6 +254,8 @@ class World {
       final isDeepUnderground = z == ZLevel.caves || z == ZLevel.deepCaves;
       layers[z] = isDeepUnderground
           ? _generateUndergroundLayer(coord, z)
+          : z == ZLevel.hills
+          ? _generateHillsLayer(coord)
           : _generateUniformLayer(z);
     }
     return Chunk(coord, layers);
@@ -273,8 +282,9 @@ class World {
           return const Tile(TileType.grass);
         }
 
+        final height = _heightNoise.valueAt(worldX, worldY);
         var biomeType = surfaceTileForBiome(
-          height: _heightNoise.valueAt(worldX, worldY),
+          height: height,
           moisture: _moistureNoise.valueAt(worldX, worldY),
           temperature: _temperatureNoise.valueAt(worldX, worldY),
         );
@@ -291,6 +301,15 @@ class World {
           } else if (biomeType == TileType.forest) {
             biomeType = TileType.grass;
           }
+        }
+
+        // Rampe zu den Hügeln (Roadmap MOV-03) — nur auf offenem Gelände,
+        // nicht auf Wasser/Wald. Die passende Rampe auf der Hügel-Ebene
+        // entsteht an derselben Welt-Koordinate, siehe
+        // [_generateHillsLayer].
+        if ((biomeType == TileType.grass || biomeType == TileType.dirt) &&
+            height >= _slopeHeightMin) {
+          return const Tile(TileType.slope);
         }
 
         // Höhleneingänge nie auf Wasser platzieren — sonst müsste man erst
@@ -312,18 +331,61 @@ class World {
     return ChunkLayer(ZLevel.surface, tiles);
   }
 
-  /// Einfache, noch nicht durch Noise aufgelöste Ebenen: Berge/Hügel sind
-  /// durchgehend Stein. Der Keller (erste Ebene unter der Oberfläche) ist
-  /// durchgehend Erde, also von jedem Höhleneingang aus ohne Hindernis
-  /// betretbar. Tiefere Ebenen (Höhlen/Minen) werden separat über
-  /// [_generateUndergroundLayer] ausgehöhlt.
+  /// Einfache, noch nicht durch Noise aufgelöste Ebenen: Berge sind
+  /// weiterhin durchgehend Stein und unerreichbar (bewusst außerhalb des
+  /// Umfangs von MOV-03 — "Generation V1"). Der Keller (erste Ebene unter
+  /// der Oberfläche) ist durchgehend Erde, also von jedem Höhleneingang aus
+  /// ohne Hindernis betretbar. Hügel haben eine eigene Generierung, siehe
+  /// [_generateHillsLayer]. Tiefere Ebenen (Höhlen/Minen) werden separat
+  /// über [_generateUndergroundLayer] ausgehöhlt.
   ChunkLayer _generateUniformLayer(int z) {
-    final type = z > ZLevel.surface ? TileType.stone : TileType.dirt;
+    final type = z == ZLevel.mountains ? TileType.stone : TileType.dirt;
     final tiles = List.generate(
       Chunk.size,
       (_) => List.generate(Chunk.size, (_) => Tile(type)),
     );
     return ChunkLayer(z, tiles);
+  }
+
+  /// Hügel-Ebene (Roadmap MOV-03: "Berge/Hügel sind begehbar, aber
+  /// verändern die z-Achse") — begehbares Hochland (Erde) statt massivem
+  /// Stein, mit einer Rampe zurück zur Oberfläche an genau den
+  /// Welt-Koordinaten, an denen die Oberfläche eine Rampe nach oben hat
+  /// (siehe [_generateSurfaceLayer]). Bewusst uniform statt eigenem
+  /// Noise-Muster — "Generation V1", die Berge (`z+2`) bleiben wie zuvor
+  /// unerreichbarer massiver Stein.
+  ChunkLayer _generateHillsLayer(ChunkCoord coord) {
+    final tiles = List.generate(
+      Chunk.size,
+      (y) => List.generate(Chunk.size, (x) {
+        final worldX = coord.x * Chunk.size + x;
+        final worldY = coord.y * Chunk.size + y;
+        final height = _heightNoise.valueAt(worldX, worldY);
+        var surfaceBiome = surfaceTileForBiome(
+          height: height,
+          moisture: _moistureNoise.valueAt(worldX, worldY),
+          temperature: _temperatureNoise.valueAt(worldX, worldY),
+        );
+        // Muss dieselbe Puffer-Ring-Ersetzung wie _generateSurfaceLayer
+        // durchlaufen, sonst könnte eine Rampe auf der Oberfläche
+        // entstehen (nach der Ersetzung begehbar + hoch genug), ohne eine
+        // passende Rampe auf der Hügel-Ebene zu haben.
+        if (_isInSpawnBufferZone(worldX, worldY)) {
+          if (surfaceBiome == TileType.water) {
+            surfaceBiome = TileType.dirt;
+          } else if (surfaceBiome == TileType.forest) {
+            surfaceBiome = TileType.grass;
+          }
+        }
+        final surfaceHasSlope =
+            !_isInSpawnSafeZone(worldX, worldY) &&
+            !_isSpawnResourceDeposit(worldX, worldY) &&
+            (surfaceBiome == TileType.grass || surfaceBiome == TileType.dirt) &&
+            height >= _slopeHeightMin;
+        return Tile(surfaceHasSlope ? TileType.slope : TileType.dirt);
+      }),
+    );
+    return ChunkLayer(ZLevel.hills, tiles);
   }
 
   /// Höhlen/Minen (`caves`, `deepCaves`): überwiegend massiver Fels, mit

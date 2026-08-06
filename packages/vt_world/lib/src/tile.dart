@@ -19,6 +19,13 @@ enum TileType {
   /// Erzader in tieferen Ebenen (Phase 2). Solide wie Fels, aber abbaubar
   /// und liefert einen eigenen Ressourcentyp statt gewöhnlichem Gestein.
   ore,
+
+  /// Begehbare Rampe zwischen Oberfläche und Hügeln (Roadmap MOV-03:
+  /// "Berge/Hügel sind begehbar, aber verändern die z-Achse"). Blockiert
+  /// weder Bewegung noch Sicht — die z-Änderung beim Betreten ist
+  /// Spielschicht-Logik (siehe VoidTraderGame), nicht Teil des Tiles
+  /// selbst.
+  slope,
 }
 
 /// Ein einzelnes Tile innerhalb einer [ChunkLayer].
@@ -94,6 +101,7 @@ extension TileMovement on TileType {
       case TileType.path:
       case TileType.empty:
       case TileType.caveEntrance:
+      case TileType.slope:
         return false;
     }
   }
@@ -115,6 +123,7 @@ extension TileMovement on TileType {
       case TileType.water:
       case TileType.empty:
       case TileType.caveEntrance:
+      case TileType.slope:
         return false;
     }
   }
@@ -140,6 +149,7 @@ extension TileMovement on TileType {
       case TileType.path:
       case TileType.empty:
       case TileType.caveEntrance:
+      case TileType.slope:
         return null;
     }
   }

@@ -70,14 +70,14 @@ void main() {
       expect(TileType.ore.minedResult, TileType.path);
     });
 
-    test('Berge/Hügel bleiben durchgehend Stein, Keller durchgehend Erde', () {
+    test('Berge bleiben durchgehend Stein, Keller durchgehend Erde', () {
       final world = World(321);
       final chunk = world.getOrCreateChunk(const ChunkCoord(0, 0));
 
-      final hills = chunk.layerAt(ZLevel.hills);
+      final mountains = chunk.layerAt(ZLevel.mountains);
       for (var y = 0; y < Chunk.size; y++) {
         for (var x = 0; x < Chunk.size; x++) {
-          expect(hills.tileAt(x, y).type, TileType.stone);
+          expect(mountains.tileAt(x, y).type, TileType.stone);
         }
       }
 
@@ -85,6 +85,23 @@ void main() {
       for (var y = 0; y < Chunk.size; y++) {
         for (var x = 0; x < Chunk.size; x++) {
           expect(cellar.tileAt(x, y).type, TileType.dirt);
+        }
+      }
+    });
+
+    test('Hügel sind begehbar (Roadmap MOV-03), nicht mehr massiver Stein', () {
+      final world = World(321);
+      final chunk = world.getOrCreateChunk(const ChunkCoord(0, 0));
+
+      final hills = chunk.layerAt(ZLevel.hills);
+      for (var y = 0; y < Chunk.size; y++) {
+        for (var x = 0; x < Chunk.size; x++) {
+          final type = hills.tileAt(x, y).type;
+          expect(
+            type == TileType.dirt || type == TileType.slope,
+            isTrue,
+            reason: 'Hügel-Tile ($x,$y) sollte begehbar sein, war $type',
+          );
         }
       }
     });

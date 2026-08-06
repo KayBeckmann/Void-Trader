@@ -87,4 +87,92 @@ void main() {
       expect(game.player.position.y, isNot(startPosition.y));
     });
   });
+
+  group('VoidTraderGame z-Achsen-Wechsel über Rampen (Roadmap MOV-03)', () {
+    test('Betreten einer Rampe wechselt von Oberfläche zu Hügeln', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        1,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.slope),
+      );
+
+      expect(game.currentZLevel.value, vt_world.ZLevel.surface);
+
+      game.player.position = Vector2(1.5 * VoidTraderGame.tileSize, 0.5 * VoidTraderGame.tileSize);
+      game.update(0.01);
+
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+      expect(game.feedbackMessage.value, contains('Hügel'));
+    });
+
+    test('erneutes Betreten derselben Rampe von den Hügeln aus wechselt zurück', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        1,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.slope),
+      );
+      game.simulationWorld.setTileAt(
+        1,
+        0,
+        vt_world.ZLevel.hills,
+        const vt_world.Tile(vt_world.TileType.slope),
+      );
+      game.simulationWorld.setTileAt(
+        2,
+        0,
+        vt_world.ZLevel.hills,
+        const vt_world.Tile(vt_world.TileType.dirt),
+      );
+
+      game.player.position = Vector2(1.5 * VoidTraderGame.tileSize, 0.5 * VoidTraderGame.tileSize);
+      game.update(0.01);
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+
+      // Rampen-Tile verlassen — kein erneuter Wechsel auf einem normalen
+      // Hügel-Tile.
+      game.player.position = Vector2(2.5 * VoidTraderGame.tileSize, 0.5 * VoidTraderGame.tileSize);
+      game.update(0.01);
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+
+      // Rampen-Tile erneut betreten -> zurück zur Oberfläche.
+      game.player.position = Vector2(1.5 * VoidTraderGame.tileSize, 0.5 * VoidTraderGame.tileSize);
+      game.update(0.01);
+      expect(game.currentZLevel.value, vt_world.ZLevel.surface);
+      expect(game.feedbackMessage.value, contains('Oberfläche'));
+    });
+
+    test('Stehenbleiben auf einer Rampe löst keinen wiederholten Wechsel aus', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        1,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.slope),
+      );
+
+      game.player.position = Vector2(1.5 * VoidTraderGame.tileSize, 0.5 * VoidTraderGame.tileSize);
+      game.update(0.01);
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+
+      game.update(0.01);
+      game.update(0.01);
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+    });
+  });
+
+  group('VoidTraderGame.zLevelLabel', () {
+    test('liefert deutsche Bezeichnungen je Ebene', () {
+      expect(VoidTraderGame.zLevelLabel(vt_world.ZLevel.surface), 'Oberfläche');
+      expect(VoidTraderGame.zLevelLabel(vt_world.ZLevel.hills), 'Hügel');
+      expect(VoidTraderGame.zLevelLabel(vt_world.ZLevel.mountains), 'Berge');
+      expect(VoidTraderGame.zLevelLabel(vt_world.ZLevel.cellar), 'Keller');
+    });
+  });
 }

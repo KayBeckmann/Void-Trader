@@ -8,7 +8,12 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: TopStatusBar(isDay: true, timeLabel: '08:15', weather: Weather.rain),
+          body: TopStatusBar(
+            isDay: true,
+            timeLabel: '08:15',
+            weather: Weather.rain,
+            zLevelLabel: 'Oberfläche',
+          ),
         ),
       ),
     );
@@ -22,7 +27,12 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: TopStatusBar(isDay: false, timeLabel: '23:40', weather: Weather.clear),
+          body: TopStatusBar(
+            isDay: false,
+            timeLabel: '23:40',
+            weather: Weather.clear,
+            zLevelLabel: 'Oberfläche',
+          ),
         ),
       ),
     );

@@ -29,7 +29,7 @@ void main() {
         gameWorld: world,
         centerProvider: () => Vector2.zero(),
         viewRadiusTiles: 4,
-        z: vt_world.ZLevel.surface,
+        zProvider: () => vt_world.ZLevel.surface,
       );
 
       expect(component.enabled, isFalse);
@@ -45,7 +45,7 @@ void main() {
           gameWorld: world,
           centerProvider: () => Vector2.zero(),
           viewRadiusTiles: 0,
-          z: vt_world.ZLevel.surface,
+          zProvider: () => vt_world.ZLevel.surface,
         ),
         throwsA(isA<AssertionError>()),
       );
