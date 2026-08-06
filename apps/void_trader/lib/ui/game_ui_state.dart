@@ -26,6 +26,15 @@ class GameUiState {
   /// HUD, siehe [VoidTraderGame.zLevelLabel].
   final String zLevelLabel;
 
+  /// Credits separat vom übrigen Inventar (Roadmap HUD-11: TopStatusBar
+  /// zeigt Credits prominent, nicht nur als Eintrag in der Ressourcenliste).
+  final int credits;
+
+  /// Summe aller Fracht-Einheiten im Schiffslager (Roadmap HUD-11:
+  /// "Schiff/Fracht-Kurzstatus"), Credits ausgenommen — die liegen beim
+  /// Spieler, nicht im Frachtraum (siehe VoidTraderGame.loadCargoAt).
+  final int shipCargoCount;
+
   const GameUiState({
     required this.inventory,
     required this.isDay,
@@ -37,6 +46,8 @@ class GameUiState {
     required this.feedbackMessage,
     required this.objectives,
     required this.zLevelLabel,
+    required this.credits,
+    required this.shipCargoCount,
   });
 
   factory GameUiState.from(VoidTraderGame game) {
@@ -57,6 +68,8 @@ class GameUiState {
         cargoEverLoaded: game.cargoEverLoaded,
       ),
       zLevelLabel: VoidTraderGame.zLevelLabel(game.currentZLevel.value),
+      credits: game.inventory.count(Resource.credits),
+      shipCargoCount: game.ship.cargo.snapshot.values.fold(0, (sum, count) => sum + count),
     );
   }
 

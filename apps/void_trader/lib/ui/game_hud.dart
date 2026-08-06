@@ -48,25 +48,27 @@ class GameHud extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Vollbreite Topbar (Roadmap HUD-11) — bewusst NICHT in der
+                // folgenden Row, damit sie über die volle Breite gestreckt
+                // wird (CrossAxisAlignment.stretch der äußeren Column)
+                // statt nur so breit wie ihr Inhalt zu sein.
+                IgnorePointer(
+                  child: TopStatusBar(
+                    isDay: state.isDay,
+                    timeLabel: state.timeLabel,
+                    weather: state.weather,
+                    zLevelLabel: state.zLevelLabel,
+                    credits: state.credits,
+                    shipCargoCount: state.shipCargoCount,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 IgnorePointer(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TopStatusBar(
-                            isDay: state.isDay,
-                            timeLabel: state.timeLabel,
-                            weather: state.weather,
-                            zLevelLabel: state.zLevelLabel,
-                          ),
-                          const SizedBox(height: 6),
-                          ResourceBar(inventory: state.inventory),
-                        ],
-                      ),
+                      ResourceBar(inventory: state.inventory),
                       ObjectivePanel(objectives: state.objectives),
                     ],
                   ),

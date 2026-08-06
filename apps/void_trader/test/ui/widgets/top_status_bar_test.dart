@@ -13,6 +13,8 @@ void main() {
             timeLabel: '08:15',
             weather: Weather.rain,
             zLevelLabel: 'Oberfläche',
+            credits: 42,
+            shipCargoCount: 7,
           ),
         ),
       ),
@@ -32,11 +34,39 @@ void main() {
             timeLabel: '23:40',
             weather: Weather.clear,
             zLevelLabel: 'Oberfläche',
+            credits: 0,
+            shipCargoCount: 0,
           ),
         ),
       ),
     );
 
     expect(find.byIcon(Icons.nightlight_round), findsOneWidget);
+  });
+
+  testWidgets('zeigt z-Ebene, Credits und Fracht als eigene Segmente (Roadmap HUD-11)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: TopStatusBar(
+            isDay: true,
+            timeLabel: '12:00',
+            weather: Weather.clear,
+            zLevelLabel: 'Hügel',
+            credits: 250,
+            shipCargoCount: 12,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Hügel'), findsOneWidget);
+    expect(find.text('250 Cr'), findsOneWidget);
+    expect(find.text('12 Fracht'), findsOneWidget);
+    expect(find.byIcon(Icons.layers_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.paid_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.local_shipping_outlined), findsOneWidget);
   });
 }
