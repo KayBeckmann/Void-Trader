@@ -22,4 +22,12 @@ void main() {
       }
     });
   });
+
+  group('BuildingMovement', () {
+    test('jedes Gebäude blockiert die Bewegung (Roadmap MOV-01)', () {
+      for (final type in BuildingType.values) {
+        expect(type.blocksMovement, isTrue, reason: '$type sollte blockieren');
+      }
+    });
+  });
 }

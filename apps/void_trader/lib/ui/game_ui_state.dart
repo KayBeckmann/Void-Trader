@@ -22,6 +22,10 @@ class GameUiState {
   final String? feedbackMessage;
   final List<ObjectiveStatus> objectives;
 
+  /// Aktuelle z-Ebene des Spielers (Roadmap MOV-03) — deutsches Label fürs
+  /// HUD, siehe [VoidTraderGame.zLevelLabel].
+  final String zLevelLabel;
+
   const GameUiState({
     required this.inventory,
     required this.isDay,
@@ -32,6 +36,7 @@ class GameUiState {
     required this.inspector,
     required this.feedbackMessage,
     required this.objectives,
+    required this.zLevelLabel,
   });
 
   factory GameUiState.from(VoidTraderGame game) {
@@ -51,6 +56,7 @@ class GameUiState {
         totalCrafted: game.totalCrafted,
         cargoEverLoaded: game.cargoEverLoaded,
       ),
+      zLevelLabel: VoidTraderGame.zLevelLabel(game.currentZLevel.value),
     );
   }
 

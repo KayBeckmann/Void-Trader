@@ -37,6 +37,7 @@ class GameHud extends StatelessWidget {
         game.selectedBuildingType,
         game.selectedTile,
         game.feedbackMessage,
+        game.currentZLevel,
       ]),
       builder: (context, _) {
         final state = GameUiState.from(game);
@@ -59,6 +60,7 @@ class GameHud extends StatelessWidget {
                             isDay: state.isDay,
                             timeLabel: state.timeLabel,
                             weather: state.weather,
+                            zLevelLabel: state.zLevelLabel,
                           ),
                           const SizedBox(height: 6),
                           ResourceBar(inventory: state.inventory),

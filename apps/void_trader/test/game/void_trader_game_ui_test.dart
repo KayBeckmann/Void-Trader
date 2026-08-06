@@ -170,8 +170,13 @@ void main() {
       expect(game.totalCrafted, greaterThan(0));
 
       // Andere Tile-Position, da das Landepad nicht auf der bereits
-      // gebauten Werkbank platziert werden kann (Tile schon belegt).
-      final landingPadPosition = Vector2(5 * VoidTraderGame.tileSize, 5 * VoidTraderGame.tileSize);
+      // gebauten Werkbank platziert werden kann (Tile schon belegt). Bewusst
+      // innerhalb der sicheren Startzone (immer Wiese, siehe World._
+      // isInSpawnSafeZone) statt einer noise-generierten Koordinate — seit
+      // MOV-01 blockiert Wasser die Bewegung/Platzierung, eine feste
+      // Wiese-Koordinate ist robuster als sich auf einen zufällig
+      // begehbaren Noise-Wert zu verlassen.
+      final landingPadPosition = Vector2(3 * VoidTraderGame.tileSize, 3 * VoidTraderGame.tileSize);
       game.buildAt(landingPadPosition, BuildingType.landingPad);
       game.loadCargoAt(landingPadPosition);
       expect(game.cargoEverLoaded, isTrue);

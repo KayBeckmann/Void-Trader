@@ -15,6 +15,7 @@ import 'package:vt_world/vt_world.dart' as vt_world;
 import '../ui/tile_inspector_info.dart';
 import '../ui/tool_mode.dart';
 import 'debug_map_component.dart';
+import 'fog_of_war_component.dart';
 import 'npc_component.dart';
 import 'player_component.dart';
 import 'tile_highlight_component.dart';
@@ -89,13 +90,38 @@ class VoidTraderGame extends FlameGame
   late final WorldFluidBridge fluidBridge;
   late final TileSpriteMapComponent spriteMap;
   late final DebugMapComponent map;
+  late final FogOfWarComponent fogOfWar;
   late final TileHighlightComponent tileHighlight;
   late final TileHighlightComponent hoverHighlight;
   late final PlayerComponent player;
   late final List<NpcComponent> npcComponents;
 
+  /// Welche Tiles der Spieler entdeckt hat/gerade sieht (Roadmap FOW-01
+  /// bis FOW-03) — von [fogOfWar] gerendert, von [_updateFieldOfView]
+  /// periodisch aktualisiert.
+  final vt_world.ExplorationTracker explorationTracker = vt_world.ExplorationTracker();
+
+  /// Sekunden zwischen zwei Sichtfeld-Berechnungen — budgetiert statt jeden
+  /// Frame neu zu berechnen (Roadmap FOW-02: "FOV-Berechnung muss
+  /// budgetiert ... sein").
+  static const double _visibilityTickInterval = 0.15;
+  double _visibilityTickAccumulator = 0;
+
   double _fluidTickAccumulator = 0;
   double _hudTickAccumulator = 0;
+
+  /// Spieler-Tile im letzten Frame (Roadmap MOV-03) — vergleicht sich jeden
+  /// Frame gegen die aktuelle Position, um eine Rampe nur EINMAL beim
+  /// Betreten auszulösen statt bei jedem Frame, in dem der Spieler auf ihr
+  /// steht (sonst würde die Ebene bei stehendem Spieler ständig hin- und
+  /// herspringen).
+  ({int x, int y})? _lastPlayerTile;
+
+  /// Aktuelle z-Ebene des Spielers (Roadmap MOV-03: "Kamera/Rendering muss
+  /// die aktuelle z-Ebene visuell kommunizieren"). Karte, Kollision und
+  /// Interaktionen (Graben/Bauen/Craften/Verkaufen/Fracht laden) beziehen
+  /// sich immer auf diese Ebene, nicht mehr fest auf die Oberfläche.
+  final ValueNotifier<int> currentZLevel = ValueNotifier(vt_world.ZLevel.surface);
 
   /// Zähler für erfolgreich abgebaute Tiles (nützlich für UI/Debug,
   /// unabhängig vom Inventarstand).
@@ -148,13 +174,14 @@ class VoidTraderGame extends FlameGame
     player = PlayerComponent(
       position: Vector2.all(tileSize / 2),
       onAction: _handleAction,
+      canMoveTo: _canPlayerMoveTo,
     );
 
     spriteMap = TileSpriteMapComponent(
       gameWorld: simulationWorld,
       centerProvider: () => player.position,
       viewRadiusTiles: _viewRadius,
-      z: vt_world.ZLevel.surface,
+      zProvider: () => currentZLevel.value,
       tileSize: tileSize,
     );
 
@@ -164,7 +191,17 @@ class VoidTraderGame extends FlameGame
       gameWorld: simulationWorld,
       centerProvider: () => player.position,
       viewRadiusTiles: _viewRadius,
-      z: vt_world.ZLevel.surface,
+      zProvider: () => currentZLevel.value,
+      tileSize: tileSize,
+    );
+
+    // Fog of War (Roadmap FOW-04) — liegt über der Karte, aber unter
+    // Tile-Hervorhebung/Spieler/NPCs (siehe addAll unten), damit die
+    // eigene Figur nie im Nebel verschwindet.
+    fogOfWar = FogOfWarComponent(
+      explorationTracker: explorationTracker,
+      centerProvider: () => player.position,
+      viewRadiusTiles: _viewRadius,
       tileSize: tileSize,
     );
 
@@ -195,10 +232,12 @@ class VoidTraderGame extends FlameGame
     // dem Game) liegen, damit sie von der Kamera transformiert werden —
     // sonst folgt die Kamera dem Spieler, aber die Karte bleibt starr.
     // Reihenfolge = Zeichenreihenfolge: spriteMap zuunterst, Debug-Overlay
-    // und Tile-Hervorhebungen direkt darüber, NPCs/Spieler obenauf.
+    // und Fog of War direkt darüber, Tile-Hervorhebungen/NPCs/Spieler
+    // obenauf (Fog darf die eigene Figur nie verdecken).
     await world.addAll([
       spriteMap,
       map,
+      fogOfWar,
       hoverHighlight,
       tileHighlight,
       player,
@@ -208,11 +247,18 @@ class VoidTraderGame extends FlameGame
     // snap: true hält den Spieler von Anfang an exakt im Bildmittelpunkt,
     // statt sich der Position erst über die erste(n) Frame(s) anzunähern.
     camera.follow(player, snap: true);
+
+    // Sofort einmal berechnen, statt bis zum ersten Visibility-Tick zu
+    // warten — sonst wäre der allererste Frame komplett schwarz (Fog of
+    // War, Roadmap FOW-04).
+    _updateFieldOfView();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+
+    _checkSlopeTransition();
 
     dayNightCycle.update(dt);
     weather.update(dt);
@@ -224,6 +270,12 @@ class VoidTraderGame extends FlameGame
     if (_hudTickAccumulator >= _hudTickInterval) {
       _hudTickAccumulator -= _hudTickInterval;
       hudTick.value++;
+    }
+
+    _visibilityTickAccumulator += dt;
+    if (_visibilityTickAccumulator >= _visibilityTickInterval) {
+      _visibilityTickAccumulator -= _visibilityTickInterval;
+      _updateFieldOfView();
     }
 
     _fluidTickAccumulator += dt;
@@ -289,7 +341,7 @@ class VoidTraderGame extends FlameGame
   /// [ToolMode.build] zusätzlich eine Bauvorschau für
   /// [selectedBuildingType], falls dort eines ausgewählt ist.
   TileInspectorInfo inspectTile(int worldX, int worldY) {
-    const z = vt_world.ZLevel.surface;
+    final z = currentZLevel.value;
     final tile = simulationWorld.tileAt(worldX, worldY, z);
     final building = simulationWorld.buildingAt(worldX, worldY, z);
 
@@ -398,6 +450,8 @@ class VoidTraderGame extends FlameGame
         return 'Höhleneingang';
       case vt_world.TileType.ore:
         return 'Erzader';
+      case vt_world.TileType.slope:
+        return 'Rampe';
     }
   }
 
@@ -407,7 +461,7 @@ class VoidTraderGame extends FlameGame
   /// `null`, wenn hier nichts Interaktives ist.
   String? currentInteractionHint() {
     final tile = _worldTileFor(player.position);
-    const z = vt_world.ZLevel.surface;
+    final z = currentZLevel.value;
     final building = simulationWorld.buildingAt(tile.x, tile.y, z);
 
     if (building == BuildingType.workbench) return '[C] Craften';
@@ -440,6 +494,68 @@ class VoidTraderGame extends FlameGame
   /// Pixel-Position im Weltkoordinatensystem.
   ({int x, int y}) _worldTileFor(Vector2 position) {
     return (x: (position.x / tileSize).floor(), y: (position.y / tileSize).floor());
+  }
+
+  /// Wechselt die z-Ebene, sobald der Spieler ein neues Tile betritt, das
+  /// eine Rampe ist (Roadmap MOV-03). Löst nur beim TILE-WECHSEL aus (nicht
+  /// jeden Frame) — sonst würde ein auf der Rampe stehender Spieler jeden
+  /// Frame zwischen Oberfläche und Hügeln hin- und herspringen.
+  void _checkSlopeTransition() {
+    final tile = _worldTileFor(player.position);
+    final last = _lastPlayerTile;
+    final enteredNewTile = last == null || last.x != tile.x || last.y != tile.y;
+    _lastPlayerTile = tile;
+    if (!enteredNewTile) return;
+
+    final type = simulationWorld.tileAt(tile.x, tile.y, currentZLevel.value).type;
+    if (type != vt_world.TileType.slope) return;
+
+    final wasOnSurface = currentZLevel.value == vt_world.ZLevel.surface;
+    currentZLevel.value = wasOnSurface ? vt_world.ZLevel.hills : vt_world.ZLevel.surface;
+    feedbackMessage.value = wasOnSurface
+        ? 'Rampe erklommen — jetzt auf den Hügeln.'
+        : 'Rampe hinabgestiegen — zurück auf der Oberfläche.';
+  }
+
+  /// Berechnet das aktuelle Sichtfeld neu und aktualisiert
+  /// [explorationTracker] (Roadmap FOW-02/FOW-03) — periodisch statt jeden
+  /// Frame, siehe [_visibilityTickInterval]. Nutzt [PlayerComponent.
+  /// facingDirection] als Blickrichtung und die aktuelle z-Ebene
+  /// (Roadmap MOV-03), damit Sichtfeld und Kollision immer zur selben
+  /// Ebene gehören.
+  void _updateFieldOfView() {
+    final tile = _worldTileFor(player.position);
+    final visible = vt_world.computeFieldOfView(
+      world: simulationWorld,
+      originX: tile.x,
+      originY: tile.y,
+      z: currentZLevel.value,
+      facingX: player.facingDirection.x,
+      facingY: player.facingDirection.y,
+      viewRadius: _viewRadius,
+    );
+    explorationTracker.update(visible);
+  }
+
+  /// Prüft für [PlayerComponent], ob eine Zielposition betreten werden darf
+  /// (Roadmap MOV-02) — löst nur die Welt-Tile-Koordinate auf und fragt
+  /// [vt_world.World.movementBlockReasonAt]; die eigentliche Regel
+  /// (welches Tile/Gebäude blockiert und warum) lebt komplett in
+  /// vt_world (MOV-01). Setzt bei Blockade [feedbackMessage], damit der
+  /// Spieler sieht, warum er nicht weiterkommt, statt still stehen zu
+  /// bleiben ("Der Spieler muss mit der Umwelt interagieren können").
+  bool _canPlayerMoveTo(Vector2 targetPosition) {
+    final tile = _worldTileFor(targetPosition);
+    final reason = simulationWorld.movementBlockReasonAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
+    if (reason != null) {
+      feedbackMessage.value = reason;
+      return false;
+    }
+    return true;
   }
 
   /// Ordnet Tastendrücke den Interaktionen zu. Lebt bewusst im Spiel statt
@@ -491,7 +607,7 @@ class VoidTraderGame extends FlameGame
   /// Rohstoffe ins Inventar gelegt.
   bool digAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final mined = simulationWorld.mineTileAt(tile.x, tile.y, vt_world.ZLevel.surface);
+    final mined = simulationWorld.mineTileAt(tile.x, tile.y, currentZLevel.value);
     if (mined == null) {
       feedbackMessage.value = 'Hier gibt es nichts abzubauen.';
       return false;
@@ -521,7 +637,7 @@ class VoidTraderGame extends FlameGame
     final placed = simulationWorld.placeBuildingAt(
       tile.x,
       tile.y,
-      vt_world.ZLevel.surface,
+      currentZLevel.value,
       type,
     );
     if (!placed) {
@@ -540,7 +656,7 @@ class VoidTraderGame extends FlameGame
   /// vollständige "Sammeln → Verarbeiten"-Stufe der Produktionskette.
   bool craftAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
     if (building != BuildingType.workbench) {
       feedbackMessage.value = 'Hier steht keine Werkbank.';
       return false;
@@ -567,7 +683,7 @@ class VoidTraderGame extends FlameGame
   /// war).
   int sellAllAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
     if (building != BuildingType.market) {
       feedbackMessage.value = 'Hier steht kein Marktkiosk.';
       return 0;
@@ -594,7 +710,7 @@ class VoidTraderGame extends FlameGame
   /// Landepad dort steht oder nichts zu laden war).
   int loadCargoAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.surface);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
     if (building != BuildingType.landingPad) {
       feedbackMessage.value = 'Hier steht kein Landepad.';
       return 0;
@@ -643,6 +759,27 @@ class VoidTraderGame extends FlameGame
         return 'Bauteil';
       case Resource.credits:
         return 'Credits';
+    }
+  }
+
+  /// Deutsches Label für eine z-Ebene, fürs HUD (Roadmap MOV-03: "Kamera/
+  /// Rendering muss die aktuelle z-Ebene visuell kommunizieren").
+  static String zLevelLabel(int z) {
+    switch (z) {
+      case vt_world.ZLevel.mountains:
+        return 'Berge';
+      case vt_world.ZLevel.hills:
+        return 'Hügel';
+      case vt_world.ZLevel.surface:
+        return 'Oberfläche';
+      case vt_world.ZLevel.cellar:
+        return 'Keller';
+      case vt_world.ZLevel.caves:
+        return 'Höhle';
+      case vt_world.ZLevel.deepCaves:
+        return 'Tiefe Höhle';
+      default:
+        return 'Ebene $z';
     }
   }
 }

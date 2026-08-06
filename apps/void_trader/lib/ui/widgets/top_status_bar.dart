@@ -10,11 +10,16 @@ class TopStatusBar extends StatelessWidget {
   final String timeLabel;
   final Weather weather;
 
+  /// Deutsches Label der aktuellen z-Ebene (Roadmap MOV-03), z.B.
+  /// "Oberfläche" oder "Hügel" — macht Ebenenwechsel über Rampen sichtbar.
+  final String zLevelLabel;
+
   const TopStatusBar({
     super.key,
     required this.isDay,
     required this.timeLabel,
     required this.weather,
+    required this.zLevelLabel,
   });
 
   @override
@@ -35,6 +40,13 @@ class TopStatusBar extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             _weatherLabel(weather),
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          const SizedBox(width: 10),
+          const Icon(Icons.layers_outlined, color: Colors.white70, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            zLevelLabel,
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],

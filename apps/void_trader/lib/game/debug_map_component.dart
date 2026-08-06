@@ -21,7 +21,11 @@ class DebugMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
   final Vector2 Function() centerProvider;
   final int viewRadiusTiles;
-  final int z;
+
+  /// Liefert die aktuell darzustellende z-Ebene (Roadmap MOV-03) — eine
+  /// Funktion statt eines festen Werts, analog zu [centerProvider] und
+  /// [TileSpriteMapComponent.zProvider].
+  final int Function() zProvider;
   final double tileSize;
 
   /// Ob das Debug-Overlay (Tile-Farben + Wasser + Gebäude-Umrandung)
@@ -33,7 +37,7 @@ class DebugMapComponent extends PositionComponent {
     required this.gameWorld,
     required this.centerProvider,
     required this.viewRadiusTiles,
-    required this.z,
+    required this.zProvider,
     this.tileSize = 16,
     this.enabled = false,
   }) : assert(viewRadiusTiles > 0, 'viewRadiusTiles muss positiv sein');
@@ -52,6 +56,7 @@ class DebugMapComponent extends PositionComponent {
     final originX = centerTileX - viewRadiusTiles;
     final originY = centerTileY - viewRadiusTiles;
     final span = viewRadiusTiles * 2;
+    final z = zProvider();
 
     for (var dy = 0; dy <= span; dy++) {
       for (var dx = 0; dx <= span; dx++) {
@@ -109,6 +114,8 @@ class DebugMapComponent extends PositionComponent {
         return const Color(0xFF6A1B9A);
       case vt_world.TileType.ore:
         return const Color(0xFFFFA000);
+      case vt_world.TileType.slope:
+        return const Color(0xFFA1887F);
     }
   }
 

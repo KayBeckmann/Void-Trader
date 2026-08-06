@@ -23,14 +23,19 @@ class TileSpriteMapComponent extends PositionComponent {
   final vt_world.World gameWorld;
   final Vector2 Function() centerProvider;
   final int viewRadiusTiles;
-  final int z;
+
+  /// Liefert die aktuell darzustellende z-Ebene (Roadmap MOV-03: "Kamera/
+  /// Rendering muss die aktuelle z-Ebene visuell kommunizieren"). Eine
+  /// Funktion statt eines festen Werts, weil der Spieler über Rampen
+  /// zwischen Ebenen wechseln kann — analog zu [centerProvider].
+  final int Function() zProvider;
   final double tileSize;
 
   TileSpriteMapComponent({
     required this.gameWorld,
     required this.centerProvider,
     required this.viewRadiusTiles,
-    required this.z,
+    required this.zProvider,
     this.tileSize = 32,
   }) : assert(viewRadiusTiles > 0, 'viewRadiusTiles muss positiv sein');
 
@@ -49,6 +54,7 @@ class TileSpriteMapComponent extends PositionComponent {
     vt_world.TileType.empty: 'tiles/empty.png',
     vt_world.TileType.caveEntrance: 'tiles/cave_entrance.png',
     vt_world.TileType.ore: 'tiles/ore.png',
+    vt_world.TileType.slope: 'tiles/slope.png',
   };
 
   static const String marketAssetFile = 'buildings/market_kiosk.png';
@@ -78,6 +84,7 @@ class TileSpriteMapComponent extends PositionComponent {
     final originX = centerTileX - viewRadiusTiles;
     final originY = centerTileY - viewRadiusTiles;
     final span = viewRadiusTiles * 2;
+    final z = zProvider();
 
     for (var dy = 0; dy <= span; dy++) {
       for (var dx = 0; dx <= span; dx++) {

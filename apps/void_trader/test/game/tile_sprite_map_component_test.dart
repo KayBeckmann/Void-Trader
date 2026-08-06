@@ -30,7 +30,7 @@ void main() {
         gameWorld: world,
         centerProvider: () => Vector2.zero(),
         viewRadiusTiles: 10,
-        z: vt_world.ZLevel.surface,
+        zProvider: () => vt_world.ZLevel.surface,
         tileSize: 32,
       );
 
@@ -46,7 +46,7 @@ void main() {
           gameWorld: world,
           centerProvider: () => Vector2.zero(),
           viewRadiusTiles: -1,
-          z: vt_world.ZLevel.surface,
+          zProvider: () => vt_world.ZLevel.surface,
         ),
         throwsA(isA<AssertionError>()),
       );

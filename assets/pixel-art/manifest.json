@@ -13,7 +13,8 @@
     "rockWall": { "file": "tiles/rock_wall.png", "source": "generated-2026-08-05", "status": "placeholder" },
     "caveEntrance": { "file": "tiles/cave_entrance.png", "source": "generated-2026-08-05", "status": "placeholder" },
     "ore": { "file": "tiles/ore.png", "source": "vault:2026-08-04_v2_detailed/desert_ore", "status": "approved" },
-    "empty": { "file": "tiles/empty.png", "source": "generated-2026-08-05", "status": "placeholder" }
+    "empty": { "file": "tiles/empty.png", "source": "generated-2026-08-05", "status": "placeholder" },
+    "slope": { "file": "tiles/slope.png", "source": "generated-2026-08-06", "status": "placeholder" }
   },
   "characters": {
     "player": { "file": "characters/colonist.png", "source": "vault:2026-08-04_v2_detailed/colonist", "status": "approved" }
