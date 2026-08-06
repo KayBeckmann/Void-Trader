@@ -39,9 +39,9 @@ const _npcSpawns = [
 /// [DebugMapComponent] liegt als schaltbares Debug-Overlay (F1) darüber.
 ///
 /// Interaktionen funktionieren über **zwei gleichwertige Wege** (Roadmap
-/// UI-Slice 1): Tastatur (Space/E graben, 1-4 bauen, C craften, V
-/// verkaufen, L Fracht laden) und Maus/Touch (Klick führt die per
-/// [activeTool] gewählte Aktion an der Klickposition aus, siehe
+/// UI-Slice 1): Tastatur (Space/E graben, 1-5 wählt Baumodus + Gebäudetyp,
+/// C craften, V verkaufen, L Fracht laden) und Maus/Touch (Klick führt die
+/// per [activeTool] gewählte Aktion an der Klickposition aus, siehe
 /// [performActionAt]) — beide rufen dieselben Aktionsmethoden auf. Ein
 /// periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
 /// vt_world im sichtbaren Fenster fließen (Phase 3). Ein [DayNightCycle]
@@ -339,6 +339,7 @@ class VoidTraderGame extends FlameGame
             ),
           );
         case BuildingType.wall:
+        case BuildingType.storage:
           break;
       }
     } else {
@@ -444,17 +445,27 @@ class VoidTraderGame extends FlameGame
   /// Ordnet Tastendrücke den Interaktionen zu. Lebt bewusst im Spiel statt
   /// in [PlayerComponent], damit die Steuerung unabhängig von den
   /// konkreten Interaktionen testbar bleibt.
+  ///
+  /// Die Zifferntasten bauen NICHT mehr sofort (das tat vor Roadmap UI-04/05
+  /// nur diese eine versteckte Tastenkombination) — sie wählen wie ein Klick
+  /// auf [ToolbeltPanel]/Baumenü nur noch Werkzeug + Gebäudetyp aus. Die
+  /// eigentliche Platzierung passiert einheitlich über [performActionAt]
+  /// (Klick/Tap), inklusive Bauvorschau im Inspector. So lösen Tastatur und
+  /// UI-Buttons dieselbe Aktion aus, statt zwei parallele, unterschiedlich
+  /// funktionierende Bauwege zu pflegen.
   void _handleAction(LogicalKeyboardKey key, Vector2 position) {
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyE) {
       digAt(position);
     } else if (key == LogicalKeyboardKey.digit1) {
-      buildAt(position, BuildingType.wall);
+      _selectBuildTool(BuildingType.wall);
     } else if (key == LogicalKeyboardKey.digit2) {
-      buildAt(position, BuildingType.workbench);
+      _selectBuildTool(BuildingType.workbench);
     } else if (key == LogicalKeyboardKey.digit3) {
-      buildAt(position, BuildingType.market);
+      _selectBuildTool(BuildingType.market);
     } else if (key == LogicalKeyboardKey.digit4) {
-      buildAt(position, BuildingType.landingPad);
+      _selectBuildTool(BuildingType.landingPad);
+    } else if (key == LogicalKeyboardKey.digit5) {
+      _selectBuildTool(BuildingType.storage);
     } else if (key == LogicalKeyboardKey.keyC) {
       craftAt(position);
     } else if (key == LogicalKeyboardKey.keyV) {
@@ -464,6 +475,13 @@ class VoidTraderGame extends FlameGame
     } else if (key == LogicalKeyboardKey.f1) {
       map.enabled = !map.enabled;
     }
+  }
+
+  /// Setzt Werkzeug auf Bauen + wählt [type] — dieselbe Wirkung wie ein Tap
+  /// auf den passenden Eintrag im Baumenü (Roadmap UI-05).
+  void _selectBuildTool(BuildingType type) {
+    activeTool.value = ToolMode.build;
+    selectedBuildingType.value = type;
   }
 
   /// Versucht, das Tile unter [worldPosition] (Pixel-Koordinaten im

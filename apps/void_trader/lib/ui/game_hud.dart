@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../game/void_trader_game.dart';
 import 'game_ui_state.dart';
+import 'tool_mode.dart';
+import 'widgets/build_menu.dart';
 import 'widgets/feedback_toast.dart';
 import 'widgets/hud_panel.dart';
 import 'widgets/inspector_panel.dart';
@@ -17,8 +19,10 @@ import 'widgets/top_status_bar.dart';
 /// mit Beispielzustand testbar (siehe test/ui/widgets/).
 ///
 /// Nur die reinen Info-Panels (Topbar/Ressourcen/Inspector/Feedback/Ziele)
-/// stecken in [IgnorePointer] — [ToolbeltPanel] braucht echten Touch-Input,
-/// um Klicks in Modus-Wechsel zu übersetzen (Roadmap UI-04).
+/// stecken in [IgnorePointer] — [ToolbeltPanel] und [BuildMenu] brauchen
+/// echten Touch-Input, um Klicks in Modus-/Gebäudeauswahl zu übersetzen
+/// (Roadmap UI-04/UI-05). [BuildMenu] erscheint nur, während [ToolMode.
+/// build] aktiv ist.
 class GameHud extends StatelessWidget {
   final VoidTraderGame game;
 
@@ -77,7 +81,17 @@ class GameHud extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                if (state.activeTool == ToolMode.build) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: BuildMenu(
+                      selected: state.selectedBuildingType,
+                      inventory: state.inventory,
+                      onSelect: (type) => game.selectedBuildingType.value = type,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Align(
                   child: ToolbeltPanel(
                     activeTool: state.activeTool,

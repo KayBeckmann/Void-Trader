@@ -32,7 +32,7 @@ extension ToolModeLabels on ToolMode {
       case ToolMode.dig:
         return 'Leertaste';
       case ToolMode.build:
-        return '1-4';
+        return '1-5';
       case ToolMode.craft:
         return 'C';
       case ToolMode.sell:
