@@ -49,6 +49,74 @@ void main() {
     });
   });
 
+  group('PlayerComponent Kollision (Roadmap MOV-02)', () {
+    test('canMoveTo == null bewegt sich ungebremst (Rückwärtskompatibilität)', () {
+      final player = PlayerComponent(position: Vector2.zero());
+      player.velocity = Vector2(10, 5);
+      player.update(1.0);
+      expect(player.position, Vector2(10, 5));
+    });
+
+    test('canMoveTo == false blockiert die Bewegung vollständig', () {
+      final player = PlayerComponent(position: Vector2.zero(), canMoveTo: (_) => false);
+      player.velocity = Vector2(10, 0);
+      player.update(1.0);
+      expect(player.position, Vector2.zero());
+    });
+
+    test('blockierte Achse lässt die andere Achse weiter gleiten', () {
+      // x-Bewegung wird blockiert, y-Bewegung bleibt erlaubt — simuliert
+      // "an einer Wand entlanggleiten" bei diagonaler Bewegung.
+      final player = PlayerComponent(
+        position: Vector2.zero(),
+        canMoveTo: (target) => target.x == 0,
+      );
+      player.velocity = Vector2(10, 10);
+      player.update(1.0);
+
+      expect(player.position.x, 0);
+      expect(player.position.y, 10);
+    });
+
+    test('canMoveTo wird mit der vorgeschlagenen Zielposition aufgerufen', () {
+      final calls = <Vector2>[];
+      final player = PlayerComponent(
+        position: Vector2(100, 100),
+        canMoveTo: (target) {
+          calls.add(target.clone());
+          return true;
+        },
+      );
+      player.velocity = Vector2(10, -5);
+      player.update(1.0);
+
+      expect(calls, [Vector2(110, 100), Vector2(110, 95)]);
+    });
+  });
+
+  group('PlayerComponent.facingDirection (Roadmap FOW-02)', () {
+    test('startet nach unten/Süden', () {
+      final player = PlayerComponent(position: Vector2.zero());
+      expect(player.facingDirection, Vector2(0, 1));
+    });
+
+    test('folgt der Bewegungstaste (dominante Achse)', () {
+      final player = PlayerComponent(position: Vector2.zero());
+      player.onKeyEvent(_dummyKeyEvent, {LogicalKeyboardKey.keyD});
+      expect(player.facingDirection, Vector2(1, 0));
+    });
+
+    test('bleibt beim Loslassen der Taste auf der letzten Richtung stehen', () {
+      final player = PlayerComponent(position: Vector2.zero());
+      player.onKeyEvent(_dummyKeyEvent, {LogicalKeyboardKey.keyW});
+      expect(player.facingDirection, Vector2(0, -1));
+
+      player.onKeyEvent(_dummyKeyEvent, <LogicalKeyboardKey>{});
+      expect(player.velocity, Vector2.zero());
+      expect(player.facingDirection, Vector2(0, -1));
+    });
+  });
+
   group('PlayerComponent Aktionstasten', () {
     const spaceDown = KeyDownEvent(
       physicalKey: PhysicalKeyboardKey.space,

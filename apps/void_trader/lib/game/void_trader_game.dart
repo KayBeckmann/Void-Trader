@@ -148,6 +148,7 @@ class VoidTraderGame extends FlameGame
     player = PlayerComponent(
       position: Vector2.all(tileSize / 2),
       onAction: _handleAction,
+      canMoveTo: _canPlayerMoveTo,
     );
 
     spriteMap = TileSpriteMapComponent(
@@ -440,6 +441,27 @@ class VoidTraderGame extends FlameGame
   /// Pixel-Position im Weltkoordinatensystem.
   ({int x, int y}) _worldTileFor(Vector2 position) {
     return (x: (position.x / tileSize).floor(), y: (position.y / tileSize).floor());
+  }
+
+  /// Prüft für [PlayerComponent], ob eine Zielposition betreten werden darf
+  /// (Roadmap MOV-02) — löst nur die Welt-Tile-Koordinate auf und fragt
+  /// [vt_world.World.movementBlockReasonAt]; die eigentliche Regel
+  /// (welches Tile/Gebäude blockiert und warum) lebt komplett in
+  /// vt_world (MOV-01). Setzt bei Blockade [feedbackMessage], damit der
+  /// Spieler sieht, warum er nicht weiterkommt, statt still stehen zu
+  /// bleiben ("Der Spieler muss mit der Umwelt interagieren können").
+  bool _canPlayerMoveTo(Vector2 targetPosition) {
+    final tile = _worldTileFor(targetPosition);
+    final reason = simulationWorld.movementBlockReasonAt(
+      tile.x,
+      tile.y,
+      vt_world.ZLevel.surface,
+    );
+    if (reason != null) {
+      feedbackMessage.value = reason;
+      return false;
+    }
+    return true;
   }
 
   /// Ordnet Tastendrücke den Interaktionen zu. Lebt bewusst im Spiel statt
