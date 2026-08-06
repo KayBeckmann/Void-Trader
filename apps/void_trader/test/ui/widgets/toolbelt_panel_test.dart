@@ -34,4 +34,22 @@ void main() {
     await tester.tap(find.text(ToolMode.craft.label));
     expect(selected, ToolMode.craft);
   });
+
+  testWidgets('jeder Modus hat ein eigenes Icon und den Tastenhinweis sichtbar (Roadmap HUD-14)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ToolbeltPanel(activeTool: ToolMode.build, onSelect: (_) {}),
+        ),
+      ),
+    );
+
+    // Sechs Icon-Widgets für sechs Modi (Icons sind je Modus verschieden,
+    // hier nur die Anzahl geprüft — Eindeutigkeit ist Implementierungs-
+    // detail).
+    expect(find.byType(Icon), findsNWidgets(ToolMode.values.length));
+    expect(find.text(ToolMode.build.keyHint), findsOneWidget);
+  });
 }

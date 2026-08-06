@@ -43,4 +43,15 @@ void main() {
     expect(find.byIcon(Icons.block), findsOneWidget);
     expect(find.textContaining('Nicht genug Rohstoffe'), findsOneWidget);
   });
+
+  testWidgets('zeigt die Scanner-Kennzeichnung (Roadmap HUD-15)', (tester) async {
+    const info = TileInspectorInfo(title: 'Wiese', details: [], actions: []);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: InspectorPanel(info: info))),
+    );
+
+    expect(find.text('SCAN'), findsOneWidget);
+    expect(find.byIcon(Icons.radar), findsOneWidget);
+  });
 }

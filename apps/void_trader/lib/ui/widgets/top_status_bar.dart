@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:vt_physics/vt_physics.dart';
 
+import '../design_tokens.dart';
 import 'hud_panel.dart';
 
-/// Tag/Nacht-Zeit + Wetter auf einen Blick (Roadmap UI-02: eigenständiges
-/// Panel statt Teil einer monolithischen HUD-Datei).
+/// Obere Statusleiste (Roadmap HUD-11: "TopStatusBar V2") — segmentierte,
+/// (fast) vollbreite Leiste am oberen Bildschirmrand statt eines kompakten
+/// Textblocks: Zeit/Wetter/z-Ebene/Credits/Fracht-Kurzstatus, jedes Segment
+/// mit eigenem Icon und Akzentfarbe.
 class TopStatusBar extends StatelessWidget {
   final bool isDay;
   final String timeLabel;
   final Weather weather;
-
-  /// Deutsches Label der aktuellen z-Ebene (Roadmap MOV-03), z.B.
-  /// "Oberfläche" oder "Hügel" — macht Ebenenwechsel über Rampen sichtbar.
   final String zLevelLabel;
+  final int credits;
+  final int shipCargoCount;
 
   const TopStatusBar({
     super.key,
@@ -20,6 +22,8 @@ class TopStatusBar extends StatelessWidget {
     required this.timeLabel,
     required this.weather,
     required this.zLevelLabel,
+    required this.credits,
+    required this.shipCargoCount,
   });
 
   @override
@@ -28,26 +32,34 @@ class TopStatusBar extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            isDay ? Icons.wb_sunny : Icons.nightlight_round,
-            color: Colors.white,
-            size: 16,
+          _StatusSegment(
+            icon: isDay ? Icons.wb_sunny : Icons.nightlight_round,
+            label: timeLabel,
+            color: VtColors.accentAmber,
           ),
-          const SizedBox(width: 6),
-          Text(timeLabel, style: const TextStyle(color: Colors.white, fontSize: 14)),
-          const SizedBox(width: 10),
-          Icon(_weatherIcon(weather), color: Colors.white70, size: 16),
-          const SizedBox(width: 4),
-          Text(
-            _weatherLabel(weather),
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          const _SegmentDivider(),
+          _StatusSegment(
+            icon: _weatherIcon(weather),
+            label: _weatherLabel(weather),
+            color: VtColors.accentCyan,
           ),
-          const SizedBox(width: 10),
-          const Icon(Icons.layers_outlined, color: Colors.white70, size: 16),
-          const SizedBox(width: 4),
-          Text(
-            zLevelLabel,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          const _SegmentDivider(),
+          _StatusSegment(
+            icon: Icons.layers_outlined,
+            label: zLevelLabel,
+            color: VtColors.accentCyan,
+          ),
+          const _SegmentDivider(),
+          _StatusSegment(
+            icon: Icons.paid_outlined,
+            label: '$credits Cr',
+            color: VtColors.accentGreen,
+          ),
+          const _SegmentDivider(),
+          _StatusSegment(
+            icon: Icons.local_shipping_outlined,
+            label: '$shipCargoCount Fracht',
+            color: VtColors.accentCyan,
           ),
         ],
       ),
@@ -78,5 +90,42 @@ class TopStatusBar extends StatelessWidget {
       case Weather.storm:
         return 'Sturm';
     }
+  }
+}
+
+class _StatusSegment extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _StatusSegment({required this.icon, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 16),
+        const SizedBox(width: VtSpacing.xs),
+        Text(
+          label,
+          style: TextStyle(color: VtColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
+/// Dünne vertikale Trennlinie zwischen Segmenten — "segmentierte Bereiche
+/// statt Textblock" laut Roadmap-Vorgabe.
+class _SegmentDivider extends StatelessWidget {
+  const _SegmentDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: VtSpacing.md),
+      child: Container(width: 1, height: 16, color: VtColors.panelBorder),
+    );
   }
 }

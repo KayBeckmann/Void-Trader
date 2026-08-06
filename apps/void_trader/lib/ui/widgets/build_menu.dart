@@ -3,6 +3,7 @@ import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
 
 import '../../game/void_trader_game.dart';
+import '../design_tokens.dart';
 import 'hud_panel.dart';
 
 /// Kleines Bau-/Craft-Menü V1 (Roadmap UI-05): listet jeden [BuildingType]
@@ -34,7 +35,7 @@ class BuildMenu extends StatelessWidget {
         children: [
           const Text(
             'Baumenü',
-            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            style: TextStyle(color: VtColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
           ),
           for (final type in BuildingType.values)
             _BuildMenuEntry(
@@ -78,36 +79,38 @@ class _BuildMenuEntry extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(VtRadii.button),
       child: Container(
-        margin: const EdgeInsets.only(top: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: const EdgeInsets.only(top: VtSpacing.xs),
+        padding: const EdgeInsets.symmetric(horizontal: VtSpacing.sm, vertical: VtSpacing.xs),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFE0A030) : const Color(0x30FFFFFF),
-          borderRadius: BorderRadius.circular(6),
+          color: active ? VtColors.accentAmber : const Color(0x30FFFFFF),
+          borderRadius: BorderRadius.circular(VtRadii.button),
+          border: Border.all(color: active ? VtColors.accentAmber : VtColors.panelBorder),
+          boxShadow: active ? VtGlow.soft(VtColors.accentAmber) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               affordable ? Icons.check_circle_outline : Icons.block,
-              color: affordable ? Colors.lightGreenAccent : Colors.redAccent,
+              color: affordable ? VtColors.accentGreen : VtColors.accentRed,
               size: 13,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: VtSpacing.sm),
             Text(
               definition.name,
               style: TextStyle(
-                color: active ? Colors.black : Colors.white,
+                color: active ? Colors.black : VtColors.textPrimary,
                 fontSize: 12,
                 fontWeight: active ? FontWeight.bold : FontWeight.normal,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: VtSpacing.sm),
             Text(
               costText,
               style: TextStyle(
-                color: active ? Colors.black87 : Colors.white70,
+                color: active ? Colors.black87 : VtColors.textSecondary,
                 fontSize: 11,
               ),
             ),

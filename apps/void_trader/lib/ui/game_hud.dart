@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../game/void_trader_game.dart';
+import 'design_tokens.dart';
 import 'game_ui_state.dart';
 import 'tool_mode.dart';
 import 'widgets/build_menu.dart';
 import 'widgets/feedback_toast.dart';
 import 'widgets/hud_panel.dart';
 import 'widgets/inspector_panel.dart';
+import 'widgets/minimap_panel.dart';
 import 'widgets/objective_panel.dart';
 import 'widgets/resource_bar.dart';
 import 'widgets/toolbelt_panel.dart';
@@ -47,26 +49,43 @@ class GameHud extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Vollbreite Topbar (Roadmap HUD-11) — bewusst NICHT in der
+                // folgenden Row, damit sie über die volle Breite gestreckt
+                // wird (CrossAxisAlignment.stretch der äußeren Column)
+                // statt nur so breit wie ihr Inhalt zu sein.
+                IgnorePointer(
+                  child: TopStatusBar(
+                    isDay: state.isDay,
+                    timeLabel: state.timeLabel,
+                    weather: state.weather,
+                    zLevelLabel: state.zLevelLabel,
+                    credits: state.credits,
+                    shipCargoCount: state.shipCargoCount,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 IgnorePointer(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      ResourceBar(inventory: state.inventory),
+                      // Minimap "rechts oben unter/innerhalb der Topbar"
+                      // (Roadmap HUD-13), Zielkette direkt darunter im
+                      // selben rechten Streifen.
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          TopStatusBar(
-                            isDay: state.isDay,
-                            timeLabel: state.timeLabel,
-                            weather: state.weather,
-                            zLevelLabel: state.zLevelLabel,
+                          MinimapPanel(
+                            grid: state.minimapGrid,
+                            facingX: state.facingX,
+                            facingY: state.facingY,
                           ),
                           const SizedBox(height: 6),
-                          ResourceBar(inventory: state.inventory),
+                          ObjectivePanel(objectives: state.objectives),
                         ],
                       ),
-                      ObjectivePanel(objectives: state.objectives),
                     ],
                   ),
                 ),
@@ -115,11 +134,12 @@ class _ControlsLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const HudPanel(
-      color: Color(0x80000000),
+      color: VtColors.panelBackgroundSubtle,
+      bordered: false,
       child: Text(
         'WASD/Pfeile Bewegen · Werkzeug per Klick oder Taste wählen · '
         'Klick auf die Karte wirkt am Zieltile · F1 Debug-Ansicht',
-        style: TextStyle(color: Colors.white70, fontSize: 11),
+        style: TextStyle(color: VtColors.textSecondary, fontSize: 11),
         textAlign: TextAlign.center,
       ),
     );
