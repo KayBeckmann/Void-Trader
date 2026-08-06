@@ -9,5 +9,6 @@ export 'src/chunk.dart';
 export 'src/noise.dart';
 export 'src/start_zone.dart';
 export 'src/tile.dart';
+export 'src/visibility.dart';
 export 'src/world.dart';
 export 'src/z_level.dart';
