@@ -140,6 +140,23 @@ class World {
   BuildingType? buildingAt(int worldX, int worldY, int z) =>
       _buildings[(x: worldX, y: worldY, z: z)];
 
+  /// Prüft, ob normale Bewegung auf die Welt-Tile-Koordinaten erlaubt ist
+  /// (Roadmap MOV-02) — berücksichtigt sowohl das Gelände als auch ein
+  /// dort platziertes Gebäude. Gibt `null` zurück, wenn die Bewegung
+  /// erlaubt ist, sonst eine deutsche UI-Meldung, warum nicht.
+  String? movementBlockReasonAt(int worldX, int worldY, int z) {
+    final building = buildingAt(worldX, worldY, z);
+    if (building != null && building.blocksMovement) {
+      return 'Gebäude blockiert den Weg.';
+    }
+    return tileAt(worldX, worldY, z).type.movementBlockedReason;
+  }
+
+  /// Bequemlichkeit für [movementBlockReasonAt]: `true`, wenn der Spieler
+  /// sich auf die Welt-Tile-Koordinaten bewegen darf.
+  bool canEnter(int worldX, int worldY, int z) =>
+      movementBlockReasonAt(worldX, worldY, z) == null;
+
   /// Entfernt ein platziertes Gebäude. Gibt `true` zurück, falls dort
   /// tatsächlich eines stand.
   bool removeBuildingAt(int worldX, int worldY, int z) =>

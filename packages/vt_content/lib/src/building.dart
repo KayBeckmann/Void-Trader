@@ -56,3 +56,13 @@ BuildingDefinition buildingDefinitionFor(BuildingType type) {
   }
   return definition;
 }
+
+/// Bewegungs-Eigenschaft je Gebäudetyp (Roadmap MOV-01: "Gebäude ... sind
+/// Hindernisse"). Jedes platzierte Gebäude blockiert die Bewegung — man
+/// steht neben seiner Werkbank, nicht in ihr. Als Erweiterung statt
+/// festem `true` in [World.placeBuildingAt] modelliert, damit ein
+/// zukünftiger begehbarer Gebäudetyp (z.B. ein Bodenpanel) die Regel
+/// gezielt überschreiben kann, ohne die Aufrufer anzufassen.
+extension BuildingMovement on BuildingType {
+  bool get blocksMovement => true;
+}
