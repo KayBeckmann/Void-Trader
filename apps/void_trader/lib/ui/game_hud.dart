@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../game/void_trader_game.dart';
+import 'design_tokens.dart';
 import 'game_ui_state.dart';
 import 'tool_mode.dart';
 import 'widgets/build_menu.dart';
@@ -115,11 +116,12 @@ class _ControlsLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const HudPanel(
-      color: Color(0x80000000),
+      color: VtColors.panelBackgroundSubtle,
+      bordered: false,
       child: Text(
         'WASD/Pfeile Bewegen · Werkzeug per Klick oder Taste wählen · '
         'Klick auf die Karte wirkt am Zieltile · F1 Debug-Ansicht',
-        style: TextStyle(color: Colors.white70, fontSize: 11),
+        style: TextStyle(color: VtColors.textSecondary, fontSize: 11),
         textAlign: TextAlign.center,
       ),
     );
