@@ -116,6 +116,41 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.sealAt (Roadmap MVP: "Graben/Pumpe/Abdichten")', () {
+    test('dichtet ein geflutetes Tile sofort vollständig ab', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
+      game.simulationWorld.setTileAt(
+        tileX,
+        tileY,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.path, waterLevel: 0.7),
+      );
+
+      final success = game.sealAt(game.player.position);
+
+      expect(success, isTrue);
+      expect(game.feedbackMessage.value, 'Abgedichtet.');
+      expect(
+        game.simulationWorld.tileAt(tileX, tileY, vt_world.ZLevel.surface).waterLevel,
+        0,
+      );
+    });
+
+    test('liefert false auf einem trockenen Tile', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      final success = game.sealAt(game.player.position);
+
+      expect(success, isFalse);
+      expect(game.feedbackMessage.value, 'Hier steht kein Wasser.');
+    });
+  });
+
   group('VoidTraderGame Fluid-Tick', () {
     test('update() lässt Wasser über die Zeit ins Nachbar-Tile fließen', () async {
       final game = VoidTraderGame(seed: 1);
@@ -477,6 +512,19 @@ void main() {
       game.buildAt(game.player.position, BuildingType.workbench);
 
       expect(game.currentInteractionHint(), contains('Craften'));
+    });
+
+    test('zeigt Abdichten-Hinweis auf geflutetem Tile (Roadmap MVP)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.grass, waterLevel: 0.4),
+      );
+
+      expect(game.currentInteractionHint(), contains('Abdichten'));
     });
   });
 

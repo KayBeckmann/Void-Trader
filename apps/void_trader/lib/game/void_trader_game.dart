@@ -348,6 +348,8 @@ class VoidTraderGame extends FlameGame
         sellAllAt(worldPosition);
       case ToolMode.cargo:
         loadCargoAt(worldPosition);
+      case ToolMode.seal:
+        sealAt(worldPosition);
     }
   }
 
@@ -493,8 +495,9 @@ class VoidTraderGame extends FlameGame
     if (building == BuildingType.market) return '[V] Verkaufen';
     if (building == BuildingType.landingPad) return '[L] Fracht laden';
 
-    final tileType = simulationWorld.tileAt(tile.x, tile.y, z).type;
-    if (tileType.isMinable) return '[Leertaste] Abbauen';
+    final playerTile = simulationWorld.tileAt(tile.x, tile.y, z);
+    if (playerTile.type.isMinable) return '[Leertaste] Abbauen';
+    if (playerTile.waterLevel > 0) return '[R] Abdichten';
 
     return null;
   }
@@ -657,6 +660,8 @@ class VoidTraderGame extends FlameGame
       sellAllAt(position);
     } else if (key == LogicalKeyboardKey.keyL) {
       loadCargoAt(position);
+    } else if (key == LogicalKeyboardKey.keyR) {
+      sealAt(position);
     } else if (key == LogicalKeyboardKey.f1) {
       map.enabled = !map.enabled;
     }
@@ -688,6 +693,23 @@ class VoidTraderGame extends FlameGame
       inventory.add(resource, 1);
       feedbackMessage.value = '+1 ${resourceLabel(resource)}';
     }
+    return true;
+  }
+
+  /// Dichtet das Tile unter [worldPosition] sofort ab (Roadmap MVP-
+  /// Definition: "Spieler kann mit Graben/Pumpe/Abdichten reagieren") —
+  /// pumpt das gesamte dort stehende Wasser in einem Schritt ab. Die
+  /// eigentliche Regel lebt in vt_world ([World.drainWaterAt]), hier wird
+  /// nur die Pixel- auf Welt-Tile-Koordinate umgerechnet und Feedback
+  /// gesetzt.
+  bool sealAt(Vector2 worldPosition) {
+    final tile = _worldTileFor(worldPosition);
+    final drained = simulationWorld.drainWaterAt(tile.x, tile.y, currentZLevel.value);
+    if (drained == null) {
+      feedbackMessage.value = 'Hier steht kein Wasser.';
+      return false;
+    }
+    feedbackMessage.value = 'Abgedichtet.';
     return true;
   }
 
