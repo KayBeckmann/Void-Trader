@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
+import 'package:vt_drones/vt_drones.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
 import 'package:void_trader/game/void_trader_game.dart';
 
@@ -189,6 +190,115 @@ void main() {
 
       expect(second, isFalse);
       expect(game.inventory.count(Resource.stone), stoneAfterFirst);
+    });
+
+    test('Minendrohne scheitert ohne abbaubares Nachbar-Tile (Roadmap Phase 8)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.ore, 20);
+      game.inventory.add(Resource.component, 20);
+
+      // Spawn-Sicherheitszone ist immer Wiese — garantiert kein
+      // abbaubares Nachbar-Tile.
+      final success = game.buildAt(game.player.position, BuildingType.miningDrone);
+
+      expect(success, isFalse);
+      expect(game.feedbackMessage.value, contains('keine abbaubare Ressource'));
+      expect(game.inventory.count(Resource.stone), 20); // Kosten nicht abgezogen
+    });
+
+    test('Minendrohne wird mit abbaubarem Nachbar-Tile platziert', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.ore, 20);
+      game.inventory.add(Resource.component, 20);
+
+      final buildPosition = Vector2(3 * VoidTraderGame.tileSize, 3 * VoidTraderGame.tileSize);
+      game.simulationWorld.setTileAt(
+        4,
+        3,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+
+      final success = game.buildAt(buildPosition, BuildingType.miningDrone);
+
+      expect(success, isTrue);
+      expect(
+        game.simulationWorld.buildingAt(3, 3, vt_world.ZLevel.surface),
+        BuildingType.miningDrone,
+      );
+    });
+  });
+
+  group('VoidTraderGame Drohnen-Tick (Roadmap Phase 8)', () {
+    // Baut an Position (3,3) mit exakt einem abbaubaren Nachbar-Tile bei
+    // (4,3) — dieselbe Ausgangslage wie im Platzierungstest oben, damit
+    // beide Tests dasselbe, bekannt-faire Setup teilen.
+    Future<VoidTraderGame> buildGameWithOneMinableNeighbor() async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.ore, 20);
+      game.inventory.add(Resource.component, 20);
+      final buildPosition = Vector2(3 * VoidTraderGame.tileSize, 3 * VoidTraderGame.tileSize);
+      game.simulationWorld.setTileAt(
+        4,
+        3,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+      game.buildAt(buildPosition, BuildingType.miningDrone);
+      return game;
+    }
+
+    // Zyklusdauer ist 6s, Drohnen-Tick-Intervall ist 1s je update()-Aufruf
+    // (kein akkumulierender While-Loop) — sieben 1s-Ticks garantieren einen
+    // abgeschlossenen Zyklus trotz Fließkomma-Summierung von 1/6, analog zur
+    // Begründung in packages/vt_drones/test/drone_test.dart.
+    const oneCycleTicks = 7;
+
+    test('vollendeter Abbauzyklus baut das Nachbar-Tile ab und füllt das Inventar', () async {
+      final game = await buildGameWithOneMinableNeighbor();
+      final oreBefore = game.inventory.count(Resource.stone);
+
+      for (var i = 0; i < oneCycleTicks; i++) {
+        game.update(1.0);
+      }
+
+      expect(game.inventory.count(Resource.stone), oreBefore + 1);
+      expect(
+        game.simulationWorld.tileAt(4, 3, vt_world.ZLevel.surface).type.isMinable,
+        isFalse,
+      );
+      final drone = game.drones[(x: 3, y: 3, z: vt_world.ZLevel.surface)];
+      expect(drone, isNotNull);
+      expect(drone!.status, DroneStatus.working);
+    });
+
+    test('Drohne wird erschöpft, sobald keine abbaubaren Nachbarn mehr übrig sind', () async {
+      final game = await buildGameWithOneMinableNeighbor();
+
+      // Erster Zyklus baut den einzigen Nachbarn ab, zweiter Zyklus findet
+      // keinen mehr.
+      for (var i = 0; i < oneCycleTicks * 2; i++) {
+        game.update(1.0);
+      }
+
+      final drone = game.drones[(x: 3, y: 3, z: vt_world.ZLevel.surface)];
+      expect(drone, isNotNull);
+      expect(drone!.status, DroneStatus.depleted);
+    });
+
+    test('Inspector zeigt Status und Energie einer platzierten Drohne', () async {
+      final game = await buildGameWithOneMinableNeighbor();
+
+      final info = game.inspectTile(3, 3);
+
+      expect(info.details.any((line) => line.contains('Arbeitet')), isTrue);
+      expect(info.details.any((line) => line.contains('Energie')), isTrue);
     });
   });
 

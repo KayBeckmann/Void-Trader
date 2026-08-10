@@ -1,8 +1,11 @@
-/// Support for doing something awesome.
+/// Drohnenlogik für Void Trader (Roadmap Phase 8: "Drohnenlogik und
+/// Automatisierung").
 ///
-/// More dartdocs go here.
+/// Reine Dart-Simulation ohne Flutter-/Flame-/Weltbezug (siehe
+/// docs/ARCHITECTURE.md: "Dart-Core zuerst") — analog zu `vt_npc`: eine
+/// [Drone] kennt nur ihren inneren Zustand (Energie, Abbau-Fortschritt,
+/// Status), keine Position oder Pfadfindung. Das lebt in der Spielschicht
+/// (`apps/void_trader`).
 library;
 
-export 'src/vt_drones_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/drone.dart';

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
+import 'package:vt_drones/vt_drones.dart';
 import 'package:vt_npc/vt_npc.dart';
 import 'package:vt_physics/vt_physics.dart';
 // Alias nötig: FlameGame definiert selbst einen `world`-Getter/Kamera-World —
@@ -106,6 +107,18 @@ class VoidTraderGame extends FlameGame
   /// budgetiert ... sein").
   static const double _visibilityTickInterval = 0.15;
   double _visibilityTickAccumulator = 0;
+
+  /// Platzierte Minendrohnen, indiziert über ihre Welt-Tile-Koordinate +
+  /// z-Ebene (Roadmap Phase 8) — jede Instanz trägt ihr eigenes Innenleben
+  /// (Energie, Abbau-Fortschritt), im Unterschied zu den übrigen
+  /// Gebäuden, die nur als Typ in [vt_world.World] existieren.
+  final Map<({int x, int y, int z}), Drone> drones = {};
+
+  /// Sekunden zwischen zwei Drohnen-Simulationsschritten — budgetiert
+  /// statt jeden Frame, analog zu [_visibilityTickInterval]/
+  /// [_fluidTickInterval].
+  static const double _droneTickInterval = 1.0;
+  double _droneTickAccumulator = 0;
 
   double _fluidTickAccumulator = 0;
   double _hudTickAccumulator = 0;
@@ -278,6 +291,12 @@ class VoidTraderGame extends FlameGame
       _updateFieldOfView();
     }
 
+    _droneTickAccumulator += dt;
+    if (_droneTickAccumulator >= _droneTickInterval) {
+      _droneTickAccumulator -= _droneTickInterval;
+      _tickDrones();
+    }
+
     _fluidTickAccumulator += dt;
     if (_fluidTickAccumulator < _fluidTickInterval) return;
     _fluidTickAccumulator -= _fluidTickInterval;
@@ -393,6 +412,12 @@ class VoidTraderGame extends FlameGame
         case BuildingType.wall:
         case BuildingType.storage:
           break;
+        case BuildingType.miningDrone:
+          final drone = drones[(x: worldX, y: worldY, z: z)];
+          if (drone != null) {
+            details.add('Status: ${droneStatusLabel(drone.status)}');
+            details.add('Energie: ${(drone.energy * 100).round()}%');
+          }
       }
     } else {
       title = tileTypeLabel(tile.type);
@@ -496,6 +521,23 @@ class VoidTraderGame extends FlameGame
     return (x: (position.x / tileSize).floor(), y: (position.y / tileSize).floor());
   }
 
+  /// Sucht das erste abbaubare Tile direkt neben [tile] auf der aktuellen
+  /// z-Ebene (Roadmap Phase 8: Minendrohnen brauchen ein Ziel in
+  /// Reichweite, bewusst ohne Pfadfindung — nur die vier Nachbarn zählen).
+  /// `null`, wenn keins gefunden wurde.
+  ({int x, int y})? _findMinableNeighbor(({int x, int y}) tile) {
+    final z = currentZLevel.value;
+    for (final neighbor in [
+      (x: tile.x + 1, y: tile.y),
+      (x: tile.x - 1, y: tile.y),
+      (x: tile.x, y: tile.y + 1),
+      (x: tile.x, y: tile.y - 1),
+    ]) {
+      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).type.isMinable) return neighbor;
+    }
+    return null;
+  }
+
   /// Wechselt die z-Ebene, sobald der Spieler ein neues Tile betritt, das
   /// eine Rampe ist (Roadmap MOV-03). Löst nur beim TILE-WECHSEL aus (nicht
   /// jeden Frame) — sonst würde ein auf der Rampe stehender Spieler jeden
@@ -535,6 +577,33 @@ class VoidTraderGame extends FlameGame
       viewRadius: _viewRadius,
     );
     explorationTracker.update(visible);
+  }
+
+  /// Simuliert einen Schritt für jede platzierte Minendrohne (Roadmap
+  /// Phase 8) — periodisch statt jeden Frame, siehe [_droneTickInterval].
+  /// Ist gerade ein Abbauzyklus fertig geworden, wird direkt ein
+  /// abbaubares Nachbar-Tile gesucht und abgebaut: dieselbe
+  /// Nachbarschaftsprüfung wie bei der Platzierung ([_findMinableNeighbor])
+  /// läuft hier erneut, statt sich ein einmal gefundenes Ziel zu merken —
+  /// so findet die Drohne nach dem Abbau eines Nachbarn automatisch das
+  /// nächste, bis die lokale Umgebung erschöpft ist.
+  void _tickDrones() {
+    for (final entry in drones.entries) {
+      final position = entry.key;
+      final drone = entry.value;
+      final cycleComplete = drone.tick(_droneTickInterval);
+      if (!cycleComplete) continue;
+
+      final neighbor = _findMinableNeighbor((x: position.x, y: position.y));
+      if (neighbor == null) {
+        drone.markDepleted();
+        continue;
+      }
+
+      final mined = simulationWorld.mineTileAt(neighbor.x, neighbor.y, position.z);
+      final resource = mined == null ? null : _resourceForMinedTile(mined);
+      if (resource != null) inventory.add(resource, 1);
+    }
   }
 
   /// Prüft für [PlayerComponent], ob eine Zielposition betreten werden darf
@@ -634,6 +703,14 @@ class VoidTraderGame extends FlameGame
       return false;
     }
 
+    // Minendrohnen sind ohne abbaubares Nachbar-Tile nutzlos (Roadmap
+    // Phase 8) — lieber die Platzierung verweigern, als eine Drohne zu
+    // bauen, die von Anfang an nichts zu tun hat.
+    if (type == BuildingType.miningDrone && _findMinableNeighbor(tile) == null) {
+      feedbackMessage.value = 'Hier ist keine abbaubare Ressource in Reichweite.';
+      return false;
+    }
+
     final placed = simulationWorld.placeBuildingAt(
       tile.x,
       tile.y,
@@ -648,6 +725,11 @@ class VoidTraderGame extends FlameGame
     inventory.removeAll(definition.buildCost);
     builtBuildingTypes.add(type);
     feedbackMessage.value = '${definition.name} gebaut.';
+
+    if (type == BuildingType.miningDrone) {
+      drones[(x: tile.x, y: tile.y, z: currentZLevel.value)] = Drone();
+    }
+
     return true;
   }
 
@@ -780,6 +862,21 @@ class VoidTraderGame extends FlameGame
         return 'Tiefe Höhle';
       default:
         return 'Ebene $z';
+    }
+  }
+
+  /// Deutschsprachiges Label für den Anzeigetext im Inspector-Panel
+  /// (Roadmap Phase 8: Minendrohne).
+  static String droneStatusLabel(DroneStatus status) {
+    switch (status) {
+      case DroneStatus.working:
+        return 'Arbeitet';
+      case DroneStatus.lowEnergy:
+        return 'Energie niedrig';
+      case DroneStatus.broken:
+        return 'Defekt (Energie leer)';
+      case DroneStatus.depleted:
+        return 'Keine Ressourcen mehr in Reichweite';
     }
   }
 }
