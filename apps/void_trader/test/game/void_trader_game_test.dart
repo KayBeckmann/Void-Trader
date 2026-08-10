@@ -116,6 +116,41 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.sealAt (Roadmap MVP: "Graben/Pumpe/Abdichten")', () {
+    test('dichtet ein geflutetes Tile sofort vollständig ab', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
+      game.simulationWorld.setTileAt(
+        tileX,
+        tileY,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.path, waterLevel: 0.7),
+      );
+
+      final success = game.sealAt(game.player.position);
+
+      expect(success, isTrue);
+      expect(game.feedbackMessage.value, 'Abgedichtet.');
+      expect(
+        game.simulationWorld.tileAt(tileX, tileY, vt_world.ZLevel.surface).waterLevel,
+        0,
+      );
+    });
+
+    test('liefert false auf einem trockenen Tile', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      final success = game.sealAt(game.player.position);
+
+      expect(success, isFalse);
+      expect(game.feedbackMessage.value, 'Hier steht kein Wasser.');
+    });
+  });
+
   group('VoidTraderGame Fluid-Tick', () {
     test('update() lässt Wasser über die Zeit ins Nachbar-Tile fließen', () async {
       final game = VoidTraderGame(seed: 1);
@@ -230,6 +265,128 @@ void main() {
         game.simulationWorld.buildingAt(3, 3, vt_world.ZLevel.surface),
         BuildingType.miningDrone,
       );
+    });
+
+    test('Pumpe scheitert ohne geflutetes Nachbar-Tile (Roadmap MVP)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.component, 20);
+
+      // Spawn-Sicherheitszone ist immer trockene Wiese — garantiert kein
+      // geflutetes Nachbar-Tile.
+      final success = game.buildAt(game.player.position, BuildingType.pump);
+
+      expect(success, isFalse);
+      expect(game.feedbackMessage.value, contains('keine Überflutung'));
+      expect(game.inventory.count(Resource.stone), 20); // Kosten nicht abgezogen
+    });
+
+    test('Pumpe wird mit geflutetem Nachbar-Tile platziert', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.component, 20);
+
+      final buildPosition = Vector2(3 * VoidTraderGame.tileSize, 3 * VoidTraderGame.tileSize);
+      game.simulationWorld.setTileAt(
+        4,
+        3,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.path, waterLevel: 0.5),
+      );
+
+      final success = game.buildAt(buildPosition, BuildingType.pump);
+
+      expect(success, isTrue);
+      expect(
+        game.simulationWorld.buildingAt(3, 3, vt_world.ZLevel.surface),
+        BuildingType.pump,
+      );
+    });
+  });
+
+  group('VoidTraderGame Pumpen-Tick (Roadmap MVP: "Graben/Pumpe/Abdichten")', () {
+    // Baut weit entfernt vom Weltursprung (analog zum Test "Interaktionen
+    // funktionieren auch weit entfernt vom Weltursprung" oben) — der
+    // Fluid-Tick simuliert nur ein Fenster um die (unbewegte) Spielerfigur
+    // bei Spawn, damit bleibt das echte, prozedural generierte Gewässer
+    // in der Seed-1-Welt außen vor und beeinflusst diese Tests nicht.
+    Future<VoidTraderGame> buildGameWithOneFloodedNeighbor({double waterLevel = 0.5}) async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.component, 20);
+      final buildPosition = Vector2(500 * VoidTraderGame.tileSize, 300 * VoidTraderGame.tileSize);
+      // Anders als bei der Minendrohne (immer in der garantiert begehbaren
+      // Spawn-Sicherheitszone getestet) liegt dieser Standort weit weg vom
+      // Ursprung — die eigentliche Bau-Kachel muss daher explizit begehbar
+      // gemacht werden, statt sich auf echte prozedurale Generierung zu
+      // verlassen.
+      game.simulationWorld.setTileAt(
+        500,
+        300,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.grass),
+      );
+      game.simulationWorld.setTileAt(
+        501,
+        300,
+        vt_world.ZLevel.surface,
+        vt_world.Tile(vt_world.TileType.path, waterLevel: waterLevel),
+      );
+      final built = game.buildAt(buildPosition, BuildingType.pump);
+      assert(built, 'Testvoraussetzung: Pumpe muss sich hier platzieren lassen');
+      return game;
+    }
+
+    test('pumpt über mehrere Ticks Wasser aus dem Nachbar-Tile ab', () async {
+      final game = await buildGameWithOneFloodedNeighbor(waterLevel: 0.5);
+
+      game.update(1.0);
+
+      final afterOneTick = game.simulationWorld
+          .tileAt(501, 300, vt_world.ZLevel.surface)
+          .waterLevel;
+      expect(afterOneTick, lessThan(0.5));
+      expect(afterOneTick, greaterThan(0));
+    });
+
+    test('legt ein Nachbar-Tile über genug Ticks vollständig trocken', () async {
+      final game = await buildGameWithOneFloodedNeighbor(waterLevel: 0.3);
+
+      // 0.3 / 0.15 pro Tick = 2 Ticks bis vollständig trocken.
+      for (var i = 0; i < 5; i++) {
+        game.update(1.0);
+      }
+
+      expect(game.simulationWorld.tileAt(501, 300, vt_world.ZLevel.surface).waterLevel, 0);
+      expect(
+        game.simulationWorld.buildingAt(500, 300, vt_world.ZLevel.surface),
+        BuildingType.pump,
+      );
+    });
+
+    test('bleibt untätig stehen, ohne Fehler, wenn kein Wasser mehr in Reichweite ist', () async {
+      final game = await buildGameWithOneFloodedNeighbor(waterLevel: 0.1);
+
+      for (var i = 0; i < 10; i++) {
+        game.update(1.0);
+      }
+
+      expect(game.simulationWorld.tileAt(501, 300, vt_world.ZLevel.surface).waterLevel, 0);
+      expect(
+        game.simulationWorld.buildingAt(500, 300, vt_world.ZLevel.surface),
+        BuildingType.pump,
+      );
+    });
+
+    test('Inspector zeigt aktiven Pump-Status mit gefluteter Nachbarschaft', () async {
+      final game = await buildGameWithOneFloodedNeighbor();
+
+      final info = game.inspectTile(500, 300);
+
+      expect(info.details.any((line) => line.contains('Pumpt aktiv')), isTrue);
     });
   });
 
@@ -477,6 +634,19 @@ void main() {
       game.buildAt(game.player.position, BuildingType.workbench);
 
       expect(game.currentInteractionHint(), contains('Craften'));
+    });
+
+    test('zeigt Abdichten-Hinweis auf geflutetem Tile (Roadmap MVP)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        0,
+        0,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.grass, waterLevel: 0.4),
+      );
+
+      expect(game.currentInteractionHint(), contains('Abdichten'));
     });
   });
 

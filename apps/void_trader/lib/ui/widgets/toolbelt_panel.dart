@@ -103,6 +103,8 @@ class _ToolButton extends StatelessWidget {
         return Icons.storefront_outlined;
       case ToolMode.cargo:
         return Icons.local_shipping_outlined;
+      case ToolMode.seal:
+        return Icons.water_drop_outlined;
     }
   }
 }

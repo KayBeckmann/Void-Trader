@@ -16,6 +16,13 @@ enum BuildingType {
   /// Abbau-Fortschritt aus dem `vt_drones`-Paket) — siehe
   /// VoidTraderGame.drones in `apps/void_trader`.
   miningDrone,
+
+  /// Pumpt automatisch Wasser aus einem angrenzenden gefluteten Tile ab
+  /// (Roadmap MVP-Definition Punkt 5: "Spieler kann mit Graben/Pumpe/
+  /// Abdichten reagieren"). Anders als die Minendrohne ohne eigenes
+  /// Innenleben — nur eine Weltposition, siehe VoidTraderGame.pumps in
+  /// `apps/void_trader`.
+  pump,
 }
 
 /// Balancing-Daten für einen [BuildingType]: Name + Baukosten in
@@ -63,6 +70,11 @@ const Map<BuildingType, BuildingDefinition> buildingDefinitions = {
     type: BuildingType.miningDrone,
     name: 'Minendrohne',
     buildCost: {Resource.stone: 4, Resource.ore: 2, Resource.component: 3},
+  ),
+  BuildingType.pump: BuildingDefinition(
+    type: BuildingType.pump,
+    name: 'Pumpe',
+    buildCost: {Resource.stone: 3, Resource.component: 2},
   ),
 };
 

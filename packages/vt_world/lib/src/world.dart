@@ -152,6 +152,24 @@ class World {
     return current.type;
   }
 
+  /// Verringert den Wasserstand eines Tiles (Roadmap MVP-Definition:
+  /// "Spieler kann mit Graben/Pumpe/Abdichten reagieren"). Ohne [amount]
+  /// wird das Tile in einem Schritt vollständig trockengelegt (Abdichten-
+  /// Sofortaktion); mit [amount] wird höchstens so viel abgepumpt, wie
+  /// tatsächlich vorhanden ist (Pumpen-Gebäude, das pro Tick einen festen
+  /// Betrag abbaut). Der Tile-Typ selbst bleibt unverändert — nur der
+  /// Wasserstand sinkt. Gibt den tatsächlich entfernten Betrag zurück,
+  /// oder `null`, wenn das Tile ohnehin trocken war.
+  double? drainWaterAt(int worldX, int worldY, int z, [double? amount]) {
+    assert(amount == null || amount > 0, 'amount muss positiv sein, falls angegeben');
+    final tile = tileAt(worldX, worldY, z);
+    if (tile.waterLevel <= 0) return null;
+    final drained = amount == null ? tile.waterLevel : amount.clamp(0.0, tile.waterLevel);
+    if (drained <= 0) return null;
+    setTileAt(worldX, worldY, z, Tile(tile.type, waterLevel: tile.waterLevel - drained));
+    return drained;
+  }
+
   /// Platziert ein Gebäude an den Welt-Tile-Koordinaten, falls das Tile
   /// begehbar und noch nicht belegt ist. Gibt `true` bei Erfolg zurück.
   /// Prüft nur die Platzierungsregel — Baukosten/Inventar-Abzug ist Sache
