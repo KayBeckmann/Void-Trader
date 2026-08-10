@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
+import 'package:vt_drones/vt_drones.dart';
 import 'package:vt_npc/vt_npc.dart';
 import 'package:vt_physics/vt_physics.dart';
 // Alias nötig: FlameGame definiert selbst einen `world`-Getter/Kamera-World —
@@ -106,6 +107,18 @@ class VoidTraderGame extends FlameGame
   /// budgetiert ... sein").
   static const double _visibilityTickInterval = 0.15;
   double _visibilityTickAccumulator = 0;
+
+  /// Platzierte Minendrohnen, indiziert über ihre Welt-Tile-Koordinate +
+  /// z-Ebene (Roadmap Phase 8) — jede Instanz trägt ihr eigenes Innenleben
+  /// (Energie, Abbau-Fortschritt), im Unterschied zu den übrigen
+  /// Gebäuden, die nur als Typ in [vt_world.World] existieren.
+  final Map<({int x, int y, int z}), Drone> drones = {};
+
+  /// Sekunden zwischen zwei Drohnen-Simulationsschritten — budgetiert
+  /// statt jeden Frame, analog zu [_visibilityTickInterval]/
+  /// [_fluidTickInterval].
+  static const double _droneTickInterval = 1.0;
+  double _droneTickAccumulator = 0;
 
   double _fluidTickAccumulator = 0;
   double _hudTickAccumulator = 0;
@@ -278,6 +291,12 @@ class VoidTraderGame extends FlameGame
       _updateFieldOfView();
     }
 
+    _droneTickAccumulator += dt;
+    if (_droneTickAccumulator >= _droneTickInterval) {
+      _droneTickAccumulator -= _droneTickInterval;
+      _tickDrones();
+    }
+
     _fluidTickAccumulator += dt;
     if (_fluidTickAccumulator < _fluidTickInterval) return;
     _fluidTickAccumulator -= _fluidTickInterval;
@@ -394,9 +413,11 @@ class VoidTraderGame extends FlameGame
         case BuildingType.storage:
           break;
         case BuildingType.miningDrone:
-          // Status-/Energieanzeige folgt, sobald die Drohnen-Instanzen
-          // verdrahtet sind (Roadmap Phase 8, nächster Schritt).
-          break;
+          final drone = drones[(x: worldX, y: worldY, z: z)];
+          if (drone != null) {
+            details.add('Status: ${droneStatusLabel(drone.status)}');
+            details.add('Energie: ${(drone.energy * 100).round()}%');
+          }
       }
     } else {
       title = tileTypeLabel(tile.type);
@@ -558,6 +579,33 @@ class VoidTraderGame extends FlameGame
     explorationTracker.update(visible);
   }
 
+  /// Simuliert einen Schritt für jede platzierte Minendrohne (Roadmap
+  /// Phase 8) — periodisch statt jeden Frame, siehe [_droneTickInterval].
+  /// Ist gerade ein Abbauzyklus fertig geworden, wird direkt ein
+  /// abbaubares Nachbar-Tile gesucht und abgebaut: dieselbe
+  /// Nachbarschaftsprüfung wie bei der Platzierung ([_findMinableNeighbor])
+  /// läuft hier erneut, statt sich ein einmal gefundenes Ziel zu merken —
+  /// so findet die Drohne nach dem Abbau eines Nachbarn automatisch das
+  /// nächste, bis die lokale Umgebung erschöpft ist.
+  void _tickDrones() {
+    for (final entry in drones.entries) {
+      final position = entry.key;
+      final drone = entry.value;
+      final cycleComplete = drone.tick(_droneTickInterval);
+      if (!cycleComplete) continue;
+
+      final neighbor = _findMinableNeighbor((x: position.x, y: position.y));
+      if (neighbor == null) {
+        drone.markDepleted();
+        continue;
+      }
+
+      final mined = simulationWorld.mineTileAt(neighbor.x, neighbor.y, position.z);
+      final resource = mined == null ? null : _resourceForMinedTile(mined);
+      if (resource != null) inventory.add(resource, 1);
+    }
+  }
+
   /// Prüft für [PlayerComponent], ob eine Zielposition betreten werden darf
   /// (Roadmap MOV-02) — löst nur die Welt-Tile-Koordinate auf und fragt
   /// [vt_world.World.movementBlockReasonAt]; die eigentliche Regel
@@ -677,6 +725,11 @@ class VoidTraderGame extends FlameGame
     inventory.removeAll(definition.buildCost);
     builtBuildingTypes.add(type);
     feedbackMessage.value = '${definition.name} gebaut.';
+
+    if (type == BuildingType.miningDrone) {
+      drones[(x: tile.x, y: tile.y, z: currentZLevel.value)] = Drone();
+    }
+
     return true;
   }
 
@@ -809,6 +862,21 @@ class VoidTraderGame extends FlameGame
         return 'Tiefe Höhle';
       default:
         return 'Ebene $z';
+    }
+  }
+
+  /// Deutschsprachiges Label für den Anzeigetext im Inspector-Panel
+  /// (Roadmap Phase 8: Minendrohne).
+  static String droneStatusLabel(DroneStatus status) {
+    switch (status) {
+      case DroneStatus.working:
+        return 'Arbeitet';
+      case DroneStatus.lowEnergy:
+        return 'Energie niedrig';
+      case DroneStatus.broken:
+        return 'Defekt (Energie leer)';
+      case DroneStatus.depleted:
+        return 'Keine Ressourcen mehr in Reichweite';
     }
   }
 }
