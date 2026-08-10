@@ -120,6 +120,24 @@ class VoidTraderGame extends FlameGame
   static const double _droneTickInterval = 1.0;
   double _droneTickAccumulator = 0;
 
+  /// Platzierte Pumpen, indiziert über ihre Welt-Tile-Koordinate + z-Ebene
+  /// (Roadmap MVP-Definition Punkt 5) — anders als [drones] ohne eigenes
+  /// Innenleben (kein Energie-/Statuskonzept in V1), nur die Position
+  /// zählt.
+  final Set<({int x, int y, int z})> pumps = {};
+
+  /// Sekunden zwischen zwei Pumpen-Simulationsschritten — budgetiert statt
+  /// jeden Frame, analog zu [_droneTickInterval].
+  static const double _pumpTickInterval = 1.0;
+  double _pumpTickAccumulator = 0;
+
+  /// Wasserstand, den eine Pumpe pro Tick aus einem gefluteten Nachbar-
+  /// Tile abpumpt. Bei [_pumpTickInterval] von 1s dauert das Trockenlegen
+  /// eines voll gefluteten Tiles (waterLevel 1.0) rund 7 Sekunden — spürbar
+  /// langsamer als die Sofortwirkung von [VoidTraderGame.sealAt], aber
+  /// ohne Spielerklick.
+  static const double _pumpDrainPerTick = 0.15;
+
   double _fluidTickAccumulator = 0;
   double _hudTickAccumulator = 0;
 
@@ -297,6 +315,12 @@ class VoidTraderGame extends FlameGame
       _tickDrones();
     }
 
+    _pumpTickAccumulator += dt;
+    if (_pumpTickAccumulator >= _pumpTickInterval) {
+      _pumpTickAccumulator -= _pumpTickInterval;
+      _tickPumps();
+    }
+
     _fluidTickAccumulator += dt;
     if (_fluidTickAccumulator < _fluidTickInterval) return;
     _fluidTickAccumulator -= _fluidTickInterval;
@@ -420,6 +444,9 @@ class VoidTraderGame extends FlameGame
             details.add('Status: ${droneStatusLabel(drone.status)}');
             details.add('Energie: ${(drone.energy * 100).round()}%');
           }
+        case BuildingType.pump:
+          final hasTarget = _findFloodedNeighbor((x: worldX, y: worldY)) != null;
+          details.add(hasTarget ? 'Pumpt aktiv Wasser ab.' : 'Kein Wasser in Reichweite.');
       }
     } else {
       title = tileTypeLabel(tile.type);
@@ -541,6 +568,23 @@ class VoidTraderGame extends FlameGame
     return null;
   }
 
+  /// Sucht das erste geflutete Tile direkt neben [tile] auf der aktuellen
+  /// z-Ebene (Roadmap MVP-Definition Punkt 5: eine Pumpe braucht ein Ziel
+  /// in Reichweite, dieselbe bewusst pfadfindungsfreie Nachbarschaftsregel
+  /// wie [_findMinableNeighbor]). `null`, wenn keins gefunden wurde.
+  ({int x, int y})? _findFloodedNeighbor(({int x, int y}) tile) {
+    final z = currentZLevel.value;
+    for (final neighbor in [
+      (x: tile.x + 1, y: tile.y),
+      (x: tile.x - 1, y: tile.y),
+      (x: tile.x, y: tile.y + 1),
+      (x: tile.x, y: tile.y - 1),
+    ]) {
+      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).waterLevel > 0) return neighbor;
+    }
+    return null;
+  }
+
   /// Wechselt die z-Ebene, sobald der Spieler ein neues Tile betritt, das
   /// eine Rampe ist (Roadmap MOV-03). Löst nur beim TILE-WECHSEL aus (nicht
   /// jeden Frame) — sonst würde ein auf der Rampe stehender Spieler jeden
@@ -606,6 +650,23 @@ class VoidTraderGame extends FlameGame
       final mined = simulationWorld.mineTileAt(neighbor.x, neighbor.y, position.z);
       final resource = mined == null ? null : _resourceForMinedTile(mined);
       if (resource != null) inventory.add(resource, 1);
+    }
+  }
+
+  /// Simuliert einen Schritt für jede platzierte Pumpe (Roadmap MVP-
+  /// Definition Punkt 5) — periodisch statt jeden Frame, siehe
+  /// [_pumpTickInterval]. Sucht jeden Tick frisch ein geflutetes
+  /// Nachbar-Tile (dieselbe Begründung wie bei [_tickDrones]: so wandert
+  /// die Wirkung automatisch weiter, sobald ein Nachbar trockengelegt
+  /// ist) und pumpt dort [_pumpDrainPerTick] ab. Anders als eine Drohne
+  /// bleibt eine Pumpe ohne Ziel einfach untätig stehen, statt in einen
+  /// "erschöpft"-Status zu wechseln — Wasser kann jederzeit zurückfließen
+  /// (Roadmap Phase 3: Fluid-Simulation), das ist kein Endzustand.
+  void _tickPumps() {
+    for (final position in pumps) {
+      final neighbor = _findFloodedNeighbor((x: position.x, y: position.y));
+      if (neighbor == null) continue;
+      simulationWorld.drainWaterAt(neighbor.x, neighbor.y, position.z, _pumpDrainPerTick);
     }
   }
 
@@ -733,6 +794,13 @@ class VoidTraderGame extends FlameGame
       return false;
     }
 
+    // Pumpen sind ohne geflutetes Nachbar-Tile nutzlos (Roadmap MVP-
+    // Definition Punkt 5) — dieselbe Begründung wie bei der Minendrohne.
+    if (type == BuildingType.pump && _findFloodedNeighbor(tile) == null) {
+      feedbackMessage.value = 'Hier ist keine Überflutung in Reichweite.';
+      return false;
+    }
+
     final placed = simulationWorld.placeBuildingAt(
       tile.x,
       tile.y,
@@ -750,6 +818,9 @@ class VoidTraderGame extends FlameGame
 
     if (type == BuildingType.miningDrone) {
       drones[(x: tile.x, y: tile.y, z: currentZLevel.value)] = Drone();
+    }
+    if (type == BuildingType.pump) {
+      pumps.add((x: tile.x, y: tile.y, z: currentZLevel.value));
     }
 
     return true;
