@@ -393,6 +393,10 @@ class VoidTraderGame extends FlameGame
         case BuildingType.wall:
         case BuildingType.storage:
           break;
+        case BuildingType.miningDrone:
+          // Status-/Energieanzeige folgt, sobald die Drohnen-Instanzen
+          // verdrahtet sind (Roadmap Phase 8, nächster Schritt).
+          break;
       }
     } else {
       title = tileTypeLabel(tile.type);
@@ -494,6 +498,23 @@ class VoidTraderGame extends FlameGame
   /// Pixel-Position im Weltkoordinatensystem.
   ({int x, int y}) _worldTileFor(Vector2 position) {
     return (x: (position.x / tileSize).floor(), y: (position.y / tileSize).floor());
+  }
+
+  /// Sucht das erste abbaubare Tile direkt neben [tile] auf der aktuellen
+  /// z-Ebene (Roadmap Phase 8: Minendrohnen brauchen ein Ziel in
+  /// Reichweite, bewusst ohne Pfadfindung — nur die vier Nachbarn zählen).
+  /// `null`, wenn keins gefunden wurde.
+  ({int x, int y})? _findMinableNeighbor(({int x, int y}) tile) {
+    final z = currentZLevel.value;
+    for (final neighbor in [
+      (x: tile.x + 1, y: tile.y),
+      (x: tile.x - 1, y: tile.y),
+      (x: tile.x, y: tile.y + 1),
+      (x: tile.x, y: tile.y - 1),
+    ]) {
+      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).type.isMinable) return neighbor;
+    }
+    return null;
   }
 
   /// Wechselt die z-Ebene, sobald der Spieler ein neues Tile betritt, das
@@ -631,6 +652,14 @@ class VoidTraderGame extends FlameGame
     final definition = buildingDefinitionFor(type);
     if (!inventory.hasAll(definition.buildCost)) {
       feedbackMessage.value = 'Nicht genug Rohstoffe für ${definition.name}.';
+      return false;
+    }
+
+    // Minendrohnen sind ohne abbaubares Nachbar-Tile nutzlos (Roadmap
+    // Phase 8) — lieber die Platzierung verweigern, als eine Drohne zu
+    // bauen, die von Anfang an nichts zu tun hat.
+    if (type == BuildingType.miningDrone && _findMinableNeighbor(tile) == null) {
+      feedbackMessage.value = 'Hier ist keine abbaubare Ressource in Reichweite.';
       return false;
     }
 

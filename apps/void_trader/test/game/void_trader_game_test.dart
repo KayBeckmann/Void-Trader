@@ -190,6 +190,46 @@ void main() {
       expect(second, isFalse);
       expect(game.inventory.count(Resource.stone), stoneAfterFirst);
     });
+
+    test('Minendrohne scheitert ohne abbaubares Nachbar-Tile (Roadmap Phase 8)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.ore, 20);
+      game.inventory.add(Resource.component, 20);
+
+      // Spawn-Sicherheitszone ist immer Wiese — garantiert kein
+      // abbaubares Nachbar-Tile.
+      final success = game.buildAt(game.player.position, BuildingType.miningDrone);
+
+      expect(success, isFalse);
+      expect(game.feedbackMessage.value, contains('keine abbaubare Ressource'));
+      expect(game.inventory.count(Resource.stone), 20); // Kosten nicht abgezogen
+    });
+
+    test('Minendrohne wird mit abbaubarem Nachbar-Tile platziert', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.stone, 20);
+      game.inventory.add(Resource.ore, 20);
+      game.inventory.add(Resource.component, 20);
+
+      final buildPosition = Vector2(3 * VoidTraderGame.tileSize, 3 * VoidTraderGame.tileSize);
+      game.simulationWorld.setTileAt(
+        4,
+        3,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+
+      final success = game.buildAt(buildPosition, BuildingType.miningDrone);
+
+      expect(success, isTrue);
+      expect(
+        game.simulationWorld.buildingAt(3, 3, vt_world.ZLevel.surface),
+        BuildingType.miningDrone,
+      );
+    });
   });
 
   group('VoidTraderGame.craftAt', () {

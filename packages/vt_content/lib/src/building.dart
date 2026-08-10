@@ -3,7 +3,20 @@ import 'package:vt_core/vt_core.dart';
 /// Baubare Objekte (Roadmap Phase 4: Baublöcke). Startet schmal mit zwei
 /// Bausteinen, die zusammen "Sammeln → Verarbeiten → Ausbauen" zeigen —
 /// weitere Baublöcke (Zäune, Lagerkisten, Pumpe, …) folgen später.
-enum BuildingType { wall, workbench, market, landingPad, storage }
+enum BuildingType {
+  wall,
+  workbench,
+  market,
+  landingPad,
+  storage,
+
+  /// Erste automatische Arbeitsdrohne (Roadmap Phase 8: "Drohnenlogik und
+  /// Automatisierung"). Anders als die übrigen Gebäude hängt an einer
+  /// platzierten Minendrohne ein eigenes Innenleben (Energie,
+  /// Abbau-Fortschritt aus dem `vt_drones`-Paket) — siehe
+  /// VoidTraderGame.drones in `apps/void_trader`.
+  miningDrone,
+}
 
 /// Balancing-Daten für einen [BuildingType]: Name + Baukosten in
 /// Rohstoffen.
@@ -45,6 +58,11 @@ const Map<BuildingType, BuildingDefinition> buildingDefinitions = {
     type: BuildingType.storage,
     name: 'Lager',
     buildCost: {Resource.stone: 4},
+  ),
+  BuildingType.miningDrone: BuildingDefinition(
+    type: BuildingType.miningDrone,
+    name: 'Minendrohne',
+    buildCost: {Resource.stone: 4, Resource.ore: 2, Resource.component: 3},
   ),
 };
 
