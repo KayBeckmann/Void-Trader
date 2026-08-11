@@ -51,6 +51,22 @@ void main() {
     });
   });
 
+  group('stationSellPrices (Roadmap Phase 9 V4)', () {
+    test('listet dieselben Ressourcen wie sellPrices', () {
+      expect(stationSellPrices.keys.toSet(), sellPrices.keys.toSet());
+    });
+
+    test('jeder Stationspreis ist höher als der Planet-Marktpreis', () {
+      for (final resource in stationSellPrices.keys) {
+        expect(
+          stationSellPrices[resource],
+          greaterThan(sellPrices[resource]!),
+          reason: '$resource sollte an der Station mehr wert sein als auf dem Planeten',
+        );
+      }
+    });
+  });
+
   group('BuildingType.market', () {
     test('hat eine Definition mit Baukosten', () {
       final market = buildingDefinitionFor(BuildingType.market);

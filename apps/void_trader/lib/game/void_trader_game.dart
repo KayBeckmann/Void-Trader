@@ -828,15 +828,15 @@ class VoidTraderGame extends FlameGame
   /// Verkauft die gesamte Schiffsfracht für Credits, sofern das Schiff
   /// gerade an einem Körper vom Typ [CelestialBodyType.station]
   /// "angedockt" ist (Roadmap Phase 9, V3: "Andocken an Station verkauft
-  /// Schiffsfracht") — der erste spielmechanische Effekt des
-  /// Schiffsstandorts über die reine Kartenanzeige hinaus. Credits gehen
-  /// an den Spieler, nicht an den Frachtraum (dieselbe Regel wie beim
-  /// Beladen in [loadCargoAt]: Credits sind keine physische Fracht).
-  /// Nutzt dieselben [sellPrices] wie der planetare Marktkiosk statt
-  /// eigener Stationspreise — eine echte, eigenständige Preisbildung pro
-  /// Station ist ein späterer Phase-9-Schritt. Gibt die erzielten
-  /// Credits zurück (0, wenn nicht an einer Station angedockt oder
-  /// nichts verkäuflich war).
+  /// Schiffsfracht", V4: "Eigene Stationspreise") — der erste
+  /// spielmechanische Effekt des Schiffsstandorts über die reine
+  /// Kartenanzeige hinaus. Credits gehen an den Spieler, nicht an den
+  /// Frachtraum (dieselbe Regel wie beim Beladen in [loadCargoAt]:
+  /// Credits sind keine physische Fracht). Nutzt [stationSellPrices]
+  /// statt der planetaren [sellPrices] — höher angesetzt, damit Fracht
+  /// ins All zu bringen eine lohnende Entscheidung ist. Gibt die
+  /// erzielten Credits zurück (0, wenn nicht an einer Station angedockt
+  /// oder nichts verkäuflich war).
   int sellDockedShipCargo() {
     CelestialBody? current;
     for (final body in currentSystem.bodies) {
@@ -851,7 +851,7 @@ class VoidTraderGame extends FlameGame
     }
 
     var totalEarned = 0;
-    for (final entry in sellPrices.entries) {
+    for (final entry in stationSellPrices.entries) {
       final amount = ship.cargo.count(entry.key);
       if (amount <= 0) continue;
       ship.cargo.remove(entry.key, amount);
