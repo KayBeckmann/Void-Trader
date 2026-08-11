@@ -825,6 +825,47 @@ class VoidTraderGame extends FlameGame
     return true;
   }
 
+  /// Verkauft die gesamte Schiffsfracht für Credits, sofern das Schiff
+  /// gerade an einem Körper vom Typ [CelestialBodyType.station]
+  /// "angedockt" ist (Roadmap Phase 9, V3: "Andocken an Station verkauft
+  /// Schiffsfracht") — der erste spielmechanische Effekt des
+  /// Schiffsstandorts über die reine Kartenanzeige hinaus. Credits gehen
+  /// an den Spieler, nicht an den Frachtraum (dieselbe Regel wie beim
+  /// Beladen in [loadCargoAt]: Credits sind keine physische Fracht).
+  /// Nutzt dieselben [sellPrices] wie der planetare Marktkiosk statt
+  /// eigener Stationspreise — eine echte, eigenständige Preisbildung pro
+  /// Station ist ein späterer Phase-9-Schritt. Gibt die erzielten
+  /// Credits zurück (0, wenn nicht an einer Station angedockt oder
+  /// nichts verkäuflich war).
+  int sellDockedShipCargo() {
+    CelestialBody? current;
+    for (final body in currentSystem.bodies) {
+      if (body.id == shipLocationBodyId.value) {
+        current = body;
+        break;
+      }
+    }
+    if (current == null || current.type != CelestialBodyType.station) {
+      feedbackMessage.value = 'Hier gibt es keine Handelsstation.';
+      return 0;
+    }
+
+    var totalEarned = 0;
+    for (final entry in sellPrices.entries) {
+      final amount = ship.cargo.count(entry.key);
+      if (amount <= 0) continue;
+      ship.cargo.remove(entry.key, amount);
+      final earned = amount * entry.value;
+      inventory.add(Resource.credits, earned);
+      totalEarned += earned;
+    }
+
+    feedbackMessage.value = totalEarned > 0
+        ? 'Fracht verkauft für $totalEarned Credits.'
+        : 'Keine verkäufliche Fracht an Bord.';
+    return totalEarned;
+  }
+
   /// Versucht, [type] unter [worldPosition] zu platzieren — nur wenn die
   /// Baukosten im Inventar vorhanden sind und vt_world die Platzierung
   /// erlaubt (begehbares, unbelegtes Tile). Zieht die Kosten erst nach

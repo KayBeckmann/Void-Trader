@@ -10,10 +10,12 @@ const systemMapCanvasKey = Key('systemMapCanvas');
 
 /// Vollbild-Overlay für die Systemkarte (Roadmap Phase 9) — zeigt die
 /// Himmelskörper des aktuellen Systems als beschriftete Punkte, hebt den
-/// aktuellen Standort des Schiffs hervor und erlaubt einen Tap auf einen
-/// anderen Körper als (in V2 noch animationslose) Reise dorthin. Bewusst
-/// weiterhin ohne echte Flugmechanik: keine Speedways, kein Andocken,
-/// keine Reisedauer — das sind spätere Phase-9-Schritte.
+/// aktuellen Standort des Schiffs hervor, erlaubt einen Tap auf einen
+/// anderen Körper als (weiterhin animationslose) Reise dorthin, und
+/// bietet einen "Fracht verkaufen"-Button, sobald das Schiff an einer
+/// Handelsstation angedockt ist (Roadmap Phase 9 V3). Bewusst weiterhin
+/// ohne echte Flugmechanik: keine Speedways, keine Reisedauer — das sind
+/// spätere Phase-9-Schritte.
 ///
 /// Bekommt System/Standort als reine Daten statt selbst auf
 /// [VoidTraderGame] zuzugreifen — bleibt so mit Beispieldaten testbar
@@ -22,6 +24,7 @@ class SystemMapPanel extends StatelessWidget {
   final StarSystem system;
   final String currentBodyId;
   final ValueChanged<String> onSelectBody;
+  final VoidCallback onSellCargo;
   final VoidCallback onClose;
 
   const SystemMapPanel({
@@ -29,8 +32,21 @@ class SystemMapPanel extends StatelessWidget {
     required this.system,
     required this.currentBodyId,
     required this.onSelectBody,
+    required this.onSellCargo,
     required this.onClose,
   });
+
+  /// Ob das Schiff gerade an einem Körper vom Typ [CelestialBodyType.
+  /// station] steht — bestimmt, ob der "Fracht verkaufen"-Button
+  /// erscheint. Aus den bereits vorhandenen [system]/[currentBodyId]-
+  /// Daten abgeleitet statt eines eigenen Flags, damit es nie aus dem
+  /// Takt geraten kann.
+  bool get _isDockedAtStation {
+    for (final body in system.bodies) {
+      if (body.id == currentBodyId) return body.type == CelestialBodyType.station;
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +72,15 @@ class SystemMapPanel extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: VtSpacing.md),
+                  if (_isDockedAtStation)
+                    TextButton.icon(
+                      onPressed: onSellCargo,
+                      icon: const Icon(Icons.sell_outlined, color: VtColors.accentGreen),
+                      label: const Text(
+                        'Fracht verkaufen',
+                        style: TextStyle(color: VtColors.accentGreen),
+                      ),
+                    ),
                   IconButton(
                     onPressed: onClose,
                     tooltip: 'Schließen (M)',

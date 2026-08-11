@@ -11,6 +11,7 @@ void main() {
           system: defaultHomeSystem,
           currentBodyId: defaultHomeSystem.homePlanet.id,
           onSelectBody: (_) {},
+          onSellCargo: () {},
           onClose: () {},
         ),
       ),
@@ -30,6 +31,7 @@ void main() {
           system: defaultHomeSystem,
           currentBodyId: defaultHomeSystem.homePlanet.id,
           onSelectBody: (_) {},
+          onSellCargo: () {},
           onClose: () => closed = true,
         ),
       ),
@@ -50,6 +52,7 @@ void main() {
           system: defaultHomeSystem,
           currentBodyId: defaultHomeSystem.homePlanet.id,
           onSelectBody: (id) => selected = id,
+          onSellCargo: () {},
           onClose: () {},
         ),
       ),
@@ -64,6 +67,48 @@ void main() {
     await tester.tapAt(tester.getCenter(find.byKey(systemMapCanvasKey)));
 
     expect(selected, defaultHomeSystem.homePlanet.id);
+  });
+
+  group('"Fracht verkaufen"-Button (Roadmap Phase 9 V3)', () {
+    testWidgets('erscheint nicht am Heimatplaneten', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SystemMapPanel(
+            system: defaultHomeSystem,
+            currentBodyId: defaultHomeSystem.homePlanet.id,
+            onSelectBody: (_) {},
+            onSellCargo: () {},
+            onClose: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('Fracht verkaufen'), findsNothing);
+    });
+
+    testWidgets('erscheint an einer Handelsstation und ruft onSellCargo auf', (tester) async {
+      final station = defaultHomeSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      var sold = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SystemMapPanel(
+            system: defaultHomeSystem,
+            currentBodyId: station.id,
+            onSelectBody: (_) {},
+            onSellCargo: () => sold = true,
+            onClose: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('Fracht verkaufen'), findsOneWidget);
+      await tester.tap(find.text('Fracht verkaufen'));
+
+      expect(sold, isTrue);
+    });
   });
 
   testWidgets('ein System mit nur einem Körper (Systemursprung) wirft nicht', (tester) async {
@@ -86,6 +131,7 @@ void main() {
           system: system,
           currentBodyId: 'home',
           onSelectBody: (_) {},
+          onSellCargo: () {},
           onClose: () {},
         ),
       ),
@@ -103,6 +149,7 @@ void main() {
           system: system,
           currentBodyId: 'unbekannt',
           onSelectBody: (_) {},
+          onSellCargo: () {},
           onClose: () {},
         ),
       ),
