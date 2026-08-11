@@ -72,6 +72,49 @@ void main() {
       game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
       expect(game.showSystemMap.value, isFalse);
     });
+
+    test('Schiff startet am Heimatplaneten', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      expect(game.shipLocationBodyId.value, game.currentSystem.homePlanet.id);
+    });
+
+    test('travelTo wechselt den Schiffsstandort zu einem existierenden Körper', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final destination = game.currentSystem.bodies.firstWhere(
+        (body) => body.id != game.currentSystem.homePlanet.id,
+      );
+
+      final success = game.travelTo(destination.id);
+
+      expect(success, isTrue);
+      expect(game.shipLocationBodyId.value, destination.id);
+      expect(game.feedbackMessage.value, contains(destination.name));
+    });
+
+    test('travelTo scheitert für eine unbekannte Körper-id', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final before = game.shipLocationBodyId.value;
+
+      final success = game.travelTo('kein-echter-koerper');
+
+      expect(success, isFalse);
+      expect(game.shipLocationBodyId.value, before);
+    });
+
+    test('travelTo zum aktuellen Standort ist ein No-op', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final currentId = game.shipLocationBodyId.value;
+
+      final success = game.travelTo(currentId);
+
+      expect(success, isFalse);
+      expect(game.shipLocationBodyId.value, currentId);
+    });
   });
 
   group('VoidTraderGame.digAt', () {

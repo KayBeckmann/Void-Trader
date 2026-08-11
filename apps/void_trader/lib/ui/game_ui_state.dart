@@ -60,6 +60,10 @@ class GameUiState {
   final bool showSystemMap;
   final StarSystem system;
 
+  /// An welchem Himmelskörper das Schiff gerade steht (Roadmap Phase 9,
+  /// V2) — siehe [VoidTraderGame.shipLocationBodyId].
+  final String shipLocationBodyId;
+
   const GameUiState({
     required this.inventory,
     required this.isDay,
@@ -78,6 +82,7 @@ class GameUiState {
     required this.facingY,
     required this.showSystemMap,
     required this.system,
+    required this.shipLocationBodyId,
   });
 
   factory GameUiState.from(VoidTraderGame game) {
@@ -116,6 +121,7 @@ class GameUiState {
       facingY: game.player.facingDirection.y,
       showSystemMap: game.showSystemMap.value,
       system: game.currentSystem,
+      shipLocationBodyId: game.shipLocationBodyId.value,
     );
   }
 

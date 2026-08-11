@@ -155,17 +155,27 @@ class VoidTraderGame extends FlameGame
   /// sich immer auf diese Ebene, nicht mehr fest auf die Oberfläche.
   final ValueNotifier<int> currentZLevel = ValueNotifier(vt_world.ZLevel.surface);
 
-  /// Das System, in dem der Spieler unterwegs ist (Roadmap Phase 9,
-  /// V1-Slice "Systemkarte") — in V1 immer [defaultHomeSystem], da weder
-  /// Reise zwischen Systemen noch prozedurale Systemgenerierung Teil
-  /// dieses Schritts sind.
+  /// Das System, in dem der Spieler unterwegs ist (Roadmap Phase 9) — in
+  /// V1/V2 immer [defaultHomeSystem], da prozedurale Systemgenerierung
+  /// und Reise zwischen Systemen (statt nur zwischen Körpern innerhalb
+  /// eines Systems) noch nicht Teil dieser Schritte sind.
   final StarSystem currentSystem = defaultHomeSystem;
 
   /// Ob die Systemkarte gerade als Vollbild-Overlay angezeigt wird
-  /// (Taste M schaltet um, siehe [_handleAction]) — rein informativ in
-  /// V1, blockiert aber bewusst die übrige Spielinteraktion, solange sie
-  /// offen ist (siehe SystemMapPanel).
+  /// (Taste M schaltet um, siehe [_handleAction]) — blockiert bewusst die
+  /// übrige Spielinteraktion, solange sie offen ist (siehe
+  /// SystemMapPanel).
   final ValueNotifier<bool> showSystemMap = ValueNotifier(false);
+
+  /// An welchem Himmelskörper das Schiff gerade steht (Roadmap Phase 9,
+  /// V2: "Schiffsstandort + Reise zwischen Systemkörpern") — startet am
+  /// Heimatplaneten. Ein Tap auf einen anderen Körper in der Systemkarte
+  /// setzt diesen Wert über [travelTo]. Bewusst noch ohne Reisedauer/
+  /// -animation und ohne jede Auswirkung auf die Planetenoberfläche
+  /// (Andocken/Ankunft folgen später) — reine Standort-Buchhaltung.
+  late final ValueNotifier<String> shipLocationBodyId = ValueNotifier(
+    currentSystem.homePlanet.id,
+  );
 
   /// Zähler für erfolgreich abgebaute Tiles (nützlich für UI/Debug,
   /// unabhängig vom Inventarstand).
@@ -786,6 +796,32 @@ class VoidTraderGame extends FlameGame
       return false;
     }
     feedbackMessage.value = 'Abgedichtet.';
+    return true;
+  }
+
+  /// Bewegt das Schiff zu einem anderen Himmelskörper im aktuellen System
+  /// (Roadmap Phase 9, V2: "Schiffsstandort + Reise zwischen
+  /// Systemkörpern") — ausgelöst durch einen Tap auf einen Körper in der
+  /// Systemkarte. Bewusst ohne Reisedauer/-animation und ohne jede
+  /// Auswirkung außerhalb der Karte selbst (kein Andocken, keine neue
+  /// Umgebung) — reine Standort-Buchhaltung als kleiner nächster Schritt,
+  /// nicht die volle Flugmechanik. Gibt `true` bei Erfolg zurück, `false`
+  /// wenn [bodyId] nicht im aktuellen System existiert oder das Schiff
+  /// dort bereits steht.
+  bool travelTo(String bodyId) {
+    if (bodyId == shipLocationBodyId.value) return false;
+
+    CelestialBody? target;
+    for (final body in currentSystem.bodies) {
+      if (body.id == bodyId) {
+        target = body;
+        break;
+      }
+    }
+    if (target == null) return false;
+
+    shipLocationBodyId.value = bodyId;
+    feedbackMessage.value = 'Schiff unterwegs zu ${target.name}.';
     return true;
   }
 

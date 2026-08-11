@@ -42,16 +42,19 @@ class GameHud extends StatelessWidget {
         game.feedbackMessage,
         game.currentZLevel,
         game.showSystemMap,
+        game.shipLocationBodyId,
       ]),
       builder: (context, _) {
         final state = GameUiState.from(game);
         if (state.showSystemMap) {
-          // Vollbild-Overlay (Roadmap Phase 9, V1-Slice "Systemkarte") —
-          // ersetzt bewusst das gesamte übrige HUD statt es zu überlagern,
-          // damit während der Kartenansicht keine Spielinteraktion
-          // (Bauen/Graben/…) versehentlich durchschlägt.
+          // Vollbild-Overlay (Roadmap Phase 9) — ersetzt bewusst das
+          // gesamte übrige HUD statt es zu überlagern, damit während der
+          // Kartenansicht keine Spielinteraktion (Bauen/Graben/…)
+          // versehentlich durchschlägt.
           return SystemMapPanel(
             system: state.system,
+            currentBodyId: state.shipLocationBodyId,
+            onSelectBody: (id) => game.travelTo(id),
             onClose: () => game.showSystemMap.value = false,
           );
         }
