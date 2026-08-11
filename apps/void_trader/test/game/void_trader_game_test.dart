@@ -63,15 +63,32 @@ void main() {
       expect(game.currentSystem.bodies, isNotEmpty);
     });
 
-    test('Taste M schaltet die Systemkarte um', () async {
+    test(
+      'Taste M öffnet/schließt die Systemkarte, sobald ein Landepad gebaut ist (Roadmap V7)',
+      () async {
+        final game = VoidTraderGame(seed: 1);
+        await game.onLoad();
+        game.inventory.add(Resource.stone, 8);
+        game.inventory.add(Resource.ore, 4);
+        game.inventory.add(Resource.component, 2);
+        game.buildAt(game.player.position, BuildingType.landingPad);
+
+        game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
+        expect(game.showSystemMap.value, isTrue);
+
+        game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
+        expect(game.showSystemMap.value, isFalse);
+      },
+    );
+
+    test('Taste M öffnet die Systemkarte nicht ohne gebautes Landepad (Roadmap V7)', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
 
       game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
-      expect(game.showSystemMap.value, isTrue);
 
-      game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
       expect(game.showSystemMap.value, isFalse);
+      expect(game.feedbackMessage.value, contains('Landepad'));
     });
 
     test('Schiff startet am Heimatplaneten', () async {

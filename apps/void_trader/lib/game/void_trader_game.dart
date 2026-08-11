@@ -749,7 +749,7 @@ class VoidTraderGame extends FlameGame
     } else if (key == LogicalKeyboardKey.keyR) {
       sealAt(position);
     } else if (key == LogicalKeyboardKey.keyM) {
-      showSystemMap.value = !showSystemMap.value;
+      _toggleSystemMap();
     } else if (key == LogicalKeyboardKey.f1) {
       map.enabled = !map.enabled;
     }
@@ -760,6 +760,26 @@ class VoidTraderGame extends FlameGame
   void _selectBuildTool(BuildingType type) {
     activeTool.value = ToolMode.build;
     selectedBuildingType.value = type;
+  }
+
+  /// Öffnet/schließt die Systemkarte (Taste M) — Öffnen setzt voraus, dass
+  /// mindestens ein Landepad gebaut wurde (Roadmap Phase 9, V7:
+  /// "Systemkarte erfordert gebautes Landepad"). Verknüpft den
+  /// Weltraum-Layer erstmals mit einer echten Voraussetzung auf der
+  /// Planetenoberfläche, statt jederzeit als bloßer Menübutton verfügbar
+  /// zu sein — "Fracht in den Orbit wird eine eigene Tech-/
+  /// Infrastrukturprogression" (Roadmap Phase 7, Ergebnis). Schließen
+  /// bleibt immer erlaubt, unabhängig vom Landepad-Status.
+  void _toggleSystemMap() {
+    if (showSystemMap.value) {
+      showSystemMap.value = false;
+      return;
+    }
+    if (!builtBuildingTypes.contains(BuildingType.landingPad)) {
+      feedbackMessage.value = 'Baue zuerst ein Landepad, um ins All zu starten.';
+      return;
+    }
+    showSystemMap.value = true;
   }
 
   /// Versucht, das Tile unter [worldPosition] (Pixel-Koordinaten im
