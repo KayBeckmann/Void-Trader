@@ -47,6 +47,8 @@ dependencies:
     path: ../../packages/vt_npc
   vt_drones:
     path: ../../packages/vt_drones
+  vt_system:
+    path: ../../packages/vt_system
 
 dev_dependencies:
   flutter_test:

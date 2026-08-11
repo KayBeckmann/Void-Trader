@@ -259,6 +259,13 @@ packages:
       relative: true
     source: path
     version: "1.0.0"
+  vt_system:
+    dependency: "direct main"
+    description:
+      path: "../../packages/vt_system"
+      relative: true
+    source: path
+    version: "1.0.0"
   vt_world:
     dependency: "direct main"
     description:

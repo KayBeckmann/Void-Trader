@@ -11,6 +11,7 @@ import 'widgets/inspector_panel.dart';
 import 'widgets/minimap_panel.dart';
 import 'widgets/objective_panel.dart';
 import 'widgets/resource_bar.dart';
+import 'widgets/system_map_panel.dart';
 import 'widgets/toolbelt_panel.dart';
 import 'widgets/top_status_bar.dart';
 
@@ -40,9 +41,20 @@ class GameHud extends StatelessWidget {
         game.selectedTile,
         game.feedbackMessage,
         game.currentZLevel,
+        game.showSystemMap,
       ]),
       builder: (context, _) {
         final state = GameUiState.from(game);
+        if (state.showSystemMap) {
+          // Vollbild-Overlay (Roadmap Phase 9, V1-Slice "Systemkarte") —
+          // ersetzt bewusst das gesamte übrige HUD statt es zu überlagern,
+          // damit während der Kartenansicht keine Spielinteraktion
+          // (Bauen/Graben/…) versehentlich durchschlägt.
+          return SystemMapPanel(
+            system: state.system,
+            onClose: () => game.showSystemMap.value = false,
+          );
+        }
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -138,7 +150,8 @@ class _ControlsLegend extends StatelessWidget {
       bordered: false,
       child: Text(
         'WASD/Pfeile Bewegen · Werkzeug per Klick oder Taste wählen · '
-        'Klick auf die Karte wirkt am Zieltile · F1 Debug-Ansicht',
+        'Klick auf die Karte wirkt am Zieltile · F1 Debug-Ansicht · '
+        'M Systemkarte',
         style: TextStyle(color: VtColors.textSecondary, fontSize: 11),
         textAlign: TextAlign.center,
       ),

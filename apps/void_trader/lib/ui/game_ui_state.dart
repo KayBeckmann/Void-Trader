@@ -1,6 +1,7 @@
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
 import 'package:vt_physics/vt_physics.dart';
+import 'package:vt_system/vt_system.dart';
 
 import '../game/void_trader_game.dart';
 import 'minimap_data.dart';
@@ -52,6 +53,13 @@ class GameUiState {
   final double facingX;
   final double facingY;
 
+  /// Ob die Systemkarte gerade als Vollbild-Overlay angezeigt wird
+  /// (Roadmap Phase 9, V1-Slice "Systemkarte") und welches System sie
+  /// zeigt — siehe [VoidTraderGame.showSystemMap]/[VoidTraderGame.
+  /// currentSystem].
+  final bool showSystemMap;
+  final StarSystem system;
+
   const GameUiState({
     required this.inventory,
     required this.isDay,
@@ -68,6 +76,8 @@ class GameUiState {
     required this.minimapGrid,
     required this.facingX,
     required this.facingY,
+    required this.showSystemMap,
+    required this.system,
   });
 
   factory GameUiState.from(VoidTraderGame game) {
@@ -104,6 +114,8 @@ class GameUiState {
       ),
       facingX: game.player.facingDirection.x,
       facingY: game.player.facingDirection.y,
+      showSystemMap: game.showSystemMap.value,
+      system: game.currentSystem,
     );
   }
 
