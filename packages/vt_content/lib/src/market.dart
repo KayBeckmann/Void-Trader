@@ -9,6 +9,18 @@ const Map<Resource, int> sellPrices = {
   Resource.component: 8,
 };
 
+/// Verkaufspreise an einer Handelsstation im All (Roadmap Phase 9 V4:
+/// "Eigene Stationspreise") — bewusst höher als [sellPrices], damit
+/// Fracht ins All zu bringen eine lohnende Entscheidung ist, nicht nur
+/// eine beliebige zweite Verkaufsstelle zu denselben Preisen. Enthält
+/// dieselben Ressourcen wie [sellPrices] (V1: eine feste Aufschlag-
+/// Preisliste statt schwankender/individueller Preise je Station).
+const Map<Resource, int> stationSellPrices = {
+  Resource.stone: 2,
+  Resource.ore: 5,
+  Resource.component: 12,
+};
+
 /// Verkauft [amount] von [resource] aus [inventory] zum hinterlegten
 /// Marktpreis (siehe [sellPrices]) und legt den Erlös als [Resource.credits]
 /// ins selbe Inventar.

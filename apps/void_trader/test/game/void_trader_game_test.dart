@@ -149,6 +149,21 @@ void main() {
       expect(game.feedbackMessage.value, contains('Fracht verkauft'));
     });
 
+    test('sellDockedShipCargo nutzt die Stationspreise, nicht die Planet-Marktpreise', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.ship.cargo.add(Resource.stone, 4);
+      final station = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      game.travelTo(station.id);
+
+      final earned = game.sellDockedShipCargo();
+
+      expect(earned, 4 * stationSellPrices[Resource.stone]!);
+      expect(earned, isNot(4 * sellPrices[Resource.stone]!));
+    });
+
     test('sellDockedShipCargo meldet leere Fracht statt eines Fehlers', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
