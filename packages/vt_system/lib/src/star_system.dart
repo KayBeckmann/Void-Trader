@@ -44,5 +44,19 @@ const defaultHomeSystem = StarSystem(
       x: -100,
       y: 80,
     ),
+
+    /// Zweite Station, weiter vom Heimatplaneten entfernt als die erste
+    /// (Roadmap Phase 9 V5: "Zweite Station mit eigenem Preisniveau") —
+    /// zahlt spürbar besser (siehe [CelestialBody.priceMultiplier]),
+    /// damit "wohin verkaufe ich meine Fracht" eine echte Entscheidung
+    /// wird statt einer beliebigen zweiten Verkaufsstelle.
+    CelestialBody(
+      id: 'outpost-station',
+      name: 'Außenposten Kepler-9d',
+      type: CelestialBodyType.station,
+      x: -220,
+      y: -170,
+      priceMultiplier: 1.5,
+    ),
   ],
 );

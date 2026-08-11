@@ -828,15 +828,16 @@ class VoidTraderGame extends FlameGame
   /// Verkauft die gesamte Schiffsfracht für Credits, sofern das Schiff
   /// gerade an einem Körper vom Typ [CelestialBodyType.station]
   /// "angedockt" ist (Roadmap Phase 9, V3: "Andocken an Station verkauft
-  /// Schiffsfracht", V4: "Eigene Stationspreise") — der erste
-  /// spielmechanische Effekt des Schiffsstandorts über die reine
-  /// Kartenanzeige hinaus. Credits gehen an den Spieler, nicht an den
-  /// Frachtraum (dieselbe Regel wie beim Beladen in [loadCargoAt]:
-  /// Credits sind keine physische Fracht). Nutzt [stationSellPrices]
-  /// statt der planetaren [sellPrices] — höher angesetzt, damit Fracht
-  /// ins All zu bringen eine lohnende Entscheidung ist. Gibt die
-  /// erzielten Credits zurück (0, wenn nicht an einer Station angedockt
-  /// oder nichts verkäuflich war).
+  /// Schiffsfracht", V4: "Eigene Stationspreise", V5: "Zweite Station
+  /// mit eigenem Preisniveau") — der erste spielmechanische Effekt des
+  /// Schiffsstandorts über die reine Kartenanzeige hinaus. Credits gehen
+  /// an den Spieler, nicht an den Frachtraum (dieselbe Regel wie beim
+  /// Beladen in [loadCargoAt]: Credits sind keine physische Fracht).
+  /// Nutzt [stationSellPrices] als Basis, skaliert mit dem
+  /// [CelestialBody.priceMultiplier] der jeweiligen Station — macht
+  /// "wohin verkaufe ich" zu einer echten Entscheidung statt überall
+  /// gleich viel Wert zu sein. Gibt die erzielten Credits zurück (0,
+  /// wenn nicht an einer Station angedockt oder nichts verkäuflich war).
   int sellDockedShipCargo() {
     CelestialBody? current;
     for (final body in currentSystem.bodies) {
@@ -855,7 +856,7 @@ class VoidTraderGame extends FlameGame
       final amount = ship.cargo.count(entry.key);
       if (amount <= 0) continue;
       ship.cargo.remove(entry.key, amount);
-      final earned = amount * entry.value;
+      final earned = (amount * entry.value * current.priceMultiplier).round();
       inventory.add(Resource.credits, earned);
       totalEarned += earned;
     }
