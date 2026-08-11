@@ -164,6 +164,24 @@ void main() {
       expect(earned, isNot(4 * sellPrices[Resource.stone]!));
     });
 
+    test('sellDockedShipCargo skaliert mit dem Preisniveau der Station (Roadmap V5)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.ship.cargo.add(Resource.stone, 4);
+      final outpost = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier != 1.0,
+      );
+      game.travelTo(outpost.id);
+
+      final earned = game.sellDockedShipCargo();
+
+      expect(
+        earned,
+        (4 * stationSellPrices[Resource.stone]! * outpost.priceMultiplier).round(),
+      );
+      expect(earned, greaterThan(4 * stationSellPrices[Resource.stone]!));
+    });
+
     test('sellDockedShipCargo meldet leere Fracht statt eines Fehlers', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();

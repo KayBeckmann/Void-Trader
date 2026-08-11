@@ -45,6 +45,45 @@ void main() {
     });
   });
 
+  group('CelestialBody.priceMultiplier (Roadmap Phase 9 V5)', () {
+    test('ist standardmäßig 1.0', () {
+      const body = CelestialBody(
+        id: 'station',
+        name: 'Station',
+        type: CelestialBodyType.station,
+        x: 0,
+        y: 0,
+      );
+
+      expect(body.priceMultiplier, 1.0);
+    });
+
+    test('wirft bei nicht-positivem Wert', () {
+      expect(
+        () => CelestialBody(
+          id: 'station',
+          name: 'Station',
+          type: CelestialBodyType.station,
+          x: 0,
+          y: 0,
+          priceMultiplier: 0,
+        ),
+        throwsA(isA<AssertionError>()),
+      );
+      expect(
+        () => CelestialBody(
+          id: 'station',
+          name: 'Station',
+          type: CelestialBodyType.station,
+          x: 0,
+          y: 0,
+          priceMultiplier: -1,
+        ),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+  });
+
   group('defaultHomeSystem', () {
     test('enthält genau einen Heimatplaneten im Systemursprung', () {
       final home = defaultHomeSystem.homePlanet;
@@ -72,6 +111,20 @@ void main() {
       for (final body in defaultHomeSystem.bodies) {
         expect(body.name, isNotEmpty, reason: '${body.id} hat keinen Namen');
       }
+    });
+
+    test('enthält mindestens zwei Stationen mit unterschiedlichem Preisniveau', () {
+      final stations = defaultHomeSystem.bodies.where(
+        (body) => body.type == CelestialBodyType.station,
+      );
+
+      expect(stations.length, greaterThanOrEqualTo(2));
+      final multipliers = stations.map((s) => s.priceMultiplier).toSet();
+      expect(
+        multipliers.length,
+        greaterThan(1),
+        reason: 'mindestens zwei Stationen sollten unterschiedlich viel zahlen',
+      );
     });
   });
 }

@@ -36,16 +36,20 @@ class SystemMapPanel extends StatelessWidget {
     required this.onClose,
   });
 
-  /// Ob das Schiff gerade an einem Körper vom Typ [CelestialBodyType.
-  /// station] steht — bestimmt, ob der "Fracht verkaufen"-Button
-  /// erscheint. Aus den bereits vorhandenen [system]/[currentBodyId]-
-  /// Daten abgeleitet statt eines eigenen Flags, damit es nie aus dem
-  /// Takt geraten kann.
-  bool get _isDockedAtStation {
+  /// Der Körper, an dem das Schiff gerade steht, falls es eine Station
+  /// ist — bestimmt, ob der "Fracht verkaufen"-Button erscheint und zu
+  /// welchem Preisniveau (Roadmap Phase 9 V5: unterschiedliche Stationen
+  /// zahlen unterschiedlich viel, siehe [CelestialBody.priceMultiplier]).
+  /// Aus den bereits vorhandenen [system]/[currentBodyId]-Daten
+  /// abgeleitet statt eines eigenen Flags, damit es nie aus dem Takt
+  /// geraten kann.
+  CelestialBody? get _dockedStation {
     for (final body in system.bodies) {
-      if (body.id == currentBodyId) return body.type == CelestialBodyType.station;
+      if (body.id == currentBodyId) {
+        return body.type == CelestialBodyType.station ? body : null;
+      }
     }
-    return false;
+    return null;
   }
 
   @override
@@ -72,13 +76,15 @@ class SystemMapPanel extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: VtSpacing.md),
-                  if (_isDockedAtStation)
+                  if (_dockedStation case final station?)
                     TextButton.icon(
                       onPressed: onSellCargo,
                       icon: const Icon(Icons.sell_outlined, color: VtColors.accentGreen),
-                      label: const Text(
-                        'Fracht verkaufen',
-                        style: TextStyle(color: VtColors.accentGreen),
+                      label: Text(
+                        station.priceMultiplier == 1.0
+                            ? 'Fracht verkaufen'
+                            : 'Fracht verkaufen (×${station.priceMultiplier.toStringAsFixed(1)})',
+                        style: const TextStyle(color: VtColors.accentGreen),
                       ),
                     ),
                   IconButton(
