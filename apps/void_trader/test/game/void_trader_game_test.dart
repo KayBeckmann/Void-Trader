@@ -52,6 +52,28 @@ void main() {
     });
   });
 
+  group('VoidTraderGame Systemkarte (Roadmap Phase 9)', () {
+    test('ist standardmäßig geschlossen und zeigt das Standard-Heimatsystem', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      expect(game.showSystemMap.value, isFalse);
+      expect(game.currentSystem.name, isNotEmpty);
+      expect(game.currentSystem.bodies, isNotEmpty);
+    });
+
+    test('Taste M schaltet die Systemkarte um', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
+      expect(game.showSystemMap.value, isTrue);
+
+      game.player.onAction?.call(LogicalKeyboardKey.keyM, game.player.position);
+      expect(game.showSystemMap.value, isFalse);
+    });
+  });
+
   group('VoidTraderGame.digAt', () {
     test('baut ein Stein-Tile ab und legt Stein ins Inventar', () async {
       final game = VoidTraderGame(seed: 1);

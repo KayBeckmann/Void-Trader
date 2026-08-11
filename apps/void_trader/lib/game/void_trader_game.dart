@@ -9,6 +9,7 @@ import 'package:vt_core/vt_core.dart';
 import 'package:vt_drones/vt_drones.dart';
 import 'package:vt_npc/vt_npc.dart';
 import 'package:vt_physics/vt_physics.dart';
+import 'package:vt_system/vt_system.dart';
 // Alias nötig: FlameGame definiert selbst einen `world`-Getter/Kamera-World —
 // Namenskollision mit vt_world.World.
 import 'package:vt_world/vt_world.dart' as vt_world;
@@ -153,6 +154,18 @@ class VoidTraderGame extends FlameGame
   /// Interaktionen (Graben/Bauen/Craften/Verkaufen/Fracht laden) beziehen
   /// sich immer auf diese Ebene, nicht mehr fest auf die Oberfläche.
   final ValueNotifier<int> currentZLevel = ValueNotifier(vt_world.ZLevel.surface);
+
+  /// Das System, in dem der Spieler unterwegs ist (Roadmap Phase 9,
+  /// V1-Slice "Systemkarte") — in V1 immer [defaultHomeSystem], da weder
+  /// Reise zwischen Systemen noch prozedurale Systemgenerierung Teil
+  /// dieses Schritts sind.
+  final StarSystem currentSystem = defaultHomeSystem;
+
+  /// Ob die Systemkarte gerade als Vollbild-Overlay angezeigt wird
+  /// (Taste M schaltet um, siehe [_handleAction]) — rein informativ in
+  /// V1, blockiert aber bewusst die übrige Spielinteraktion, solange sie
+  /// offen ist (siehe SystemMapPanel).
+  final ValueNotifier<bool> showSystemMap = ValueNotifier(false);
 
   /// Zähler für erfolgreich abgebaute Tiles (nützlich für UI/Debug,
   /// unabhängig vom Inventarstand).
@@ -723,6 +736,8 @@ class VoidTraderGame extends FlameGame
       loadCargoAt(position);
     } else if (key == LogicalKeyboardKey.keyR) {
       sealAt(position);
+    } else if (key == LogicalKeyboardKey.keyM) {
+      showSystemMap.value = !showSystemMap.value;
     } else if (key == LogicalKeyboardKey.f1) {
       map.enabled = !map.enabled;
     }
