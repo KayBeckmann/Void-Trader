@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vt_content/vt_content.dart';
 import 'package:vt_core/vt_core.dart';
 import 'package:vt_drones/vt_drones.dart';
+import 'package:vt_system/vt_system.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
 import 'package:void_trader/game/void_trader_game.dart';
 
@@ -114,6 +115,52 @@ void main() {
 
       expect(success, isFalse);
       expect(game.shipLocationBodyId.value, currentId);
+    });
+
+    test('sellDockedShipCargo scheitert ohne Andocken an einer Station', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.ship.cargo.add(Resource.stone, 5);
+
+      final earned = game.sellDockedShipCargo();
+
+      expect(earned, 0);
+      expect(game.feedbackMessage.value, contains('keine Handelsstation'));
+      expect(game.ship.cargo.count(Resource.stone), 5);
+    });
+
+    test('sellDockedShipCargo verkauft die Fracht an einer Handelsstation für Credits', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.ship.cargo.add(Resource.stone, 5);
+      game.ship.cargo.add(Resource.ore, 2);
+      final station = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      game.travelTo(station.id);
+      final creditsBefore = game.inventory.count(Resource.credits);
+
+      final earned = game.sellDockedShipCargo();
+
+      expect(earned, greaterThan(0));
+      expect(game.inventory.count(Resource.credits), creditsBefore + earned);
+      expect(game.ship.cargo.count(Resource.stone), 0);
+      expect(game.ship.cargo.count(Resource.ore), 0);
+      expect(game.feedbackMessage.value, contains('Fracht verkauft'));
+    });
+
+    test('sellDockedShipCargo meldet leere Fracht statt eines Fehlers', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final station = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      game.travelTo(station.id);
+
+      final earned = game.sellDockedShipCargo();
+
+      expect(earned, 0);
+      expect(game.feedbackMessage.value, contains('Keine verkäufliche Fracht'));
     });
   });
 
