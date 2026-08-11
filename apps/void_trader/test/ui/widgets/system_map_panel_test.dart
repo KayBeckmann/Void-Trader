@@ -7,7 +7,12 @@ void main() {
   testWidgets('rendert das Standardsystem ohne Fehler', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: SystemMapPanel(system: defaultHomeSystem, onClose: () {}),
+        home: SystemMapPanel(
+          system: defaultHomeSystem,
+          currentBodyId: defaultHomeSystem.homePlanet.id,
+          onSelectBody: (_) {},
+          onClose: () {},
+        ),
       ),
     );
 
@@ -16,17 +21,49 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ein Tap ruft onClose auf', (tester) async {
+  testWidgets('ein Tap auf den Schließen-Button ruft onClose auf', (tester) async {
     var closed = false;
 
     await tester.pumpWidget(
       MaterialApp(
-        home: SystemMapPanel(system: defaultHomeSystem, onClose: () => closed = true),
+        home: SystemMapPanel(
+          system: defaultHomeSystem,
+          currentBodyId: defaultHomeSystem.homePlanet.id,
+          onSelectBody: (_) {},
+          onClose: () => closed = true,
+        ),
       ),
     );
-    await tester.tap(find.byType(SystemMapPanel));
+    await tester.tap(find.byIcon(Icons.close));
 
     expect(closed, isTrue);
+  });
+
+  testWidgets('ein Tap auf einen anderen Körper ruft onSelectBody mit dessen id auf', (
+    tester,
+  ) async {
+    String? selected;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SystemMapPanel(
+          system: defaultHomeSystem,
+          currentBodyId: defaultHomeSystem.homePlanet.id,
+          onSelectBody: (id) => selected = id,
+          onClose: () {},
+        ),
+      ),
+    );
+
+    // Trefferfläche des Heimatplaneten (Position 0,0) liegt per Layout
+    // exakt in der Mitte der Kartenfläche (siehe layoutSystemBodies) —
+    // bewusst die Mitte des Karten-CustomPaint anvisiert (eindeutig über
+    // systemMapCanvasKey gefunden, da MaterialApp selbst weitere
+    // CustomPaint-Widgets einbringt), nicht die Mitte des gesamten
+    // Overlays (die liegt wegen der Titelzeile darüber verschoben).
+    await tester.tapAt(tester.getCenter(find.byKey(systemMapCanvasKey)));
+
+    expect(selected, defaultHomeSystem.homePlanet.id);
   });
 
   testWidgets('ein System mit nur einem Körper (Systemursprung) wirft nicht', (tester) async {
@@ -43,7 +80,16 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(MaterialApp(home: SystemMapPanel(system: system, onClose: () {})));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SystemMapPanel(
+          system: system,
+          currentBodyId: 'home',
+          onSelectBody: (_) {},
+          onClose: () {},
+        ),
+      ),
+    );
 
     expect(tester.takeException(), isNull);
   });
@@ -51,7 +97,16 @@ void main() {
   testWidgets('ein System ohne Körper wirft nicht', (tester) async {
     const system = StarSystem(name: 'Leer', bodies: []);
 
-    await tester.pumpWidget(MaterialApp(home: SystemMapPanel(system: system, onClose: () {})));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SystemMapPanel(
+          system: system,
+          currentBodyId: 'unbekannt',
+          onSelectBody: (_) {},
+          onClose: () {},
+        ),
+      ),
+    );
 
     expect(tester.takeException(), isNull);
   });

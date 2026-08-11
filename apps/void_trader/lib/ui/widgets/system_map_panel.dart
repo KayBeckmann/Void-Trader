@@ -3,67 +3,103 @@ import 'package:vt_system/vt_system.dart';
 
 import '../design_tokens.dart';
 
-/// Vollbild-Overlay für die Systemkarte (Roadmap Phase 9, V1-Slice
-/// "Systemkarte") — zeigt die Himmelskörper des aktuellen Systems als
-/// beschriftete Punkte. Bewusst reine Darstellung ohne Reise-/
-/// Flugmechanik: kein Andocken, keine Speedways, keine Interaktion mit
-/// einzelnen Körpern — das sind spätere Phase-9-Schritte.
+/// Key des Karten-[CustomPaint] — eindeutig auffindbar für Tests (Tap-
+/// Zielkoordinaten müssen sich exakt auf die Kartenfläche beziehen, nicht
+/// auf das gesamte Overlay inklusive Titelzeile).
+const systemMapCanvasKey = Key('systemMapCanvas');
+
+/// Vollbild-Overlay für die Systemkarte (Roadmap Phase 9) — zeigt die
+/// Himmelskörper des aktuellen Systems als beschriftete Punkte, hebt den
+/// aktuellen Standort des Schiffs hervor und erlaubt einen Tap auf einen
+/// anderen Körper als (in V2 noch animationslose) Reise dorthin. Bewusst
+/// weiterhin ohne echte Flugmechanik: keine Speedways, kein Andocken,
+/// keine Reisedauer — das sind spätere Phase-9-Schritte.
 ///
-/// Bekommt das fertige [StarSystem] als reine Daten statt selbst auf
+/// Bekommt System/Standort als reine Daten statt selbst auf
 /// [VoidTraderGame] zuzugreifen — bleibt so mit Beispieldaten testbar
 /// (siehe test/ui/widgets/), analog zu [MinimapPanel].
 class SystemMapPanel extends StatelessWidget {
   final StarSystem system;
+  final String currentBodyId;
+  final ValueChanged<String> onSelectBody;
   final VoidCallback onClose;
 
-  const SystemMapPanel({super.key, required this.system, required this.onClose});
+  const SystemMapPanel({
+    super.key,
+    required this.system,
+    required this.currentBodyId,
+    required this.onSelectBody,
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onClose,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        color: const Color(0xF20B1220),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Systemkarte: ${system.name}',
-                        style: const TextStyle(
-                          color: VtColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+    return Container(
+      color: const Color(0xF20B1220),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Systemkarte: ${system.name}',
+                      style: const TextStyle(
+                        color: VtColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: VtSpacing.md),
-                    const Text(
-                      'Schließen: Taste M oder Klick',
-                      style: TextStyle(color: VtColors.textSecondary, fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: VtSpacing.lg),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: VtColors.panelBackground,
-                      borderRadius: BorderRadius.circular(VtRadii.panel),
-                      border: Border.all(color: VtColors.panelBorder),
-                    ),
-                    child: CustomPaint(painter: _SystemMapPainter(system: system)),
+                  ),
+                  const SizedBox(width: VtSpacing.md),
+                  IconButton(
+                    onPressed: onClose,
+                    tooltip: 'Schließen (M)',
+                    icon: const Icon(Icons.close, color: VtColors.textSecondary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: VtSpacing.lg),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: VtColors.panelBackground,
+                    borderRadius: BorderRadius.circular(VtRadii.panel),
+                    border: Border.all(color: VtColors.panelBorder),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = Size(constraints.maxWidth, constraints.maxHeight);
+                      final positions = layoutSystemBodies(system.bodies, size);
+                      return Stack(
+                        children: [
+                          CustomPaint(
+                            key: systemMapCanvasKey,
+                            size: size,
+                            painter: _SystemMapPainter(
+                              system: system,
+                              positions: positions,
+                              currentBodyId: currentBodyId,
+                            ),
+                          ),
+                          for (final body in system.bodies)
+                            _BodyTapTarget(
+                              position: positions[body.id]!,
+                              radius: _tapRadiusFor(body.type),
+                              onTap: () => onSelectBody(body.id),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -71,28 +107,81 @@ class SystemMapPanel extends StatelessWidget {
   }
 }
 
+/// Mindest-Trefferradius für einen Körper-Tap — deutlich größer als der
+/// sichtbare Punkt (v.a. beim kleinen Asteroidengürtel-Symbol), damit die
+/// Karte auch auf Touch-Geräten bedienbar bleibt.
+double _tapRadiusFor(CelestialBodyType type) => switch (type) {
+  CelestialBodyType.homePlanet => 24,
+  CelestialBodyType.station => 20,
+  CelestialBodyType.asteroidField => 20,
+};
+
+class _BodyTapTarget extends StatelessWidget {
+  final Offset position;
+  final double radius;
+  final VoidCallback onTap;
+
+  const _BodyTapTarget({required this.position, required this.radius, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: position.dx - radius,
+      top: position.dy - radius,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(width: radius * 2, height: radius * 2),
+      ),
+    );
+  }
+}
+
+/// Bildet die "Systemkarten-Einheiten" aus [CelestialBody.x]/[y] auf
+/// Bildschirmkoordinaten innerhalb von [canvasSize] ab — eine reine
+/// Funktion statt in Painter und Tap-Zielen doppelt zu rechnen, damit
+/// sichtbare Punkte und Trefferflächen immer exakt übereinstimmen.
+Map<String, Offset> layoutSystemBodies(List<CelestialBody> bodies, Size canvasSize) {
+  if (bodies.isEmpty) return {};
+
+  final maxExtent = bodies
+      .map((b) => [b.x.abs(), b.y.abs()].reduce((a, b) => a > b ? a : b))
+      .reduce((a, b) => a > b ? a : b);
+  final scale = maxExtent == 0 ? 1.0 : (canvasSize.shortestSide / 2 - 40) / maxExtent;
+  final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
+
+  return {
+    for (final body in bodies) body.id: center + Offset(body.x * scale, body.y * scale),
+  };
+}
+
 class _SystemMapPainter extends CustomPainter {
   final StarSystem system;
+  final Map<String, Offset> positions;
+  final String currentBodyId;
 
-  _SystemMapPainter({required this.system});
+  _SystemMapPainter({
+    required this.system,
+    required this.positions,
+    required this.currentBodyId,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (system.bodies.isEmpty) return;
-
-    // Alle Körper gleichmäßig in die verfügbare Fläche einpassen — die
-    // rohen x/y-Werte aus vt_system sind beliebige "Systemkarten-
-    // Einheiten", keine Pixel.
-    final maxExtent = system.bodies
-        .map((b) => [b.x.abs(), b.y.abs()].reduce((a, b) => a > b ? a : b))
-        .reduce((a, b) => a > b ? a : b);
-    final scale = maxExtent == 0 ? 1.0 : (size.shortestSide / 2 - 40) / maxExtent;
-    final center = Offset(size.width / 2, size.height / 2);
-
     for (final body in system.bodies) {
-      final position = center + Offset(body.x * scale, body.y * scale);
+      final position = positions[body.id]!;
+      final radius = _visualRadiusFor(body.type);
+
+      if (body.id == currentBodyId) {
+        final ringPaint = Paint()
+          ..color = VtColors.accentAmber
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+        canvas.drawCircle(position, radius + 6, ringPaint);
+      }
+
       final paint = Paint()..color = _colorFor(body.type);
-      canvas.drawCircle(position, _radiusFor(body.type), paint);
+      canvas.drawCircle(position, radius, paint);
 
       final textPainter = TextPainter(
         text: TextSpan(
@@ -101,14 +190,11 @@ class _SystemMapPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(
-        canvas,
-        position + Offset(-textPainter.width / 2, _radiusFor(body.type) + 4),
-      );
+      textPainter.paint(canvas, position + Offset(-textPainter.width / 2, radius + 4));
     }
   }
 
-  double _radiusFor(CelestialBodyType type) => switch (type) {
+  double _visualRadiusFor(CelestialBodyType type) => switch (type) {
     CelestialBodyType.homePlanet => 14,
     CelestialBodyType.station => 8,
     CelestialBodyType.asteroidField => 6,
@@ -121,5 +207,8 @@ class _SystemMapPainter extends CustomPainter {
   };
 
   @override
-  bool shouldRepaint(covariant _SystemMapPainter oldDelegate) => oldDelegate.system != system;
+  bool shouldRepaint(covariant _SystemMapPainter oldDelegate) =>
+      oldDelegate.system != system ||
+      oldDelegate.positions != positions ||
+      oldDelegate.currentBodyId != currentBodyId;
 }
