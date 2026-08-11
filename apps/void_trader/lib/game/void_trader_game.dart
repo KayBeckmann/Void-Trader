@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
@@ -799,26 +801,41 @@ class VoidTraderGame extends FlameGame
     return true;
   }
 
+  /// Sekunden Spielzeit pro Einheit Entfernung im System (Roadmap Phase
+  /// 9, V6: "Reisedauer/-kosten statt Instant-Reise") — die Reise selbst
+  /// braucht weiterhin keine Echtzeit-Wartezeit, kostet aber Spielzeit
+  /// (der Tag/Nacht-Zyklus rückt sofort um die Reisedauer vor). Macht
+  /// die Standortwahl zusätzlich zum Preisniveau (siehe [CelestialBody.
+  /// priceMultiplier]) zu einer echten Abwägung: der besser zahlende,
+  /// aber weiter entfernte Außenposten kostet auch mehr Zeit.
+  static const double _travelSecondsPerDistanceUnit = 1.0;
+
   /// Bewegt das Schiff zu einem anderen Himmelskörper im aktuellen System
   /// (Roadmap Phase 9, V2: "Schiffsstandort + Reise zwischen
-  /// Systemkörpern") — ausgelöst durch einen Tap auf einen Körper in der
-  /// Systemkarte. Bewusst ohne Reisedauer/-animation und ohne jede
-  /// Auswirkung außerhalb der Karte selbst (kein Andocken, keine neue
-  /// Umgebung) — reine Standort-Buchhaltung als kleiner nächster Schritt,
-  /// nicht die volle Flugmechanik. Gibt `true` bei Erfolg zurück, `false`
-  /// wenn [bodyId] nicht im aktuellen System existiert oder das Schiff
-  /// dort bereits steht.
+  /// Systemkörpern", V6: "Reisedauer/-kosten") — ausgelöst durch einen
+  /// Tap auf einen Körper in der Systemkarte. Weiterhin ohne echte
+  /// Fluganimation und ohne Auswirkung außerhalb der Karte selbst (kein
+  /// Andocken, keine neue Umgebung) — nur Standort-Buchhaltung plus
+  /// Zeitkosten, nicht die volle Flugmechanik. Gibt `true` bei Erfolg
+  /// zurück, `false` wenn [bodyId] nicht im aktuellen System existiert
+  /// oder das Schiff dort bereits steht.
   bool travelTo(String bodyId) {
     if (bodyId == shipLocationBodyId.value) return false;
 
     CelestialBody? target;
+    CelestialBody? origin;
     for (final body in currentSystem.bodies) {
-      if (body.id == bodyId) {
-        target = body;
-        break;
-      }
+      if (body.id == bodyId) target = body;
+      if (body.id == shipLocationBodyId.value) origin = body;
     }
     if (target == null) return false;
+
+    if (origin != null) {
+      final dx = target.x - origin.x;
+      final dy = target.y - origin.y;
+      final distance = math.sqrt(dx * dx + dy * dy);
+      dayNightCycle.update(distance * _travelSecondsPerDistanceUnit);
+    }
 
     shipLocationBodyId.value = bodyId;
     feedbackMessage.value = 'Schiff unterwegs zu ${target.name}.';

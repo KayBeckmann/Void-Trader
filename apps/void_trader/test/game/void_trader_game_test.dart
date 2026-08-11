@@ -117,6 +117,57 @@ void main() {
       expect(game.shipLocationBodyId.value, currentId);
     });
 
+    test('travelTo lässt die Spielzeit um die Reisedauer voranschreiten (Roadmap V6)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final before = game.dayNightCycle.dayNumber + game.dayNightCycle.timeOfDay;
+      final destination = game.currentSystem.bodies.firstWhere(
+        (body) => body.id != game.currentSystem.homePlanet.id,
+      );
+
+      game.travelTo(destination.id);
+
+      final after = game.dayNightCycle.dayNumber + game.dayNightCycle.timeOfDay;
+      expect(after, greaterThan(before));
+    });
+
+    test('eine weitere Reise kostet mehr Spielzeit als eine nahe (Roadmap V6)', () async {
+      // Zwei getrennte Spiele, damit sich die Reisen nicht gegenseitig
+      // beeinflussen (beide starten identisch am Heimatplaneten).
+      final gameNear = VoidTraderGame(seed: 1);
+      await gameNear.onLoad();
+      final near = gameNear.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier == 1.0,
+      );
+      final beforeNear = gameNear.dayNightCycle.dayNumber + gameNear.dayNightCycle.timeOfDay;
+      gameNear.travelTo(near.id);
+      final elapsedNear =
+          (gameNear.dayNightCycle.dayNumber + gameNear.dayNightCycle.timeOfDay) - beforeNear;
+
+      final gameFar = VoidTraderGame(seed: 1);
+      await gameFar.onLoad();
+      final far = gameFar.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier != 1.0,
+      );
+      final beforeFar = gameFar.dayNightCycle.dayNumber + gameFar.dayNightCycle.timeOfDay;
+      gameFar.travelTo(far.id);
+      final elapsedFar =
+          (gameFar.dayNightCycle.dayNumber + gameFar.dayNightCycle.timeOfDay) - beforeFar;
+
+      expect(elapsedFar, greaterThan(elapsedNear));
+    });
+
+    test('eine fehlgeschlagene Reise kostet keine Spielzeit', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final before = game.dayNightCycle.dayNumber + game.dayNightCycle.timeOfDay;
+
+      game.travelTo('kein-echter-koerper');
+
+      final after = game.dayNightCycle.dayNumber + game.dayNightCycle.timeOfDay;
+      expect(after, before);
+    });
+
     test('sellDockedShipCargo scheitert ohne Andocken an einer Station', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
