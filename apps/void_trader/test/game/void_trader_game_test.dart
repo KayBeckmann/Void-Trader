@@ -265,6 +265,74 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.buyStationSupplies (Roadmap Phase 9 V8)', () {
+    test('scheitert ohne Andocken an einer Station', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.credits, 1000);
+
+      final spent = game.buyStationSupplies();
+
+      expect(spent, 0);
+      expect(game.feedbackMessage.value, contains('keine Handelsstation'));
+      expect(game.inventory.count(Resource.credits), 1000);
+      expect(game.ship.cargo.count(Resource.stone), 0);
+    });
+
+    test('kauft das Ankaufbündel an einer Handelsstation und zieht Credits ab', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.credits, 1000);
+      final station = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      game.travelTo(station.id);
+
+      final spent = game.buyStationSupplies();
+
+      expect(spent, greaterThan(0));
+      expect(game.inventory.count(Resource.credits), 1000 - spent);
+      for (final entry in stationBuyBundle.entries) {
+        expect(game.ship.cargo.count(entry.key), entry.value);
+      }
+      expect(game.feedbackMessage.value, contains('Vorräte'));
+    });
+
+    test('scheitert ohne genug Credits und lässt Fracht/Inventar unverändert', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final station = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      game.travelTo(station.id);
+
+      final spent = game.buyStationSupplies();
+
+      expect(spent, 0);
+      expect(game.feedbackMessage.value, contains('Nicht genug Credits'));
+      expect(game.ship.cargo.count(Resource.stone), 0);
+    });
+
+    test('skaliert mit dem Preisniveau der Station wie der Verkauf (Roadmap V5)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.credits, 1000);
+      final outpost = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier != 1.0,
+      );
+      game.travelTo(outpost.id);
+
+      final spent = game.buyStationSupplies();
+
+      var expectedCost = 0;
+      for (final entry in stationBuyBundle.entries) {
+        expectedCost += (entry.value * stationBuyPrices[entry.key]! * outpost.priceMultiplier)
+            .round();
+      }
+      expect(spent, expectedCost);
+    });
+  });
+
   group('VoidTraderGame.digAt', () {
     test('baut ein Stein-Tile ab und legt Stein ins Inventar', () async {
       final game = VoidTraderGame(seed: 1);
@@ -764,6 +832,51 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.unloadCargoAt (Roadmap Phase 9 V8)', () {
+    test('entlädt Schiffsfracht zurück ins Spieler-Inventar, Credits bleiben im Schiff', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.buildAt(game.player.position, BuildingType.landingPad);
+      game.ship.cargo.add(Resource.component, 3);
+      game.ship.cargo.add(Resource.credits, 20);
+
+      final unloaded = game.unloadCargoAt(game.player.position);
+
+      expect(unloaded, 3);
+      expect(game.inventory.count(Resource.component), 3);
+      expect(game.ship.cargo.count(Resource.component), 0);
+      expect(game.ship.cargo.count(Resource.credits), 20);
+      expect(game.feedbackMessage.value, contains('entladen'));
+    });
+
+    test('liefert 0 ohne Landepad an der Position', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.ship.cargo.add(Resource.stone, 5);
+
+      final unloaded = game.unloadCargoAt(game.player.position);
+
+      expect(unloaded, 0);
+      expect(game.ship.cargo.count(Resource.stone), 5);
+      expect(game.inventory.count(Resource.stone), 0);
+    });
+
+    test('meldet leere Fracht statt eines Fehlers', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.buildAt(game.player.position, BuildingType.landingPad);
+
+      final unloaded = game.unloadCargoAt(game.player.position);
+
+      expect(unloaded, 0);
+      expect(game.feedbackMessage.value, contains('Nichts zu entladen'));
+    });
+  });
+
   group('VoidTraderGame NPCs + Tag/Nacht-Zyklus', () {
     test('onLoad erzeugt mindestens 3 NPCs mit passenden Komponenten', () async {
       final game = VoidTraderGame(seed: 1);
@@ -860,6 +973,29 @@ void main() {
       );
 
       expect(game.currentInteractionHint(), contains('Abdichten'));
+    });
+
+    test('zeigt Entladen-Hinweis am Landepad, wenn nur Schiffsfracht wartet (Roadmap V8)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.buildAt(game.player.position, BuildingType.landingPad);
+      game.ship.cargo.add(Resource.stone, 2);
+
+      expect(game.currentInteractionHint(), contains('Fracht entladen'));
+    });
+
+    test('bevorzugt den Laden-Hinweis am Landepad, wenn beides möglich ist', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.buildAt(game.player.position, BuildingType.landingPad);
+      game.inventory.add(Resource.stone, 1);
+      game.ship.cargo.add(Resource.stone, 2);
+
+      expect(game.currentInteractionHint(), contains('Fracht laden'));
     });
   });
 

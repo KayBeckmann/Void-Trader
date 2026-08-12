@@ -67,6 +67,34 @@ void main() {
     });
   });
 
+  group('stationBuyPrices (Roadmap Phase 9 V8)', () {
+    test('listet dieselben Ressourcen wie stationSellPrices', () {
+      expect(stationBuyPrices.keys.toSet(), stationSellPrices.keys.toSet());
+    });
+
+    test('jeder Ankaufpreis liegt über dem zugehörigen Stationsverkaufspreis', () {
+      for (final resource in stationBuyPrices.keys) {
+        expect(
+          stationBuyPrices[resource],
+          greaterThan(stationSellPrices[resource]!),
+          reason: '$resource: Kaufen-und-Zurückverkaufen darf kein Gewinn sein',
+        );
+      }
+    });
+  });
+
+  group('stationBuyBundle (Roadmap Phase 9 V8)', () {
+    test('listet dieselben Ressourcen wie stationBuyPrices', () {
+      expect(stationBuyBundle.keys.toSet(), stationBuyPrices.keys.toSet());
+    });
+
+    test('jede Bündelmenge ist positiv', () {
+      for (final amount in stationBuyBundle.values) {
+        expect(amount, greaterThan(0));
+      }
+    });
+  });
+
   group('BuildingType.market', () {
     test('hat eine Definition mit Baukosten', () {
       final market = buildingDefinitionFor(BuildingType.market);

@@ -21,6 +21,28 @@ const Map<Resource, int> stationSellPrices = {
   Resource.component: 12,
 };
 
+/// Ankaufpreise an einer Handelsstation im All (Roadmap Phase 9 V8:
+/// "Ankauf an der Station") — bewusst deutlich über [stationSellPrices],
+/// damit Kaufen-und-sofort-Zurückverkaufen an derselben Station kein
+/// risikoloser Gewinn ist. Der eigentliche Sinn ist, Fracht dorthin zu
+/// bringen, wo sie gebraucht wird (Bauteile für die Kolonie), nicht ein
+/// Arbitragegeschäft.
+const Map<Resource, int> stationBuyPrices = {
+  Resource.stone: 4,
+  Resource.ore: 9,
+  Resource.component: 20,
+};
+
+/// Feste Einkaufsmenge je Ressource für "Vorräte kaufen" (Roadmap Phase 9
+/// V8) — bewusst ein einziges Bündel statt einer Mengenauswahl-UI, analog
+/// zum "gesamte Fracht verkaufen"-Knopf aus V3: eine klare Aktion statt
+/// eines eigenen Shopping-Menüs.
+const Map<Resource, int> stationBuyBundle = {
+  Resource.stone: 5,
+  Resource.ore: 5,
+  Resource.component: 2,
+};
+
 /// Verkauft [amount] von [resource] aus [inventory] zum hinterlegten
 /// Marktpreis (siehe [sellPrices]) und legt den Erlös als [Resource.credits]
 /// ins selbe Inventar.

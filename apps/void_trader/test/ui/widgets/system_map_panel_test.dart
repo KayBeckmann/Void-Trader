@@ -12,6 +12,7 @@ void main() {
           currentBodyId: defaultHomeSystem.homePlanet.id,
           onSelectBody: (_) {},
           onSellCargo: () {},
+          onBuySupplies: () {},
           onClose: () {},
         ),
       ),
@@ -32,6 +33,7 @@ void main() {
           currentBodyId: defaultHomeSystem.homePlanet.id,
           onSelectBody: (_) {},
           onSellCargo: () {},
+          onBuySupplies: () {},
           onClose: () => closed = true,
         ),
       ),
@@ -53,6 +55,7 @@ void main() {
           currentBodyId: defaultHomeSystem.homePlanet.id,
           onSelectBody: (id) => selected = id,
           onSellCargo: () {},
+          onBuySupplies: () {},
           onClose: () {},
         ),
       ),
@@ -78,6 +81,7 @@ void main() {
             currentBodyId: defaultHomeSystem.homePlanet.id,
             onSelectBody: (_) {},
             onSellCargo: () {},
+            onBuySupplies: () {},
             onClose: () {},
           ),
         ),
@@ -99,6 +103,7 @@ void main() {
             currentBodyId: station.id,
             onSelectBody: (_) {},
             onSellCargo: () => sold = true,
+            onBuySupplies: () {},
             onClose: () {},
           ),
         ),
@@ -108,6 +113,74 @@ void main() {
       await tester.tap(find.text('Fracht verkaufen'));
 
       expect(sold, isTrue);
+    });
+  });
+
+  group('"Vorräte kaufen"-Button (Roadmap Phase 9 V8)', () {
+    testWidgets('erscheint nicht am Heimatplaneten', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SystemMapPanel(
+            system: defaultHomeSystem,
+            currentBodyId: defaultHomeSystem.homePlanet.id,
+            onSelectBody: (_) {},
+            onSellCargo: () {},
+            onBuySupplies: () {},
+            onClose: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('Vorräte kaufen'), findsNothing);
+    });
+
+    testWidgets('erscheint an einer Handelsstation und ruft onBuySupplies auf', (tester) async {
+      final station = defaultHomeSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      var bought = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SystemMapPanel(
+            system: defaultHomeSystem,
+            currentBodyId: station.id,
+            onSelectBody: (_) {},
+            onSellCargo: () {},
+            onBuySupplies: () => bought = true,
+            onClose: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('Vorräte kaufen'), findsOneWidget);
+      await tester.tap(find.text('Vorräte kaufen'));
+
+      expect(bought, isTrue);
+    });
+
+    testWidgets('zeigt das Preisniveau am teureren Außenposten (Roadmap V5)', (tester) async {
+      final outpost = defaultHomeSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier != 1.0,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SystemMapPanel(
+            system: defaultHomeSystem,
+            currentBodyId: outpost.id,
+            onSelectBody: (_) {},
+            onSellCargo: () {},
+            onBuySupplies: () {},
+            onClose: () {},
+          ),
+        ),
+      );
+
+      expect(
+        find.text('Vorräte kaufen (×${outpost.priceMultiplier.toStringAsFixed(1)})'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -132,6 +205,7 @@ void main() {
           currentBodyId: 'home',
           onSelectBody: (_) {},
           onSellCargo: () {},
+          onBuySupplies: () {},
           onClose: () {},
         ),
       ),
@@ -150,6 +224,7 @@ void main() {
           currentBodyId: 'unbekannt',
           onSelectBody: (_) {},
           onSellCargo: () {},
+          onBuySupplies: () {},
           onClose: () {},
         ),
       ),

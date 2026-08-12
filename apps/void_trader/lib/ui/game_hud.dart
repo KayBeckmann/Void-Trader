@@ -56,6 +56,7 @@ class GameHud extends StatelessWidget {
             currentBodyId: state.shipLocationBodyId,
             onSelectBody: (id) => game.travelTo(id),
             onSellCargo: () => game.sellDockedShipCargo(),
+            onBuySupplies: () => game.buyStationSupplies(),
             onClose: () => game.showSystemMap.value = false,
           );
         }

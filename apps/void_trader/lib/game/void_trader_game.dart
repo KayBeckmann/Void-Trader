@@ -45,11 +45,12 @@ const _npcSpawns = [
 ///
 /// Interaktionen funktionieren über **zwei gleichwertige Wege** (Roadmap
 /// UI-Slice 1): Tastatur (Space/E graben, 1-5 wählt Baumodus + Gebäudetyp,
-/// C craften, V verkaufen, L Fracht laden) und Maus/Touch (Klick führt die
-/// per [activeTool] gewählte Aktion an der Klickposition aus, siehe
-/// [performActionAt]) — beide rufen dieselben Aktionsmethoden auf. Ein
-/// periodischer Fluid-Tick ([WorldFluidBridge]) lässt echtes Wasser aus
-/// vt_world im sichtbaren Fenster fließen (Phase 3). Ein [DayNightCycle]
+/// C craften, V verkaufen, L Fracht laden, U Fracht entladen) und Maus/
+/// Touch (Klick führt die per [activeTool] gewählte Aktion an der
+/// Klickposition aus, siehe [performActionAt]) — beide rufen dieselben
+/// Aktionsmethoden auf. Ein periodischer Fluid-Tick ([WorldFluidBridge])
+/// lässt echtes Wasser aus vt_world im sichtbaren Fenster fließen
+/// (Phase 3). Ein [DayNightCycle]
 /// und ein [WeatherSystem] treiben drei NPCs mit einfacher Tagesroutine an
 /// (Phase 5).
 class VoidTraderGame extends FlameGame
@@ -399,6 +400,8 @@ class VoidTraderGame extends FlameGame
         loadCargoAt(worldPosition);
       case ToolMode.seal:
         sealAt(worldPosition);
+      case ToolMode.unloadCargo:
+        unloadCargoAt(worldPosition);
     }
   }
 
@@ -458,6 +461,17 @@ class VoidTraderGame extends FlameGame
               keyHint: 'L',
               available: canLoad,
               blockedReason: canLoad ? null : 'Nichts zu verladen',
+            ),
+          );
+          final canUnload = Resource.values.any(
+            (r) => r != Resource.credits && ship.cargo.count(r) > 0,
+          );
+          actions.add(
+            InspectorActionInfo(
+              label: 'Fracht entladen',
+              keyHint: 'U',
+              available: canUnload,
+              blockedReason: canUnload ? null : 'Nichts an Bord zu entladen',
             ),
           );
         case BuildingType.wall:
@@ -545,7 +559,21 @@ class VoidTraderGame extends FlameGame
 
     if (building == BuildingType.workbench) return '[C] Craften';
     if (building == BuildingType.market) return '[V] Verkaufen';
-    if (building == BuildingType.landingPad) return '[L] Fracht laden';
+    if (building == BuildingType.landingPad) {
+      // Beide Frachtrichtungen sind hier möglich (Roadmap Phase 9 V8) —
+      // zeigt bevorzugt "laden", solange am Boden noch etwas wartet, sonst
+      // "entladen", falls das Schiff etwas mitbringt, das sonst nirgends
+      // ankäme.
+      final hasCargoToLoad = Resource.values.any(
+        (r) => r != Resource.credits && inventory.count(r) > 0,
+      );
+      if (hasCargoToLoad) return '[L] Fracht laden';
+      final hasCargoToUnload = Resource.values.any(
+        (r) => r != Resource.credits && ship.cargo.count(r) > 0,
+      );
+      if (hasCargoToUnload) return '[U] Fracht entladen';
+      return '[L] Fracht laden';
+    }
 
     final playerTile = simulationWorld.tileAt(tile.x, tile.y, z);
     if (playerTile.type.isMinable) return '[Leertaste] Abbauen';
@@ -746,6 +774,8 @@ class VoidTraderGame extends FlameGame
       sellAllAt(position);
     } else if (key == LogicalKeyboardKey.keyL) {
       loadCargoAt(position);
+    } else if (key == LogicalKeyboardKey.keyU) {
+      unloadCargoAt(position);
     } else if (key == LogicalKeyboardKey.keyR) {
       sealAt(position);
     } else if (key == LogicalKeyboardKey.keyM) {
@@ -862,6 +892,21 @@ class VoidTraderGame extends FlameGame
     return true;
   }
 
+  /// Der Körper, an dem das Schiff gerade "angedockt" steht, sofern es
+  /// eine Handelsstation ist — gemeinsame Grundlage für
+  /// [sellDockedShipCargo] und [buyStationSupplies], damit beide Richtungen
+  /// (verkaufen/kaufen) exakt dieselbe Docking-Regel und denselben
+  /// [CelestialBody.priceMultiplier] verwenden statt zweier Kopien derselben
+  /// Suche.
+  CelestialBody? get _dockedStation {
+    for (final body in currentSystem.bodies) {
+      if (body.id == shipLocationBodyId.value) {
+        return body.type == CelestialBodyType.station ? body : null;
+      }
+    }
+    return null;
+  }
+
   /// Verkauft die gesamte Schiffsfracht für Credits, sofern das Schiff
   /// gerade an einem Körper vom Typ [CelestialBodyType.station]
   /// "angedockt" ist (Roadmap Phase 9, V3: "Andocken an Station verkauft
@@ -876,14 +921,8 @@ class VoidTraderGame extends FlameGame
   /// gleich viel Wert zu sein. Gibt die erzielten Credits zurück (0,
   /// wenn nicht an einer Station angedockt oder nichts verkäuflich war).
   int sellDockedShipCargo() {
-    CelestialBody? current;
-    for (final body in currentSystem.bodies) {
-      if (body.id == shipLocationBodyId.value) {
-        current = body;
-        break;
-      }
-    }
-    if (current == null || current.type != CelestialBodyType.station) {
+    final current = _dockedStation;
+    if (current == null) {
       feedbackMessage.value = 'Hier gibt es keine Handelsstation.';
       return 0;
     }
@@ -902,6 +941,47 @@ class VoidTraderGame extends FlameGame
         ? 'Fracht verkauft für $totalEarned Credits.'
         : 'Keine verkäufliche Fracht an Bord.';
     return totalEarned;
+  }
+
+  /// Kauft das feste [stationBuyBundle] an Vorräten ein, sofern das Schiff
+  /// an einer Handelsstation angedockt ist und genug Credits vorhanden sind
+  /// (Roadmap Phase 9, V8: "Ankauf an der Station") — das Gegenstück zu
+  /// [sellDockedShipCargo]: erstmals fließt Fracht auch in die andere
+  /// Richtung, ins Schiff hinein statt nur heraus. Credits werden direkt
+  /// aus dem Spieler-[inventory] bezahlt (dieselbe Buchungsregel wie beim
+  /// Verkauf: Credits sind keine physische Fracht, egal wo das Schiff
+  /// gerade steht). Die eingekaufte Fracht landet im Schiffsfrachtraum und
+  /// muss über [unloadCargoAt] am Landepad erst zurück auf den Planeten
+  /// gebracht werden, um nutzbar zu sein. Skaliert mit
+  /// [CelestialBody.priceMultiplier] wie der Verkauf — an einer teuren
+  /// Station zahlt man für beide Richtungen drauf. Gibt die ausgegebenen
+  /// Credits zurück (0 bei fehlgeschlagenem Kauf).
+  int buyStationSupplies() {
+    final current = _dockedStation;
+    if (current == null) {
+      feedbackMessage.value = 'Hier gibt es keine Handelsstation.';
+      return 0;
+    }
+
+    var totalCost = 0;
+    for (final entry in stationBuyBundle.entries) {
+      final price = stationBuyPrices[entry.key];
+      if (price == null) continue;
+      totalCost += (entry.value * price * current.priceMultiplier).round();
+    }
+
+    if (!inventory.has(Resource.credits, totalCost)) {
+      feedbackMessage.value = 'Nicht genug Credits für Vorräte ($totalCost benötigt).';
+      return 0;
+    }
+
+    inventory.remove(Resource.credits, totalCost);
+    for (final entry in stationBuyBundle.entries) {
+      ship.cargo.add(entry.key, entry.value);
+    }
+
+    feedbackMessage.value = 'Vorräte für $totalCost Credits gekauft.';
+    return totalCost;
   }
 
   /// Versucht, [type] unter [worldPosition] zu platzieren — nur wenn die
@@ -1036,6 +1116,39 @@ class VoidTraderGame extends FlameGame
         ? '$totalLoaded Einheiten Fracht verladen.'
         : 'Nichts zu verladen.';
     return totalLoaded;
+  }
+
+  /// Kehrt [loadCargoAt] um: entlädt die gesamte Schiffsfracht zurück ins
+  /// Spieler-Inventar, sofern unter [worldPosition] ein Landepad steht
+  /// (Roadmap Phase 9, V8: "Ankauf an der Station") — ohne diese Aktion
+  /// wäre an einer Station eingekaufte Fracht (siehe [buyStationSupplies])
+  /// eine Sackgasse: Sie könnte das Schiff nie wieder verlassen und stünde
+  /// dem Planeten-Inventar (Bauen/Craften) nie zur Verfügung. Credits sind
+  /// wie beim Beladen keine physische Fracht und bleiben unberührt. Gibt
+  /// die Gesamtmenge entladener Einheiten zurück (0, wenn kein Landepad
+  /// dort steht oder nichts zu entladen war).
+  int unloadCargoAt(Vector2 worldPosition) {
+    final tile = _worldTileFor(worldPosition);
+    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
+    if (building != BuildingType.landingPad) {
+      feedbackMessage.value = 'Hier steht kein Landepad.';
+      return 0;
+    }
+
+    var totalUnloaded = 0;
+    for (final resource in Resource.values) {
+      if (resource == Resource.credits) continue;
+      final amount = ship.cargo.count(resource);
+      if (amount <= 0) continue;
+      ship.cargo.remove(resource, amount);
+      inventory.add(resource, amount);
+      totalUnloaded += amount;
+    }
+
+    feedbackMessage.value = totalUnloaded > 0
+        ? '$totalUnloaded Einheiten Fracht entladen.'
+        : 'Nichts zu entladen.';
+    return totalUnloaded;
   }
 
   /// Welcher Rohstoff (falls überhaupt einer) beim Abbau von [type] anfällt.

@@ -12,10 +12,10 @@ const systemMapCanvasKey = Key('systemMapCanvas');
 /// Himmelskörper des aktuellen Systems als beschriftete Punkte, hebt den
 /// aktuellen Standort des Schiffs hervor, erlaubt einen Tap auf einen
 /// anderen Körper als (weiterhin animationslose) Reise dorthin, und
-/// bietet einen "Fracht verkaufen"-Button, sobald das Schiff an einer
-/// Handelsstation angedockt ist (Roadmap Phase 9 V3). Bewusst weiterhin
-/// ohne echte Flugmechanik: keine Speedways, keine Reisedauer — das sind
-/// spätere Phase-9-Schritte.
+/// bietet einen "Fracht verkaufen"- und einen "Vorräte kaufen"-Button,
+/// sobald das Schiff an einer Handelsstation angedockt ist (Roadmap
+/// Phase 9 V3 bzw. V8). Bewusst weiterhin ohne echte Flugmechanik: keine
+/// Speedways — das sind spätere Phase-9-Schritte.
 ///
 /// Bekommt System/Standort als reine Daten statt selbst auf
 /// [VoidTraderGame] zuzugreifen — bleibt so mit Beispieldaten testbar
@@ -25,6 +25,7 @@ class SystemMapPanel extends StatelessWidget {
   final String currentBodyId;
   final ValueChanged<String> onSelectBody;
   final VoidCallback onSellCargo;
+  final VoidCallback onBuySupplies;
   final VoidCallback onClose;
 
   const SystemMapPanel({
@@ -33,6 +34,7 @@ class SystemMapPanel extends StatelessWidget {
     required this.currentBodyId,
     required this.onSelectBody,
     required this.onSellCargo,
+    required this.onBuySupplies,
     required this.onClose,
   });
 
@@ -75,8 +77,39 @@ class SystemMapPanel extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: VtSpacing.md),
-                  if (_dockedStation case final station?)
+                  IconButton(
+                    onPressed: onClose,
+                    tooltip: 'Schließen (M)',
+                    icon: const Icon(Icons.close, color: VtColors.textSecondary),
+                  ),
+                ],
+              ),
+              // Eigene Zeile statt Teil der Titel-Row (Roadmap V8): mit
+              // zwei Stations-Buttons ("Vorräte kaufen" + "Fracht
+              // verkaufen") passt das nicht mehr neben Titel + Schließen-
+              // Button. Als direktes Column-Kind bekommt Wrap eine echte
+              // Breitenbeschränkung und bricht bei Bedarf in eine zweite
+              // Zeile um, statt einen RenderFlex-Overflow zu erzeugen
+              // (dasselbe Muster wie ToolbeltPanel — dort funktioniert es
+              // aus demselben Grund: Wrap braucht begrenzte, nicht
+              // unbegrenzte Constraints, die es innerhalb einer Row als
+              // Row-Geschwister eines Expanded nicht bekommt).
+              if (_dockedStation case final station?) ...[
+                const SizedBox(height: VtSpacing.sm),
+                Wrap(
+                  spacing: VtSpacing.sm,
+                  runSpacing: VtSpacing.sm,
+                  children: [
+                    TextButton.icon(
+                      onPressed: onBuySupplies,
+                      icon: const Icon(Icons.shopping_cart_outlined, color: VtColors.accentCyan),
+                      label: Text(
+                        station.priceMultiplier == 1.0
+                            ? 'Vorräte kaufen'
+                            : 'Vorräte kaufen (×${station.priceMultiplier.toStringAsFixed(1)})',
+                        style: const TextStyle(color: VtColors.accentCyan),
+                      ),
+                    ),
                     TextButton.icon(
                       onPressed: onSellCargo,
                       icon: const Icon(Icons.sell_outlined, color: VtColors.accentGreen),
@@ -87,13 +120,9 @@ class SystemMapPanel extends StatelessWidget {
                         style: const TextStyle(color: VtColors.accentGreen),
                       ),
                     ),
-                  IconButton(
-                    onPressed: onClose,
-                    tooltip: 'Schließen (M)',
-                    icon: const Icon(Icons.close, color: VtColors.textSecondary),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
               const SizedBox(height: VtSpacing.lg),
               Expanded(
                 child: Container(
