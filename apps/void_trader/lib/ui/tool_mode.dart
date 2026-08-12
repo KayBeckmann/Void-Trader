@@ -4,7 +4,7 @@
 /// `inspect` wählt nur ein Tile aus und aktualisiert den Inspector, ohne
 /// eine Aktion auszulösen — alle anderen Modi lösen beim Klick auf ein
 /// Tile die jeweilige Aktion an genau dieser Position aus.
-enum ToolMode { inspect, dig, build, craft, sell, cargo, seal }
+enum ToolMode { inspect, dig, build, craft, sell, cargo, seal, unloadCargo }
 
 /// Deutsches Label + Tastenkürzel je Modus, fürs Toolbelt-UI.
 extension ToolModeLabels on ToolMode {
@@ -24,6 +24,8 @@ extension ToolModeLabels on ToolMode {
         return 'Fracht laden';
       case ToolMode.seal:
         return 'Abdichten';
+      case ToolMode.unloadCargo:
+        return 'Fracht entladen';
     }
   }
 
@@ -43,6 +45,8 @@ extension ToolModeLabels on ToolMode {
         return 'L';
       case ToolMode.seal:
         return 'R';
+      case ToolMode.unloadCargo:
+        return 'U';
     }
   }
 }
