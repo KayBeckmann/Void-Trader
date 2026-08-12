@@ -64,6 +64,9 @@ class TileSpriteMapComponent extends PositionComponent {
     BuildingType.market: 'buildings/market_kiosk.png',
     BuildingType.workbench: 'buildings/workbench.png',
     BuildingType.wall: 'buildings/wall.png',
+    BuildingType.landingPad: 'buildings/landing_pad.png',
+    BuildingType.storage: 'buildings/storage.png',
+    BuildingType.miningDrone: 'buildings/mining_drone.png',
   };
 
   late final Map<vt_world.TileType, Sprite> _tileSprites;

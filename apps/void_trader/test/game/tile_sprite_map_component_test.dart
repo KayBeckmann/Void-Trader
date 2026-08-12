@@ -39,6 +39,24 @@ void main() {
       );
     });
 
+    // Roadmap Pixel-Art-Auftrag 2026-08-12, Teil 1: bereits im Vault
+    // vorhandene, bislang ungenutzte Assets für Landepad/Lager/Minendrohne
+    // importiert — kein neuer Generierungsauftrag nötig.
+    test('enthält echte Sprite-Dateien für Landepad, Lager und Minendrohne', () {
+      expect(
+        TileSpriteMapComponent.buildingAssetFiles[BuildingType.landingPad],
+        'buildings/landing_pad.png',
+      );
+      expect(
+        TileSpriteMapComponent.buildingAssetFiles[BuildingType.storage],
+        'buildings/storage.png',
+      );
+      expect(
+        TileSpriteMapComponent.buildingAssetFiles[BuildingType.miningDrone],
+        'buildings/mining_drone.png',
+      );
+    });
+
     test('alle Gebäude-Sprite-Dateien liegen unter buildings/', () {
       for (final file in TileSpriteMapComponent.buildingAssetFiles.values) {
         expect(file, startsWith('buildings/'));

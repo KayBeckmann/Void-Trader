@@ -86,6 +86,21 @@
       "file": "buildings/wall.png",
       "source": "vault:2026-08-12_auftrag-fehlende-assets",
       "status": "approved"
+    },
+    "landingPad": {
+      "file": "buildings/landing_pad.png",
+      "source": "vault:2026-08-04_startpack_sorted/landing_pad",
+      "status": "approved"
+    },
+    "storage": {
+      "file": "buildings/storage.png",
+      "source": "vault:2026-08-04_startpack_sorted/cargo_crate",
+      "status": "approved"
+    },
+    "miningDrone": {
+      "file": "buildings/mining_drone.png",
+      "source": "vault:2026-08-04_startpack_sorted/ore_drill",
+      "status": "approved"
     }
   },
   "updated": "2026-08-12"
