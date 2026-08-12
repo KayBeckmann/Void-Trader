@@ -57,10 +57,17 @@ class TileSpriteMapComponent extends PositionComponent {
     vt_world.TileType.slope: 'tiles/slope.png',
   };
 
-  static const String marketAssetFile = 'buildings/market_kiosk.png';
+  /// Sprite-Dateien je Gebäudetyp. Gebäude ohne Mapping fallen weiterhin auf
+  /// die Debug-Umrandung zurück, damit neue BuildingTypes nicht unsichtbar
+  /// werden.
+  static const Map<BuildingType, String> buildingAssetFiles = {
+    BuildingType.market: 'buildings/market_kiosk.png',
+    BuildingType.workbench: 'buildings/workbench.png',
+    BuildingType.wall: 'buildings/wall.png',
+  };
 
   late final Map<vt_world.TileType, Sprite> _tileSprites;
-  late final Sprite _marketSprite;
+  late final Map<BuildingType, Sprite> _buildingSprites;
 
   final Paint _waterPaint = Paint();
   final Paint _buildingPaint = Paint()
@@ -71,9 +78,13 @@ class TileSpriteMapComponent extends PositionComponent {
   Future<void> onLoad() async {
     await super.onLoad();
     _tileSprites = {
-      for (final entry in tileAssetFiles.entries) entry.key: await Sprite.load(entry.value),
+      for (final entry in tileAssetFiles.entries)
+        entry.key: await Sprite.load(entry.value),
     };
-    _marketSprite = await Sprite.load(marketAssetFile);
+    _buildingSprites = {
+      for (final entry in buildingAssetFiles.entries)
+        entry.key: await Sprite.load(entry.value),
+    };
   }
 
   @override
@@ -107,11 +118,14 @@ class TileSpriteMapComponent extends PositionComponent {
         }
 
         final building = gameWorld.buildingAt(worldX, worldY, z);
-        if (building == BuildingType.market) {
-          _marketSprite.renderRect(canvas, rect);
+        final buildingSprite = building == null
+            ? null
+            : _buildingSprites[building];
+        if (buildingSprite != null) {
+          buildingSprite.renderRect(canvas, rect);
         } else if (building != null) {
-          // Noch kein Sprite hinterlegt (siehe Asset-Inventar) — Debug-
-          // Umrandung als Übergangslösung, bis eigene Grafik existiert.
+          // Noch kein Sprite hinterlegt — Debug-Umrandung als Übergangslösung,
+          // bis eigene Grafik existiert.
           _buildingPaint.color = DebugMapComponent.buildingColor(building);
           canvas.drawRect(rect.deflate(1), _buildingPaint);
         }

@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vt_content/vt_content.dart';
 import 'package:vt_world/vt_world.dart' as vt_world;
 import 'package:void_trader/game/tile_sprite_map_component.dart';
 
@@ -18,6 +19,29 @@ void main() {
     test('alle Dateien liegen unter tiles/', () {
       for (final file in TileSpriteMapComponent.tileAssetFiles.values) {
         expect(file, startsWith('tiles/'));
+      }
+    });
+  });
+
+  group('TileSpriteMapComponent.buildingAssetFiles', () {
+    test('enthält echte Sprite-Dateien für Markt, Werkbank und Mauer', () {
+      expect(
+        TileSpriteMapComponent.buildingAssetFiles[BuildingType.market],
+        'buildings/market_kiosk.png',
+      );
+      expect(
+        TileSpriteMapComponent.buildingAssetFiles[BuildingType.workbench],
+        'buildings/workbench.png',
+      );
+      expect(
+        TileSpriteMapComponent.buildingAssetFiles[BuildingType.wall],
+        'buildings/wall.png',
+      );
+    });
+
+    test('alle Gebäude-Sprite-Dateien liegen unter buildings/', () {
+      for (final file in TileSpriteMapComponent.buildingAssetFiles.values) {
+        expect(file, startsWith('buildings/'));
       }
     });
   });
