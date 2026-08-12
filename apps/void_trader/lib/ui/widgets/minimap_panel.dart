@@ -26,7 +26,7 @@ class MinimapPanel extends StatelessWidget {
     required this.grid,
     required this.facingX,
     required this.facingY,
-    this.size = 148,
+    this.size = 190,
   });
 
   @override

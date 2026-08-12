@@ -10,10 +10,14 @@ import 'tile_inspector_info.dart';
 import 'tool_mode.dart';
 
 /// Sichtradius der Minimap in Tiles (Roadmap HUD-13: "Renderbudget klein
-/// halten") — bewusst kleiner als der Kamera-/Fog-of-War-Sichtradius, eine
-/// Minimap muss nur die grobe Umgebung zeigen, nicht das ganze geladene
-/// Fenster.
-const int _minimapRadiusTiles = 10;
+/// halten") — bewusst GRÖSSER als der Kamera-/Fog-of-War-Sichtradius
+/// ([VoidTraderGame._viewRadius] = 16): genau darin liegt der Sinn einer
+/// Minimap, mehr von der bereits erkundeten Umgebung zu zeigen als gerade
+/// auf dem Bildschirm sichtbar ist. `peekTileAt`/`ExplorationTracker`
+/// bleiben trotzdem strikt auf bereits geladene/entdeckte Chunks
+/// beschränkt (siehe [buildMinimapGrid]), das Budget wächst also nur bei
+/// tatsächlich erkundeter Fläche, nicht bei frischer Chunk-Generierung.
+const int _minimapRadiusTiles = 24;
 
 /// Unveränderlicher Snapshot des UI-relevanten Spielzustands (Roadmap
 /// UI-01). Wird periodisch aus [VoidTraderGame] gebaut, damit HUD-Widgets
