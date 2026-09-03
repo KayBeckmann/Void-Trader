@@ -61,26 +61,43 @@ void main() {
         expect(
           stationSellPrices[resource],
           greaterThan(sellPrices[resource]!),
-          reason: '$resource sollte an der Station mehr wert sein als auf dem Planeten',
+          reason:
+              '$resource sollte an der Station mehr wert sein als auf dem Planeten',
         );
       }
     });
   });
 
   group('stationBuyPrices (Roadmap Phase 9 V8)', () {
-    test('listet dieselben Ressourcen wie stationSellPrices', () {
-      expect(stationBuyPrices.keys.toSet(), stationSellPrices.keys.toSet());
+    test('listet mindestens dieselben Ressourcen wie stationSellPrices', () {
+      expect(
+        stationBuyPrices.keys.toSet().containsAll(stationSellPrices.keys),
+        isTrue,
+      );
     });
 
-    test('jeder Ankaufpreis liegt über dem zugehörigen Stationsverkaufspreis', () {
-      for (final resource in stationBuyPrices.keys) {
-        expect(
-          stationBuyPrices[resource],
-          greaterThan(stationSellPrices[resource]!),
-          reason: '$resource: Kaufen-und-Zurückverkaufen darf kein Gewinn sein',
-        );
-      }
-    });
+    test(
+      'jeder Ankaufpreis liegt über dem zugehörigen Stationsverkaufspreis',
+      () {
+        for (final resource in stationSellPrices.keys) {
+          expect(
+            stationBuyPrices[resource],
+            greaterThan(stationSellPrices[resource]!),
+            reason:
+                '$resource: Kaufen-und-Zurückverkaufen darf kein Gewinn sein',
+          );
+        }
+      },
+    );
+
+    test(
+      'Treibstoff ist seit Roadmap V9 zusätzlich käuflich, aber nicht verkäuflich',
+      () {
+        expect(stationBuyPrices, contains(Resource.fuel));
+        expect(stationSellPrices, isNot(contains(Resource.fuel)));
+        expect(sellPrices, isNot(contains(Resource.fuel)));
+      },
+    );
   });
 
   group('stationBuyBundle (Roadmap Phase 9 V8)', () {

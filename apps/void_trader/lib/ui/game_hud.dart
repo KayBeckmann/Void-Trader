@@ -54,6 +54,7 @@ class GameHud extends StatelessWidget {
           return SystemMapPanel(
             system: state.system,
             currentBodyId: state.shipLocationBodyId,
+            shipFuel: state.shipFuel,
             onSelectBody: (id) => game.travelTo(id),
             onSellCargo: () => game.sellDockedShipCargo(),
             onBuySupplies: () => game.buyStationSupplies(),
@@ -125,7 +126,8 @@ class GameHud extends StatelessWidget {
                     child: BuildMenu(
                       selected: state.selectedBuildingType,
                       inventory: state.inventory,
-                      onSelect: (type) => game.selectedBuildingType.value = type,
+                      onSelect: (type) =>
+                          game.selectedBuildingType.value = type,
                     ),
                   ),
                   const SizedBox(height: 8),

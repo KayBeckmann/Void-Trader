@@ -27,20 +27,30 @@ const Map<Resource, int> stationSellPrices = {
 /// risikoloser Gewinn ist. Der eigentliche Sinn ist, Fracht dorthin zu
 /// bringen, wo sie gebraucht wird (Bauteile für die Kolonie), nicht ein
 /// Arbitragegeschäft.
+///
+/// Enthält seit Roadmap Phase 9 V9 ("Treibstoffverbrauch") zusätzlich
+/// [Resource.fuel] — bewusst NICHT in [stationSellPrices]/[sellPrices]
+/// gespiegelt: Treibstoff ist reines Verbrauchsgut fürs Schiff, nicht
+/// Handelsware, die man auch verkaufen könnte (siehe [Resource.fuel]-Doc).
 const Map<Resource, int> stationBuyPrices = {
   Resource.stone: 4,
   Resource.ore: 9,
   Resource.component: 20,
+  Resource.fuel: 2,
 };
 
 /// Feste Einkaufsmenge je Ressource für "Vorräte kaufen" (Roadmap Phase 9
-/// V8) — bewusst ein einziges Bündel statt einer Mengenauswahl-UI, analog
-/// zum "gesamte Fracht verkaufen"-Knopf aus V3: eine klare Aktion statt
-/// eines eigenen Shopping-Menüs.
+/// V8, seit V9 inkl. Treibstoff) — bewusst ein einziges Bündel statt einer
+/// Mengenauswahl-UI, analog zum "gesamte Fracht verkaufen"-Knopf aus V3:
+/// eine klare Aktion statt eines eigenen Shopping-Menüs. Die
+/// Treibstoffmenge (30) liegt knapp unter [Ship.startingFuel] (40) — ein
+/// einzelner Einkauf füllt den Tank spürbar auf, ohne ihn allein schon auf
+/// Dauer unerschöpflich zu machen.
 const Map<Resource, int> stationBuyBundle = {
   Resource.stone: 5,
   Resource.ore: 5,
   Resource.component: 2,
+  Resource.fuel: 30,
 };
 
 /// Verkauft [amount] von [resource] aus [inventory] zum hinterlegten

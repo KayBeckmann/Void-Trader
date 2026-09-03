@@ -104,7 +104,8 @@ class VoidTraderGame extends FlameGame
   /// Welche Tiles der Spieler entdeckt hat/gerade sieht (Roadmap FOW-01
   /// bis FOW-03) — von [fogOfWar] gerendert, von [_updateFieldOfView]
   /// periodisch aktualisiert.
-  final vt_world.ExplorationTracker explorationTracker = vt_world.ExplorationTracker();
+  final vt_world.ExplorationTracker explorationTracker =
+      vt_world.ExplorationTracker();
 
   /// Sekunden zwischen zwei Sichtfeld-Berechnungen — budgetiert statt jeden
   /// Frame neu zu berechnen (Roadmap FOW-02: "FOV-Berechnung muss
@@ -156,7 +157,9 @@ class VoidTraderGame extends FlameGame
   /// die aktuelle z-Ebene visuell kommunizieren"). Karte, Kollision und
   /// Interaktionen (Graben/Bauen/Craften/Verkaufen/Fracht laden) beziehen
   /// sich immer auf diese Ebene, nicht mehr fest auf die Oberfläche.
-  final ValueNotifier<int> currentZLevel = ValueNotifier(vt_world.ZLevel.surface);
+  final ValueNotifier<int> currentZLevel = ValueNotifier(
+    vt_world.ZLevel.surface,
+  );
 
   /// Das System, in dem der Spieler unterwegs ist (Roadmap Phase 9) — in
   /// V1/V2 immer [defaultHomeSystem], da prozedurale Systemgenerierung
@@ -265,8 +268,9 @@ class VoidTraderGame extends FlameGame
     // Visuelle Entsprechung zum HUD-Interaktionshinweis: hebt das Tile
     // hervor, auf das sich currentInteractionHint() gerade bezieht.
     tileHighlight = TileHighlightComponent(
-      tileProvider: () =>
-          currentInteractionHint() == null ? null : _worldTileFor(player.position),
+      tileProvider: () => currentInteractionHint() == null
+          ? null
+          : _worldTileFor(player.position),
       tileSize: tileSize,
     );
 
@@ -407,7 +411,8 @@ class VoidTraderGame extends FlameGame
 
   /// Welches Tile der Inspector gerade zeigen soll: das zuletzt
   /// angeklickte, sonst das unter dem Spieler.
-  ({int x, int y}) get inspectedTile => selectedTile.value ?? _worldTileFor(player.position);
+  ({int x, int y}) get inspectedTile =>
+      selectedTile.value ?? _worldTileFor(player.position);
 
   /// Baut die Inspector-Information für ein beliebiges Welt-Tile (Roadmap
   /// UI-03) — unabhängig davon, ob der Spieler dort gerade steht. Zeigt bei
@@ -453,7 +458,7 @@ class VoidTraderGame extends FlameGame
           );
         case BuildingType.landingPad:
           final canLoad = Resource.values.any(
-            (r) => r != Resource.credits && inventory.count(r) > 0,
+            (r) => _isTransportableCargo(r) && inventory.count(r) > 0,
           );
           actions.add(
             InspectorActionInfo(
@@ -464,7 +469,7 @@ class VoidTraderGame extends FlameGame
             ),
           );
           final canUnload = Resource.values.any(
-            (r) => r != Resource.credits && ship.cargo.count(r) > 0,
+            (r) => _isTransportableCargo(r) && ship.cargo.count(r) > 0,
           );
           actions.add(
             InspectorActionInfo(
@@ -484,14 +489,21 @@ class VoidTraderGame extends FlameGame
             details.add('Energie: ${(drone.energy * 100).round()}%');
           }
         case BuildingType.pump:
-          final hasTarget = _findFloodedNeighbor((x: worldX, y: worldY)) != null;
-          details.add(hasTarget ? 'Pumpt aktiv Wasser ab.' : 'Kein Wasser in Reichweite.');
+          final hasTarget =
+              _findFloodedNeighbor((x: worldX, y: worldY)) != null;
+          details.add(
+            hasTarget ? 'Pumpt aktiv Wasser ab.' : 'Kein Wasser in Reichweite.',
+          );
       }
     } else {
       title = tileTypeLabel(tile.type);
       if (tile.type.isMinable) {
         actions.add(
-          const InspectorActionInfo(label: 'Abbauen', keyHint: 'Leertaste', available: true),
+          const InspectorActionInfo(
+            label: 'Abbauen',
+            keyHint: 'Leertaste',
+            available: true,
+          ),
         );
       }
     }
@@ -565,11 +577,11 @@ class VoidTraderGame extends FlameGame
       // "entladen", falls das Schiff etwas mitbringt, das sonst nirgends
       // ankäme.
       final hasCargoToLoad = Resource.values.any(
-        (r) => r != Resource.credits && inventory.count(r) > 0,
+        (r) => _isTransportableCargo(r) && inventory.count(r) > 0,
       );
       if (hasCargoToLoad) return '[L] Fracht laden';
       final hasCargoToUnload = Resource.values.any(
-        (r) => r != Resource.credits && ship.cargo.count(r) > 0,
+        (r) => _isTransportableCargo(r) && ship.cargo.count(r) > 0,
       );
       if (hasCargoToUnload) return '[U] Fracht entladen';
       return '[L] Fracht laden';
@@ -601,7 +613,10 @@ class VoidTraderGame extends FlameGame
   /// Kehrt [_pixelForWorldTile] um: zu welchem Welt-Tile gehört eine
   /// Pixel-Position im Weltkoordinatensystem.
   ({int x, int y}) _worldTileFor(Vector2 position) {
-    return (x: (position.x / tileSize).floor(), y: (position.y / tileSize).floor());
+    return (
+      x: (position.x / tileSize).floor(),
+      y: (position.y / tileSize).floor(),
+    );
   }
 
   /// Sucht das erste abbaubare Tile direkt neben [tile] auf der aktuellen
@@ -616,7 +631,9 @@ class VoidTraderGame extends FlameGame
       (x: tile.x, y: tile.y + 1),
       (x: tile.x, y: tile.y - 1),
     ]) {
-      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).type.isMinable) return neighbor;
+      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).type.isMinable) {
+        return neighbor;
+      }
     }
     return null;
   }
@@ -633,7 +650,9 @@ class VoidTraderGame extends FlameGame
       (x: tile.x, y: tile.y + 1),
       (x: tile.x, y: tile.y - 1),
     ]) {
-      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).waterLevel > 0) return neighbor;
+      if (simulationWorld.tileAt(neighbor.x, neighbor.y, z).waterLevel > 0) {
+        return neighbor;
+      }
     }
     return null;
   }
@@ -649,11 +668,15 @@ class VoidTraderGame extends FlameGame
     _lastPlayerTile = tile;
     if (!enteredNewTile) return;
 
-    final type = simulationWorld.tileAt(tile.x, tile.y, currentZLevel.value).type;
+    final type = simulationWorld
+        .tileAt(tile.x, tile.y, currentZLevel.value)
+        .type;
     if (type != vt_world.TileType.slope) return;
 
     final wasOnSurface = currentZLevel.value == vt_world.ZLevel.surface;
-    currentZLevel.value = wasOnSurface ? vt_world.ZLevel.hills : vt_world.ZLevel.surface;
+    currentZLevel.value = wasOnSurface
+        ? vt_world.ZLevel.hills
+        : vt_world.ZLevel.surface;
     feedbackMessage.value = wasOnSurface
         ? 'Rampe erklommen — jetzt auf den Hügeln.'
         : 'Rampe hinabgestiegen — zurück auf der Oberfläche.';
@@ -700,7 +723,11 @@ class VoidTraderGame extends FlameGame
         continue;
       }
 
-      final mined = simulationWorld.mineTileAt(neighbor.x, neighbor.y, position.z);
+      final mined = simulationWorld.mineTileAt(
+        neighbor.x,
+        neighbor.y,
+        position.z,
+      );
       final resource = mined == null ? null : _resourceForMinedTile(mined);
       if (resource != null) inventory.add(resource, 1);
     }
@@ -719,7 +746,12 @@ class VoidTraderGame extends FlameGame
     for (final position in pumps) {
       final neighbor = _findFloodedNeighbor((x: position.x, y: position.y));
       if (neighbor == null) continue;
-      simulationWorld.drainWaterAt(neighbor.x, neighbor.y, position.z, _pumpDrainPerTick);
+      simulationWorld.drainWaterAt(
+        neighbor.x,
+        neighbor.y,
+        position.z,
+        _pumpDrainPerTick,
+      );
     }
   }
 
@@ -806,7 +838,8 @@ class VoidTraderGame extends FlameGame
       return;
     }
     if (!builtBuildingTypes.contains(BuildingType.landingPad)) {
-      feedbackMessage.value = 'Baue zuerst ein Landepad, um ins All zu starten.';
+      feedbackMessage.value =
+          'Baue zuerst ein Landepad, um ins All zu starten.';
       return;
     }
     showSystemMap.value = true;
@@ -819,7 +852,11 @@ class VoidTraderGame extends FlameGame
   /// Rohstoffe ins Inventar gelegt.
   bool digAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final mined = simulationWorld.mineTileAt(tile.x, tile.y, currentZLevel.value);
+    final mined = simulationWorld.mineTileAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
     if (mined == null) {
       feedbackMessage.value = 'Hier gibt es nichts abzubauen.';
       return false;
@@ -842,7 +879,11 @@ class VoidTraderGame extends FlameGame
   /// gesetzt.
   bool sealAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final drained = simulationWorld.drainWaterAt(tile.x, tile.y, currentZLevel.value);
+    final drained = simulationWorld.drainWaterAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
     if (drained == null) {
       feedbackMessage.value = 'Hier steht kein Wasser.';
       return false;
@@ -860,15 +901,27 @@ class VoidTraderGame extends FlameGame
   /// aber weiter entfernte Außenposten kostet auch mehr Zeit.
   static const double _travelSecondsPerDistanceUnit = 1.0;
 
+  /// Treibstoff-Verbrauch pro Entfernungseinheit im System (Roadmap Phase
+  /// 9, V9: "Treibstoffverbrauch") — macht Reisen zusätzlich zu den
+  /// Zeitkosten (siehe [_travelSecondsPerDistanceUnit]) auch zu einer
+  /// Ressourcen-Entscheidung: ohne genug [Resource.fuel] im Schiffs-
+  /// frachtraum scheitert [travelTo] vollständig (kein Teilverbrauch, keine
+  /// Zeitkosten), statt das Schiff mit leerem Tank stranden zu lassen.
+  /// Kosten werden aufgerundet (`ceil()`), damit jede tatsächliche Distanz
+  /// mindestens 1 Treibstoffeinheit kostet und keine "kostenlosen"
+  /// Bruchteil-Reisen durch Abrunden entstehen.
+  static const double _fuelPerDistanceUnit = 0.1;
+
   /// Bewegt das Schiff zu einem anderen Himmelskörper im aktuellen System
   /// (Roadmap Phase 9, V2: "Schiffsstandort + Reise zwischen
-  /// Systemkörpern", V6: "Reisedauer/-kosten") — ausgelöst durch einen
-  /// Tap auf einen Körper in der Systemkarte. Weiterhin ohne echte
-  /// Fluganimation und ohne Auswirkung außerhalb der Karte selbst (kein
-  /// Andocken, keine neue Umgebung) — nur Standort-Buchhaltung plus
-  /// Zeitkosten, nicht die volle Flugmechanik. Gibt `true` bei Erfolg
-  /// zurück, `false` wenn [bodyId] nicht im aktuellen System existiert
-  /// oder das Schiff dort bereits steht.
+  /// Systemkörpern", V6: "Reisedauer/-kosten", V9: "Treibstoffverbrauch")
+  /// — ausgelöst durch einen Tap auf einen Körper in der Systemkarte.
+  /// Weiterhin ohne echte Fluganimation und ohne Auswirkung außerhalb der
+  /// Karte selbst (kein Andocken, keine neue Umgebung) — nur Standort-
+  /// Buchhaltung plus Zeit-/Treibstoffkosten, nicht die volle Flugmechanik.
+  /// Gibt `true` bei Erfolg zurück, `false` wenn [bodyId] nicht im
+  /// aktuellen System existiert, das Schiff dort bereits steht, oder nicht
+  /// genug Treibstoff für die Strecke im Schiffsfrachtraum liegt.
   bool travelTo(String bodyId) {
     if (bodyId == shipLocationBodyId.value) return false;
 
@@ -880,11 +933,26 @@ class VoidTraderGame extends FlameGame
     }
     if (target == null) return false;
 
+    var distance = 0.0;
     if (origin != null) {
       final dx = target.x - origin.x;
       final dy = target.y - origin.y;
-      final distance = math.sqrt(dx * dx + dy * dy);
+      distance = math.sqrt(dx * dx + dy * dy);
+    }
+
+    final fuelCost = (distance * _fuelPerDistanceUnit).ceil();
+    if (fuelCost > 0 && !ship.cargo.has(Resource.fuel, fuelCost)) {
+      feedbackMessage.value =
+          'Nicht genug Treibstoff für die Reise zu ${target.name} '
+          '($fuelCost benötigt, ${ship.cargo.count(Resource.fuel)} an Bord).';
+      return false;
+    }
+
+    if (origin != null) {
       dayNightCycle.update(distance * _travelSecondsPerDistanceUnit);
+    }
+    if (fuelCost > 0) {
+      ship.cargo.remove(Resource.fuel, fuelCost);
     }
 
     shipLocationBodyId.value = bodyId;
@@ -971,7 +1039,8 @@ class VoidTraderGame extends FlameGame
     }
 
     if (!inventory.has(Resource.credits, totalCost)) {
-      feedbackMessage.value = 'Nicht genug Credits für Vorräte ($totalCost benötigt).';
+      feedbackMessage.value =
+          'Nicht genug Credits für Vorräte ($totalCost benötigt).';
       return 0;
     }
 
@@ -999,8 +1068,10 @@ class VoidTraderGame extends FlameGame
     // Minendrohnen sind ohne abbaubares Nachbar-Tile nutzlos (Roadmap
     // Phase 8) — lieber die Platzierung verweigern, als eine Drohne zu
     // bauen, die von Anfang an nichts zu tun hat.
-    if (type == BuildingType.miningDrone && _findMinableNeighbor(tile) == null) {
-      feedbackMessage.value = 'Hier ist keine abbaubare Ressource in Reichweite.';
+    if (type == BuildingType.miningDrone &&
+        _findMinableNeighbor(tile) == null) {
+      feedbackMessage.value =
+          'Hier ist keine abbaubare Ressource in Reichweite.';
       return false;
     }
 
@@ -1041,7 +1112,11 @@ class VoidTraderGame extends FlameGame
   /// vollständige "Sammeln → Verarbeiten"-Stufe der Produktionskette.
   bool craftAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
+    final building = simulationWorld.buildingAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
     if (building != BuildingType.workbench) {
       feedbackMessage.value = 'Hier steht keine Werkbank.';
       return false;
@@ -1068,7 +1143,11 @@ class VoidTraderGame extends FlameGame
   /// war).
   int sellAllAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
+    final building = simulationWorld.buildingAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
     if (building != BuildingType.market) {
       feedbackMessage.value = 'Hier steht kein Marktkiosk.';
       return 0;
@@ -1087,6 +1166,17 @@ class VoidTraderGame extends FlameGame
     return totalEarned;
   }
 
+  /// Ob [resource] als "Fracht" zwischen Planet und Schiff über Landepad
+  /// ([loadCargoAt]/[unloadCargoAt]) transportiert werden kann. Credits
+  /// bleiben beim Spieler (keine physische Fracht, siehe [loadCargoAt]-
+  /// Doc). [Resource.fuel] bleibt seit Roadmap Phase 9 V9 aus demselben
+  /// Grund ausgenommen — es ist kein Frachtgut, sondern der Antrieb des
+  /// Schiffs selbst (siehe [travelTo]); ohne diese Ausnahme würde ein
+  /// simples "Fracht entladen" den Tank leerräumen, weil
+  /// [Ship.startingFuel] den Frachtraum nie leer sein lässt.
+  static bool _isTransportableCargo(Resource resource) =>
+      resource != Resource.credits && resource != Resource.fuel;
+
   /// Lädt alle Rohstoffe/Bauteile aus dem Spieler-Inventar ins Schiff,
   /// sofern unter [worldPosition] ein Landepad steht — "Ressourcen vom
   /// Planeten ins Schiff laden" aus Phase 7 (erste Oberfläche↔Orbit-
@@ -1095,7 +1185,11 @@ class VoidTraderGame extends FlameGame
   /// Landepad dort steht oder nichts zu laden war).
   int loadCargoAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
+    final building = simulationWorld.buildingAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
     if (building != BuildingType.landingPad) {
       feedbackMessage.value = 'Hier steht kein Landepad.';
       return 0;
@@ -1103,7 +1197,7 @@ class VoidTraderGame extends FlameGame
 
     var totalLoaded = 0;
     for (final resource in Resource.values) {
-      if (resource == Resource.credits) continue;
+      if (!_isTransportableCargo(resource)) continue;
       final amount = inventory.count(resource);
       if (amount <= 0) continue;
       inventory.remove(resource, amount);
@@ -1129,7 +1223,11 @@ class VoidTraderGame extends FlameGame
   /// dort steht oder nichts zu entladen war).
   int unloadCargoAt(Vector2 worldPosition) {
     final tile = _worldTileFor(worldPosition);
-    final building = simulationWorld.buildingAt(tile.x, tile.y, currentZLevel.value);
+    final building = simulationWorld.buildingAt(
+      tile.x,
+      tile.y,
+      currentZLevel.value,
+    );
     if (building != BuildingType.landingPad) {
       feedbackMessage.value = 'Hier steht kein Landepad.';
       return 0;
@@ -1137,7 +1235,7 @@ class VoidTraderGame extends FlameGame
 
     var totalUnloaded = 0;
     for (final resource in Resource.values) {
-      if (resource == Resource.credits) continue;
+      if (!_isTransportableCargo(resource)) continue;
       final amount = ship.cargo.count(resource);
       if (amount <= 0) continue;
       ship.cargo.remove(resource, amount);
@@ -1177,6 +1275,8 @@ class VoidTraderGame extends FlameGame
         return 'Bauteil';
       case Resource.credits:
         return 'Credits';
+      case Resource.fuel:
+        return 'Treibstoff';
     }
   }
 

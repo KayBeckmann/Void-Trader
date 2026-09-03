@@ -10,6 +10,7 @@ void main() {
         home: SystemMapPanel(
           system: defaultHomeSystem,
           currentBodyId: defaultHomeSystem.homePlanet.id,
+          shipFuel: 25,
           onSelectBody: (_) {},
           onSellCargo: () {},
           onBuySupplies: () {},
@@ -31,6 +32,7 @@ void main() {
         home: SystemMapPanel(
           system: defaultHomeSystem,
           currentBodyId: defaultHomeSystem.homePlanet.id,
+          shipFuel: 25,
           onSelectBody: (_) {},
           onSellCargo: () {},
           onBuySupplies: () {},
@@ -53,6 +55,7 @@ void main() {
         home: SystemMapPanel(
           system: defaultHomeSystem,
           currentBodyId: defaultHomeSystem.homePlanet.id,
+          shipFuel: 25,
           onSelectBody: (id) => selected = id,
           onSellCargo: () {},
           onBuySupplies: () {},
@@ -79,6 +82,7 @@ void main() {
           home: SystemMapPanel(
             system: defaultHomeSystem,
             currentBodyId: defaultHomeSystem.homePlanet.id,
+            shipFuel: 25,
             onSelectBody: (_) {},
             onSellCargo: () {},
             onBuySupplies: () {},
@@ -101,6 +105,7 @@ void main() {
           home: SystemMapPanel(
             system: defaultHomeSystem,
             currentBodyId: station.id,
+            shipFuel: 25,
             onSelectBody: (_) {},
             onSellCargo: () => sold = true,
             onBuySupplies: () {},
@@ -123,6 +128,7 @@ void main() {
           home: SystemMapPanel(
             system: defaultHomeSystem,
             currentBodyId: defaultHomeSystem.homePlanet.id,
+            shipFuel: 25,
             onSelectBody: (_) {},
             onSellCargo: () {},
             onBuySupplies: () {},
@@ -145,6 +151,7 @@ void main() {
           home: SystemMapPanel(
             system: defaultHomeSystem,
             currentBodyId: station.id,
+            shipFuel: 25,
             onSelectBody: (_) {},
             onSellCargo: () {},
             onBuySupplies: () => bought = true,
@@ -169,6 +176,7 @@ void main() {
           home: SystemMapPanel(
             system: defaultHomeSystem,
             currentBodyId: outpost.id,
+            shipFuel: 25,
             onSelectBody: (_) {},
             onSellCargo: () {},
             onBuySupplies: () {},
@@ -203,6 +211,7 @@ void main() {
         home: SystemMapPanel(
           system: system,
           currentBodyId: 'home',
+          shipFuel: 25,
           onSelectBody: (_) {},
           onSellCargo: () {},
           onBuySupplies: () {},
@@ -222,6 +231,7 @@ void main() {
         home: SystemMapPanel(
           system: system,
           currentBodyId: 'unbekannt',
+          shipFuel: 25,
           onSelectBody: (_) {},
           onSellCargo: () {},
           onBuySupplies: () {},
@@ -231,5 +241,25 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('Treibstoffanzeige (Roadmap Phase 9 V9)', () {
+    testWidgets('zeigt den übergebenen Treibstoffstand in der Titelzeile', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SystemMapPanel(
+            system: defaultHomeSystem,
+            currentBodyId: defaultHomeSystem.homePlanet.id,
+            shipFuel: 37,
+            onSelectBody: (_) {},
+            onSellCargo: () {},
+            onBuySupplies: () {},
+            onClose: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('37'), findsOneWidget);
+    });
   });
 }

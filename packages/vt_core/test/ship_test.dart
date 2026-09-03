@@ -3,9 +3,9 @@ import 'package:vt_core/vt_core.dart';
 
 void main() {
   group('Ship', () {
-    test('hat einen eigenen, leeren Frachtraum', () {
+    test('startet mit einer Treibstoff-Reserve, sonst leerem Frachtraum', () {
       final ship = Ship();
-      expect(ship.cargo.snapshot, isEmpty);
+      expect(ship.cargo.snapshot, {Resource.fuel: Ship.startingFuel});
     });
 
     test('Frachtraum ist unabhängig von anderen Inventaren', () {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flame/components.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -265,6 +267,103 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.travelTo Treibstoffverbrauch (Roadmap Phase 9 V9)', () {
+    test('Schiff startet mit einer Treibstoff-Reserve', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      expect(game.ship.cargo.count(Resource.fuel), Ship.startingFuel);
+    });
+
+    test('eine erfolgreiche Reise verbraucht Treibstoff', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final destination = game.currentSystem.bodies.firstWhere(
+        (body) => body.id != game.currentSystem.homePlanet.id,
+      );
+      final fuelBefore = game.ship.cargo.count(Resource.fuel);
+
+      final success = game.travelTo(destination.id);
+
+      expect(success, isTrue);
+      expect(game.ship.cargo.count(Resource.fuel), lessThan(fuelBefore));
+    });
+
+    test('eine weitere Reise verbraucht mehr Treibstoff als eine nahe', () async {
+      // Zwei getrennte Spiele, damit sich die Reisen nicht gegenseitig
+      // beeinflussen (beide starten identisch am Heimatplaneten), analog
+      // zum entsprechenden Test für die Reisedauer (Roadmap V6).
+      final gameNear = VoidTraderGame(seed: 1);
+      await gameNear.onLoad();
+      final near = gameNear.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier == 1.0,
+      );
+      gameNear.travelTo(near.id);
+      final consumedNear = Ship.startingFuel - gameNear.ship.cargo.count(Resource.fuel);
+
+      final gameFar = VoidTraderGame(seed: 1);
+      await gameFar.onLoad();
+      final far = gameFar.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station && body.priceMultiplier != 1.0,
+      );
+      gameFar.travelTo(far.id);
+      final consumedFar = Ship.startingFuel - gameFar.ship.cargo.count(Resource.fuel);
+
+      expect(consumedFar, greaterThan(consumedNear));
+    });
+
+    test('eine fehlgeschlagene Reise (unbekannter Körper) verbraucht keinen Treibstoff', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final fuelBefore = game.ship.cargo.count(Resource.fuel);
+
+      game.travelTo('kein-echter-koerper');
+
+      expect(game.ship.cargo.count(Resource.fuel), fuelBefore);
+    });
+
+    test('scheitert ohne genug Treibstoff und lässt Standort/Zeit/Tank unverändert', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      // Kompletten Tank abbauen, damit garantiert nicht genug für irgendeine
+      // Reise übrig ist, unabhängig vom genauen Distanz-/Kostenwert.
+      game.ship.cargo.remove(Resource.fuel, game.ship.cargo.count(Resource.fuel));
+      final locationBefore = game.shipLocationBodyId.value;
+      final timeBefore = game.dayNightCycle.dayNumber + game.dayNightCycle.timeOfDay;
+      final destination = game.currentSystem.bodies.firstWhere(
+        (body) => body.id != game.currentSystem.homePlanet.id,
+      );
+
+      final success = game.travelTo(destination.id);
+
+      expect(success, isFalse);
+      expect(game.shipLocationBodyId.value, locationBefore);
+      expect(game.dayNightCycle.dayNumber + game.dayNightCycle.timeOfDay, timeBefore);
+      expect(game.ship.cargo.count(Resource.fuel), 0);
+      expect(game.feedbackMessage.value, contains('Treibstoff'));
+    });
+
+    test('mit exakt genug Treibstoff gelingt die Reise und der Tank ist danach leer', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final destination = game.currentSystem.bodies.firstWhere(
+        (body) => body.id != game.currentSystem.homePlanet.id,
+      );
+      final origin = game.currentSystem.homePlanet;
+      final dx = destination.x - origin.x;
+      final dy = destination.y - origin.y;
+      final distance = math.sqrt(dx * dx + dy * dy);
+      final exactFuelCost = (distance * 0.1).ceil();
+      game.ship.cargo.remove(Resource.fuel, game.ship.cargo.count(Resource.fuel));
+      game.ship.cargo.add(Resource.fuel, exactFuelCost);
+
+      final success = game.travelTo(destination.id);
+
+      expect(success, isTrue);
+      expect(game.ship.cargo.count(Resource.fuel), 0);
+    });
+  });
+
   group('VoidTraderGame.buyStationSupplies (Roadmap Phase 9 V8)', () {
     test('scheitert ohne Andocken an einer Station', () async {
       final game = VoidTraderGame(seed: 1);
@@ -287,13 +386,22 @@ void main() {
         (body) => body.type == CelestialBodyType.station,
       );
       game.travelTo(station.id);
+      // Treibstoff ist beim Andocken bereits nicht mehr 0 (Ship.startingFuel
+      // abzüglich der Reisekosten, Roadmap V9) — für Treibstoff also relativ
+      // zum Stand vor dem Kauf prüfen statt auf einen absoluten Wert, anders
+      // als bei stone/ore/component, die im Schiff bei 0 starten.
+      final fuelBeforePurchase = game.ship.cargo.count(Resource.fuel);
 
       final spent = game.buyStationSupplies();
 
       expect(spent, greaterThan(0));
       expect(game.inventory.count(Resource.credits), 1000 - spent);
       for (final entry in stationBuyBundle.entries) {
-        expect(game.ship.cargo.count(entry.key), entry.value);
+        if (entry.key == Resource.fuel) {
+          expect(game.ship.cargo.count(Resource.fuel), fuelBeforePurchase + entry.value);
+        } else {
+          expect(game.ship.cargo.count(entry.key), entry.value);
+        }
       }
       expect(game.feedbackMessage.value, contains('Vorräte'));
     });

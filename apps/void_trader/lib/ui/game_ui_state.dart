@@ -43,9 +43,18 @@ class GameUiState {
   final int credits;
 
   /// Summe aller Fracht-Einheiten im Schiffslager (Roadmap HUD-11:
-  /// "Schiff/Fracht-Kurzstatus"), Credits ausgenommen — die liegen beim
-  /// Spieler, nicht im Frachtraum (siehe VoidTraderGame.loadCargoAt).
+  /// "Schiff/Fracht-Kurzstatus"), Credits UND Treibstoff ausgenommen —
+  /// Credits liegen beim Spieler, nicht im Frachtraum (siehe
+  /// VoidTraderGame.loadCargoAt); Treibstoff ist seit Roadmap Phase 9 V9
+  /// kein Frachtgut, sondern der Antrieb des Schiffs (siehe [shipFuel]
+  /// für dessen eigenen, separaten Stand).
   final int shipCargoCount;
+
+  /// Aktueller Treibstoffstand im Schiff (Roadmap Phase 9, V9:
+  /// "Treibstoffverbrauch") — separat von [shipCargoCount], damit das HUD
+  /// den Tankstand als eigene Größe zeigen kann statt ihn in der
+  /// allgemeinen Fracht-Summe zu verstecken.
+  final int shipFuel;
 
   /// Minimap-Raster um die Spielerposition (Roadmap HUD-13), Spieler ist
   /// per Konstruktion immer die Mitte — siehe [buildMinimapGrid].
@@ -81,6 +90,7 @@ class GameUiState {
     required this.zLevelLabel,
     required this.credits,
     required this.shipCargoCount,
+    required this.shipFuel,
     required this.minimapGrid,
     required this.facingX,
     required this.facingY,
@@ -112,7 +122,10 @@ class GameUiState {
       ),
       zLevelLabel: VoidTraderGame.zLevelLabel(game.currentZLevel.value),
       credits: game.inventory.count(Resource.credits),
-      shipCargoCount: game.ship.cargo.snapshot.values.fold(0, (sum, count) => sum + count),
+      shipCargoCount: game.ship.cargo.snapshot.entries
+          .where((entry) => entry.key != Resource.fuel)
+          .fold(0, (sum, entry) => sum + entry.value),
+      shipFuel: game.ship.cargo.count(Resource.fuel),
       minimapGrid: buildMinimapGrid(
         world: game.simulationWorld,
         explorationTracker: game.explorationTracker,

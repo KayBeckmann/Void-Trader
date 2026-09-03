@@ -17,4 +17,14 @@ enum Resource {
   /// separaten "Wallet" — Verkaufen ist damit einfach eine weitere
   /// Umwandlung wie [Inventory.craft].
   credits,
+
+  /// Schiffs-Treibstoff (Roadmap Phase 9, V9: "Treibstoffverbrauch").
+  /// Bewusst nur an Handelsstationen käuflich (siehe
+  /// `stationBuyPrices`/`stationBuyBundle` in vt_content), nicht auf dem
+  /// Planeten abbaubar oder zurückverkaufbar — echte Förderung/Raffinerie
+  /// sind ein späterer Schritt. Lebt ausschließlich im Schiffsfrachtraum
+  /// ([Ship.cargo]), nicht im Spieler-Inventar — siehe
+  /// `VoidTraderGame._isTransportableCargo`, das Treibstoff bewusst von
+  /// `loadCargoAt`/`unloadCargoAt` ausnimmt.
+  fuel,
 }

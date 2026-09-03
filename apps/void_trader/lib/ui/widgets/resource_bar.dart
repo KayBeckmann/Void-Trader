@@ -14,7 +14,11 @@ class ResourceBar extends StatelessWidget {
 
   const ResourceBar({super.key, required this.inventory});
 
-  static const _displayedResources = [Resource.stone, Resource.ore, Resource.component];
+  static const _displayedResources = [
+    Resource.stone,
+    Resource.ore,
+    Resource.component,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,10 @@ class _ResourceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: VtSpacing.md, vertical: VtSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: VtSpacing.md,
+        vertical: VtSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: VtColors.panelBackground,
         borderRadius: BorderRadius.circular(VtRadii.chip),
@@ -77,6 +84,8 @@ class _ResourceChip extends StatelessWidget {
         return Icons.settings_outlined;
       case Resource.credits:
         return Icons.paid_outlined;
+      case Resource.fuel:
+        return Icons.local_gas_station_outlined;
     }
   }
 
@@ -90,6 +99,8 @@ class _ResourceChip extends StatelessWidget {
         return VtColors.accentCyan;
       case Resource.credits:
         return VtColors.accentGreen;
+      case Resource.fuel:
+        return VtColors.accentRed;
     }
   }
 }

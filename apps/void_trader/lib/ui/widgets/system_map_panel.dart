@@ -23,6 +23,12 @@ const systemMapCanvasKey = Key('systemMapCanvas');
 class SystemMapPanel extends StatelessWidget {
   final StarSystem system;
   final String currentBodyId;
+
+  /// Aktueller Treibstoffstand des Schiffs (Roadmap Phase 9, V9:
+  /// "Treibstoffverbrauch") — hier statt in der allgemeinen ResourceBar
+  /// angezeigt, weil genau hier die Reiseentscheidung getroffen wird, die
+  /// Treibstoff kostet (siehe VoidTraderGame.travelTo).
+  final int shipFuel;
   final ValueChanged<String> onSelectBody;
   final VoidCallback onSellCargo;
   final VoidCallback onBuySupplies;
@@ -32,6 +38,7 @@ class SystemMapPanel extends StatelessWidget {
     super.key,
     required this.system,
     required this.currentBodyId,
+    required this.shipFuel,
     required this.onSelectBody,
     required this.onSellCargo,
     required this.onBuySupplies,
@@ -77,10 +84,31 @@ class SystemMapPanel extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  // Treibstoffstand direkt neben dem Titel (Roadmap V9) —
+                  // immer sichtbar, während hier Reiseentscheidungen
+                  // getroffen werden, die Treibstoff kosten.
+                  const Icon(
+                    Icons.local_gas_station_outlined,
+                    color: VtColors.accentRed,
+                    size: 18,
+                  ),
+                  const SizedBox(width: VtSpacing.xs),
+                  Text(
+                    '$shipFuel',
+                    style: const TextStyle(
+                      color: VtColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: VtSpacing.md),
                   IconButton(
                     onPressed: onClose,
                     tooltip: 'Schließen (M)',
-                    icon: const Icon(Icons.close, color: VtColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: VtColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -102,7 +130,10 @@ class SystemMapPanel extends StatelessWidget {
                   children: [
                     TextButton.icon(
                       onPressed: onBuySupplies,
-                      icon: const Icon(Icons.shopping_cart_outlined, color: VtColors.accentCyan),
+                      icon: const Icon(
+                        Icons.shopping_cart_outlined,
+                        color: VtColors.accentCyan,
+                      ),
                       label: Text(
                         station.priceMultiplier == 1.0
                             ? 'Vorräte kaufen'
@@ -112,7 +143,10 @@ class SystemMapPanel extends StatelessWidget {
                     ),
                     TextButton.icon(
                       onPressed: onSellCargo,
-                      icon: const Icon(Icons.sell_outlined, color: VtColors.accentGreen),
+                      icon: const Icon(
+                        Icons.sell_outlined,
+                        color: VtColors.accentGreen,
+                      ),
                       label: Text(
                         station.priceMultiplier == 1.0
                             ? 'Fracht verkaufen'
@@ -134,7 +168,10 @@ class SystemMapPanel extends StatelessWidget {
                   clipBehavior: Clip.antiAlias,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final size = Size(constraints.maxWidth, constraints.maxHeight);
+                      final size = Size(
+                        constraints.maxWidth,
+                        constraints.maxHeight,
+                      );
                       final positions = layoutSystemBodies(system.bodies, size);
                       return Stack(
                         children: [
@@ -181,7 +218,11 @@ class _BodyTapTarget extends StatelessWidget {
   final double radius;
   final VoidCallback onTap;
 
-  const _BodyTapTarget({required this.position, required this.radius, required this.onTap});
+  const _BodyTapTarget({
+    required this.position,
+    required this.radius,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -201,17 +242,23 @@ class _BodyTapTarget extends StatelessWidget {
 /// Bildschirmkoordinaten innerhalb von [canvasSize] ab — eine reine
 /// Funktion statt in Painter und Tap-Zielen doppelt zu rechnen, damit
 /// sichtbare Punkte und Trefferflächen immer exakt übereinstimmen.
-Map<String, Offset> layoutSystemBodies(List<CelestialBody> bodies, Size canvasSize) {
+Map<String, Offset> layoutSystemBodies(
+  List<CelestialBody> bodies,
+  Size canvasSize,
+) {
   if (bodies.isEmpty) return {};
 
   final maxExtent = bodies
       .map((b) => [b.x.abs(), b.y.abs()].reduce((a, b) => a > b ? a : b))
       .reduce((a, b) => a > b ? a : b);
-  final scale = maxExtent == 0 ? 1.0 : (canvasSize.shortestSide / 2 - 40) / maxExtent;
+  final scale = maxExtent == 0
+      ? 1.0
+      : (canvasSize.shortestSide / 2 - 40) / maxExtent;
   final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
 
   return {
-    for (final body in bodies) body.id: center + Offset(body.x * scale, body.y * scale),
+    for (final body in bodies)
+      body.id: center + Offset(body.x * scale, body.y * scale),
   };
 }
 
@@ -250,7 +297,10 @@ class _SystemMapPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      textPainter.paint(canvas, position + Offset(-textPainter.width / 2, radius + 4));
+      textPainter.paint(
+        canvas,
+        position + Offset(-textPainter.width / 2, radius + 4),
+      );
     }
   }
 
