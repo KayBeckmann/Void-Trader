@@ -16,6 +16,9 @@ class TopStatusBar extends StatelessWidget {
   final int credits;
   final int shipCargoCount;
 
+  /// Laderaum-Kapazität (Roadmap Phase 9 V10); `null` zeigt nur die Menge.
+  final int? shipCargoCapacity;
+
   const TopStatusBar({
     super.key,
     required this.isDay,
@@ -24,6 +27,7 @@ class TopStatusBar extends StatelessWidget {
     required this.zLevelLabel,
     required this.credits,
     required this.shipCargoCount,
+    this.shipCargoCapacity,
   });
 
   @override
@@ -58,7 +62,9 @@ class TopStatusBar extends StatelessWidget {
           const _SegmentDivider(),
           _StatusSegment(
             icon: Icons.local_shipping_outlined,
-            label: '$shipCargoCount Fracht',
+            label: shipCargoCapacity == null
+                ? '$shipCargoCount Fracht'
+                : '$shipCargoCount/$shipCargoCapacity Fracht',
             color: VtColors.accentCyan,
           ),
         ],

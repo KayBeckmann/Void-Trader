@@ -1038,6 +1038,18 @@ class VoidTraderGame extends FlameGame
       totalCost += (entry.value * price * current.priceMultiplier).round();
     }
 
+    // Treibstoff belegt keinen Laderaum (siehe [Ship.cargoUsed]); alles
+    // andere im Bündel schon — Kapazitätslimit, Roadmap Phase 9 V10.
+    final bundleCargo = stationBuyBundle.entries
+        .where((entry) => _isTransportableCargo(entry.key))
+        .fold(0, (sum, entry) => sum + entry.value);
+    if (bundleCargo > ship.freeCargoSpace) {
+      feedbackMessage.value =
+          'Laderaum voll: $bundleCargo Einheiten benötigt, '
+          '${ship.freeCargoSpace} frei.';
+      return 0;
+    }
+
     if (!inventory.has(Resource.credits, totalCost)) {
       feedbackMessage.value =
           'Nicht genug Credits für Vorräte ($totalCost benötigt).';
@@ -1195,10 +1207,16 @@ class VoidTraderGame extends FlameGame
       return 0;
     }
 
+    // Nur so viel laden, wie in den Laderaum passt (Roadmap Phase 9 V10);
+    // der Rest bleibt im Spieler-Inventar.
     var totalLoaded = 0;
+    var carriedOver = 0;
     for (final resource in Resource.values) {
       if (!_isTransportableCargo(resource)) continue;
-      final amount = inventory.count(resource);
+      final available = inventory.count(resource);
+      if (available <= 0) continue;
+      final amount = available.clamp(0, ship.freeCargoSpace);
+      carriedOver += available - amount;
       if (amount <= 0) continue;
       inventory.remove(resource, amount);
       ship.cargo.add(resource, amount);
@@ -1206,9 +1224,17 @@ class VoidTraderGame extends FlameGame
     }
 
     if (totalLoaded > 0) cargoEverLoaded = true;
-    feedbackMessage.value = totalLoaded > 0
-        ? '$totalLoaded Einheiten Fracht verladen.'
-        : 'Nichts zu verladen.';
+    if (totalLoaded == 0 && carriedOver > 0) {
+      feedbackMessage.value = 'Laderaum voll — nichts verladen.';
+    } else if (carriedOver > 0) {
+      feedbackMessage.value =
+          '$totalLoaded Einheiten verladen, Laderaum voll '
+          '($carriedOver bleiben zurück).';
+    } else {
+      feedbackMessage.value = totalLoaded > 0
+          ? '$totalLoaded Einheiten Fracht verladen.'
+          : 'Nichts zu verladen.';
+    }
     return totalLoaded;
   }
 

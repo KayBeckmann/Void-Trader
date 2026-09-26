@@ -8,6 +8,27 @@ void main() {
       expect(ship.cargo.snapshot, {Resource.fuel: Ship.startingFuel});
     });
 
+    test('Treibstoff und Credits belegen keinen Laderaum', () {
+      final ship = Ship();
+      ship.cargo.add(Resource.credits, 500);
+      ship.cargo.add(Resource.fuel, 100);
+
+      expect(ship.cargoUsed, 0);
+      expect(ship.freeCargoSpace, Ship.cargoCapacity);
+    });
+
+    test('Fracht belegt Laderaum, freier Platz sinkt und wird nie negativ', () {
+      final ship = Ship();
+      ship.cargo.add(Resource.stone, 20);
+      ship.cargo.add(Resource.ore, 5);
+
+      expect(ship.cargoUsed, 25);
+      expect(ship.freeCargoSpace, Ship.cargoCapacity - 25);
+
+      ship.cargo.add(Resource.stone, Ship.cargoCapacity);
+      expect(ship.freeCargoSpace, 0);
+    });
+
     test('Frachtraum ist unabhängig von anderen Inventaren', () {
       final ship = Ship();
       final playerInventory = Inventory();

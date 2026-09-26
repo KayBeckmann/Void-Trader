@@ -79,6 +79,7 @@ class GameHud extends StatelessWidget {
                     zLevelLabel: state.zLevelLabel,
                     credits: state.credits,
                     shipCargoCount: state.shipCargoCount,
+                    shipCargoCapacity: state.shipCargoCapacity,
                   ),
                 ),
                 const SizedBox(height: 6),

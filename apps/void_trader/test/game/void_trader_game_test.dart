@@ -406,6 +406,26 @@ void main() {
       expect(game.feedbackMessage.value, contains('Vorräte'));
     });
 
+    test('scheitert bei zu wenig Laderaum und lässt Credits/Fracht unverändert (Roadmap V10)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.credits, 1000);
+      final station = game.currentSystem.bodies.firstWhere(
+        (body) => body.type == CelestialBodyType.station,
+      );
+      game.travelTo(station.id);
+      game.ship.cargo.add(Resource.ore, Ship.cargoCapacity - 5);
+      final fuelBefore = game.ship.cargo.count(Resource.fuel);
+
+      final spent = game.buyStationSupplies();
+
+      expect(spent, 0);
+      expect(game.feedbackMessage.value, contains('Laderaum voll'));
+      expect(game.inventory.count(Resource.credits), 1000);
+      expect(game.ship.cargo.count(Resource.stone), 0);
+      expect(game.ship.cargo.count(Resource.fuel), fuelBefore);
+    });
+
     test('scheitert ohne genug Credits und lässt Fracht/Inventar unverändert', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
@@ -925,6 +945,40 @@ void main() {
       expect(game.ship.cargo.count(Resource.stone), 5);
       expect(game.inventory.count(Resource.credits), 50);
       expect(game.ship.cargo.count(Resource.credits), 0);
+    });
+
+    test('lädt nur bis zum Laderaum-Limit, Rest bleibt im Inventar (Roadmap V10)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.buildAt(game.player.position, BuildingType.landingPad);
+      game.ship.cargo.add(Resource.ore, Ship.cargoCapacity - 3);
+      game.inventory.add(Resource.stone, 10);
+
+      final loaded = game.loadCargoAt(game.player.position);
+
+      expect(loaded, 3);
+      expect(game.ship.cargoUsed, Ship.cargoCapacity);
+      expect(game.inventory.count(Resource.stone), 7);
+      expect(game.feedbackMessage.value, contains('Laderaum voll'));
+      expect(game.feedbackMessage.value, contains('7'));
+    });
+
+    test('lädt nichts bei vollem Laderaum', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      final cost = buildingDefinitionFor(BuildingType.landingPad).buildCost;
+      cost.forEach((resource, amount) => game.inventory.add(resource, amount));
+      game.buildAt(game.player.position, BuildingType.landingPad);
+      game.ship.cargo.add(Resource.ore, Ship.cargoCapacity);
+      game.inventory.add(Resource.stone, 4);
+
+      final loaded = game.loadCargoAt(game.player.position);
+
+      expect(loaded, 0);
+      expect(game.inventory.count(Resource.stone), 4);
+      expect(game.feedbackMessage.value, contains('Laderaum voll'));
     });
 
     test('liefert 0 ohne Landepad an der Position', () async {

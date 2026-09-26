@@ -69,4 +69,26 @@ void main() {
     expect(find.byIcon(Icons.paid_outlined), findsOneWidget);
     expect(find.byIcon(Icons.local_shipping_outlined), findsOneWidget);
   });
+
+  testWidgets('zeigt Fracht als belegt/Kapazität, wenn Kapazität bekannt ist (Roadmap V10)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: TopStatusBar(
+            isDay: true,
+            timeLabel: '12:00',
+            weather: Weather.clear,
+            zLevelLabel: 'Oberfläche',
+            credits: 0,
+            shipCargoCount: 12,
+            shipCargoCapacity: 50,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('12/50 Fracht'), findsOneWidget);
+  });
 }

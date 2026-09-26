@@ -50,6 +50,10 @@ class GameUiState {
   /// für dessen eigenen, separaten Stand).
   final int shipCargoCount;
 
+  /// Kapazität des Laderaums (Roadmap Phase 9, V10: "Frachtraum-
+  /// Kapazitätslimit") — fürs HUD als "belegt/Kapazität".
+  final int shipCargoCapacity;
+
   /// Aktueller Treibstoffstand im Schiff (Roadmap Phase 9, V9:
   /// "Treibstoffverbrauch") — separat von [shipCargoCount], damit das HUD
   /// den Tankstand als eigene Größe zeigen kann statt ihn in der
@@ -90,6 +94,7 @@ class GameUiState {
     required this.zLevelLabel,
     required this.credits,
     required this.shipCargoCount,
+    required this.shipCargoCapacity,
     required this.shipFuel,
     required this.minimapGrid,
     required this.facingX,
@@ -122,9 +127,8 @@ class GameUiState {
       ),
       zLevelLabel: VoidTraderGame.zLevelLabel(game.currentZLevel.value),
       credits: game.inventory.count(Resource.credits),
-      shipCargoCount: game.ship.cargo.snapshot.entries
-          .where((entry) => entry.key != Resource.fuel)
-          .fold(0, (sum, entry) => sum + entry.value),
+      shipCargoCount: game.ship.cargoUsed,
+      shipCargoCapacity: Ship.cargoCapacity,
       shipFuel: game.ship.cargo.count(Resource.fuel),
       minimapGrid: buildMinimapGrid(
         world: game.simulationWorld,
