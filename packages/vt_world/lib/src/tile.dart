@@ -163,12 +163,20 @@ extension TileMovement on TileType {
 /// docs/ARCHITECTURE.md: "Dart-Core zuerst").
 extension TileMining on TileType {
   /// Ob dieses Tile mit dem Graben/Abbauen-Werkzeug entfernt werden kann.
+  /// Wald liefert Holz (Kays Feedback 2026-09-27: "Holz sollte man auch
+  /// abbauen können") — anders als Fels/Erz bleibt danach kein Weg zurück,
+  /// sondern gerodete Wiese (siehe [minedResult]), auf der neuer Wald
+  /// nachwachsen kann (siehe `World.stepForestGrowth`).
   bool get isMinable =>
-      this == TileType.stone || this == TileType.rockWall || this == TileType.ore;
+      this == TileType.stone ||
+      this == TileType.rockWall ||
+      this == TileType.ore ||
+      this == TileType.forest;
 
   /// Tile-Typ, der nach erfolgreichem Abbau zurückbleibt.
   TileType get minedResult {
     assert(isMinable, 'minedResult nur für abbaubare Tiles ($this) aufrufen');
+    if (this == TileType.forest) return TileType.grass;
     return TileType.path;
   }
 }

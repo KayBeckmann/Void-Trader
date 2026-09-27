@@ -509,6 +509,30 @@ void main() {
       expect(game.inventory.count(Resource.stone), 0);
     });
 
+    test('fällt Wald und legt Holz statt Stein ins Inventar (Roadmap: Holz/Wald)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      final tileX = (game.player.position.x / VoidTraderGame.tileSize).floor();
+      final tileY = (game.player.position.y / VoidTraderGame.tileSize).floor();
+      game.simulationWorld.setTileAt(
+        tileX,
+        tileY,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.forest),
+      );
+
+      final success = game.digAt(game.player.position);
+
+      expect(success, isTrue);
+      expect(game.inventory.count(Resource.wood), 1);
+      expect(game.inventory.count(Resource.stone), 0);
+      expect(
+        game.simulationWorld.tileAt(tileX, tileY, vt_world.ZLevel.surface).type,
+        vt_world.TileType.grass,
+      );
+    });
+
     test('liefert false für nicht abbaubare Tiles und zählt nichts', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();

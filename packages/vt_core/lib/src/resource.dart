@@ -1,11 +1,17 @@
 /// Sammelbare/verarbeitbare Rohstoffe (Roadmap Phase 4: Produktionskette).
 ///
 /// Startet bewusst schmal mit dem, was aktuell tatsächlich gesammelt werden
-/// kann (Abbau von Stein/Erz, siehe vt_world). Holz (Bäume fällen) und
-/// Wasser (Fluid-Entnahme) kommen als eigene Interaktionen später dazu.
+/// kann (Abbau von Stein/Erz, siehe vt_world). Wasser (Fluid-Entnahme) kommt
+/// als eigene Interaktion später dazu.
 enum Resource {
   stone,
   ore,
+
+  /// Holz aus abgeholztem Wald (Roadmap: "Holz/Wald", Kays Feedback
+  /// 2026-09-27). Baumaterial für Hütte/Zaun/Leiter und Zutat für
+  /// Bauteile/Werkzeuge neben Stein/Erz — siehe `basicComponentRecipe` und
+  /// die entsprechenden `BuildingDefinition`s in vt_content.
+  wood,
 
   /// Verarbeitetes Bauteil (Roadmap Phase 4: Werkbank/Schmelzer-Ausgabe).
   /// Wird aus Rohstoffen gecraftet, nicht direkt in der Welt gesammelt.

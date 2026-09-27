@@ -17,6 +17,7 @@ class ResourceBar extends StatelessWidget {
   static const _displayedResources = [
     Resource.stone,
     Resource.ore,
+    Resource.wood,
     Resource.component,
   ];
 
@@ -80,6 +81,8 @@ class _ResourceChip extends StatelessWidget {
         return Icons.terrain;
       case Resource.ore:
         return Icons.diamond_outlined;
+      case Resource.wood:
+        return Icons.park_outlined;
       case Resource.component:
         return Icons.settings_outlined;
       case Resource.credits:
@@ -95,6 +98,8 @@ class _ResourceChip extends StatelessWidget {
         return VtColors.textSecondary;
       case Resource.ore:
         return VtColors.accentAmber;
+      case Resource.wood:
+        return VtColors.accentGreen;
       case Resource.component:
         return VtColors.accentCyan;
       case Resource.credits:

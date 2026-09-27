@@ -6,6 +6,7 @@ import 'package:vt_core/vt_core.dart';
 const Map<Resource, int> sellPrices = {
   Resource.stone: 1,
   Resource.ore: 3,
+  Resource.wood: 1,
   Resource.component: 8,
 };
 
@@ -18,6 +19,7 @@ const Map<Resource, int> sellPrices = {
 const Map<Resource, int> stationSellPrices = {
   Resource.stone: 2,
   Resource.ore: 5,
+  Resource.wood: 2,
   Resource.component: 12,
 };
 
@@ -35,6 +37,7 @@ const Map<Resource, int> stationSellPrices = {
 const Map<Resource, int> stationBuyPrices = {
   Resource.stone: 4,
   Resource.ore: 9,
+  Resource.wood: 4,
   Resource.component: 20,
   Resource.fuel: 2,
 };
@@ -49,6 +52,7 @@ const Map<Resource, int> stationBuyPrices = {
 const Map<Resource, int> stationBuyBundle = {
   Resource.stone: 5,
   Resource.ore: 5,
+  Resource.wood: 5,
   Resource.component: 2,
   Resource.fuel: 30,
 };

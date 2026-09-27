@@ -1362,6 +1362,8 @@ class VoidTraderGame extends FlameGame
         return Resource.stone;
       case vt_world.TileType.ore:
         return Resource.ore;
+      case vt_world.TileType.forest:
+        return Resource.wood;
       default:
         return null;
     }
@@ -1374,6 +1376,8 @@ class VoidTraderGame extends FlameGame
         return 'Stein';
       case Resource.ore:
         return 'Erz';
+      case Resource.wood:
+        return 'Holz';
       case Resource.component:
         return 'Bauteil';
       case Resource.credits:

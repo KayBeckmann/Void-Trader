@@ -29,7 +29,7 @@ void main() {
       const MaterialApp(home: Scaffold(body: ResourceBar(inventory: {}))),
     );
 
-    expect(find.text('0'), findsNWidgets(3));
+    expect(find.text('0'), findsNWidgets(4));
   });
 
   testWidgets('zeigt Credits nicht an — die stehen in TopStatusBar (Roadmap HUD-11/12)', (

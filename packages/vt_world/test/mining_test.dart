@@ -3,10 +3,15 @@ import 'package:vt_world/vt_world.dart';
 
 void main() {
   group('TileMining', () {
-    test('Stein, Felswand und Erz sind abbaubar', () {
+    test('Stein, Felswand, Erz und Wald sind abbaubar', () {
       expect(TileType.stone.isMinable, isTrue);
       expect(TileType.rockWall.isMinable, isTrue);
       expect(TileType.ore.isMinable, isTrue);
+      // Wald abbaubar seit Kays Feedback 2026-09-27 ("Holz/Wald sollte man
+      // auch abbauen können") — anders als Fels/Erz blockiert Wald die
+      // Bewegung nicht (siehe TileMovement.blocksMovement), ist aber
+      // trotzdem eine eigenständige Ressourcenquelle mit Ertrag Holz.
+      expect(TileType.forest.isMinable, isTrue);
     });
 
     test('Gras, Erde, Wasser etc. sind nicht abbaubar', () {
@@ -14,7 +19,6 @@ void main() {
         TileType.grass,
         TileType.dirt,
         TileType.water,
-        TileType.forest,
         TileType.farmland,
         TileType.path,
         TileType.empty,
@@ -24,9 +28,11 @@ void main() {
       }
     });
 
-    test('minedResult liefert path', () {
+    test('minedResult liefert path, außer bei Wald (liefert gerodete Wiese)', () {
       expect(TileType.stone.minedResult, TileType.path);
       expect(TileType.rockWall.minedResult, TileType.path);
+      expect(TileType.ore.minedResult, TileType.path);
+      expect(TileType.forest.minedResult, TileType.grass);
     });
 
     test('minedResult wirft für nicht abbaubare Tiles', () {

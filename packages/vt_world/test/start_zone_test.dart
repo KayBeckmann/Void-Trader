@@ -57,7 +57,13 @@ void main() {
         }
       }
 
-      final report = validateStartZone(world, minReachableTiles: 10);
+      // searchBudget bewusst auf die überschriebene 21×21-Fläche begrenzt
+      // (< 441 Tiles): ohne das Limit würde die Flood-Fill über den Rand
+      // hinaus ins natürlich generierte Gelände laufen, wo seit Wald
+      // abbaubar ist (Roadmap: Holz/Wald) mit hoher Wahrscheinlichkeit
+      // Wald angrenzt — der Test soll aber gezielt eine ressourcenfreie
+      // Fläche prüfen, kein Leck über ihren Rand hinaus.
+      final report = validateStartZone(world, minReachableTiles: 10, searchBudget: 200);
 
       expect(report.hasReachableMinableResource, isFalse);
       expect(report.isFair, isFalse);
