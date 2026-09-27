@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'tile.dart';
 import 'world.dart';
+import 'z_level.dart';
 
 /// Sichtzustand eines einzelnen Tiles (Roadmap FOW-01).
 enum VisibilityState {
@@ -20,27 +21,55 @@ enum VisibilityState {
 /// gerade aktuell sichtbar sind (Roadmap FOW-01: "Entdeckte Tiles bleiben
 /// im Savegame"). Bewusst reines Dart ohne Rendering-Bezug — der
 /// Fog-Renderer (FOW-04) liest nur [stateAt].
+///
+/// Getrennt je z-Ebene (Kays Feedback 2026-09-27: "Nur weil ich an der
+/// Oberfläche schon einen Weg gegangen bin, heißt das nicht, dass ich in
+/// den unteren Ebenen dort auch schon alles sehen kann") — dieselbe
+/// (x,y)-Koordinate auf Oberfläche und in einer Höhle sind zwei
+/// unabhängig zu entdeckende Orte. [z] hat überall den Default `0`
+/// ([ZLevel.surface]), damit reine Oberflächen-Tests/-Aufrufer ihn nicht
+/// überall explizit angeben müssen.
 class ExplorationTracker {
-  final Set<({int x, int y})> _discovered = {};
-  Set<({int x, int y})> _currentlyVisible = const {};
+  final Map<int, Set<({int x, int y})>> _discoveredByZ = {};
+  final Map<int, Set<({int x, int y})>> _currentlyVisibleByZ = {};
 
-  /// Ersetzt die aktuell sichtbare Menge (z.B. Ergebnis von
-  /// [computeFieldOfView]) und merkt sich alle neuen Tiles dauerhaft als
-  /// entdeckt.
-  void update(Set<({int x, int y})> visibleNow) {
-    _currentlyVisible = visibleNow;
-    _discovered.addAll(visibleNow);
+  /// Ersetzt die aktuell auf Ebene [z] sichtbare Menge (z.B. Ergebnis von
+  /// [computeFieldOfView]) und merkt sich alle neuen Tiles dort dauerhaft
+  /// als entdeckt.
+  ///
+  /// Leert dabei die "aktuell sichtbar"-Menge JEDER ANDEREN Ebene: der
+  /// Spieler kann immer nur auf einer z-Ebene gleichzeitig stehen, "aktuell
+  /// sichtbar" darf deshalb nie an einer Ebene kleben bleiben, die er
+  /// bereits verlassen hat — sonst würde eine beim Verlassen zufällig
+  /// zuletzt berechnete Sicht dort für immer "visible" bleiben, obwohl dort
+  /// niemand mehr steht, um es zu sehen. Bereits Entdecktes ([_discoveredByZ])
+  /// bleibt davon unberührt, nur die MOMENTANE Sichtbarkeit wird
+  /// zurückgesetzt (fällt auf [VisibilityState.seenButNotVisible]).
+  void update(Set<({int x, int y})> visibleNow, {int z = ZLevel.surface}) {
+    _currentlyVisibleByZ
+      ..clear()
+      ..[z] = visibleNow;
+    (_discoveredByZ[z] ??= {}).addAll(visibleNow);
   }
 
-  VisibilityState stateAt(int x, int y) {
+  VisibilityState stateAt(int x, int y, {int z = ZLevel.surface}) {
     final tile = (x: x, y: y);
-    if (_currentlyVisible.contains(tile)) return VisibilityState.visible;
-    if (_discovered.contains(tile)) return VisibilityState.seenButNotVisible;
+    if ((_currentlyVisibleByZ[z] ?? const {}).contains(tile)) {
+      return VisibilityState.visible;
+    }
+    if ((_discoveredByZ[z] ?? const {}).contains(tile)) {
+      return VisibilityState.seenButNotVisible;
+    }
     return VisibilityState.unseen;
   }
 
-  int get discoveredCount => _discovered.length;
-  Set<({int x, int y})> get currentlyVisible => _currentlyVisible;
+  /// Anzahl entdeckter Tiles auf Ebene [z] (Default: Oberfläche).
+  int discoveredCountAt({int z = ZLevel.surface}) =>
+      (_discoveredByZ[z] ?? const {}).length;
+
+  /// Aktuell sichtbare Tiles auf Ebene [z] (Default: Oberfläche).
+  Set<({int x, int y})> currentlyVisibleAt({int z = ZLevel.surface}) =>
+      _currentlyVisibleByZ[z] ?? const {};
 }
 
 /// Berechnet die aktuell sichtbaren Welt-Tile-Koordinaten von [originX]/

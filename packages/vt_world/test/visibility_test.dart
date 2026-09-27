@@ -6,7 +6,7 @@ void main() {
     test('alles ist unseen, solange nichts entdeckt wurde', () {
       final tracker = ExplorationTracker();
       expect(tracker.stateAt(0, 0), VisibilityState.unseen);
-      expect(tracker.discoveredCount, 0);
+      expect(tracker.discoveredCountAt(), 0);
     });
 
     test('update() macht Tiles visible und merkt sie sich als entdeckt', () {
@@ -16,7 +16,7 @@ void main() {
       expect(tracker.stateAt(0, 0), VisibilityState.visible);
       expect(tracker.stateAt(1, 0), VisibilityState.visible);
       expect(tracker.stateAt(5, 5), VisibilityState.unseen);
-      expect(tracker.discoveredCount, 2);
+      expect(tracker.discoveredCountAt(), 2);
     });
 
     test('Tiles, die nicht mehr sichtbar sind, bleiben als seenButNotVisible bekannt', () {
@@ -28,8 +28,40 @@ void main() {
       expect(tracker.stateAt(1, 0), VisibilityState.seenButNotVisible);
       expect(tracker.stateAt(9, 9), VisibilityState.unseen);
       // Entdeckt bleibt entdeckt, auch wenn gerade nicht sichtbar.
-      expect(tracker.discoveredCount, 2);
+      expect(tracker.discoveredCountAt(), 2);
     });
+
+    test(
+      'Ebenen sind unabhängig voneinander (Kays Feedback 2026-09-27): '
+      'ein auf der Oberfläche entdecktes Tile ist in einer Höhle weiter unseen',
+      () {
+        final tracker = ExplorationTracker();
+        tracker.update({(x: 5, y: 5)}, z: ZLevel.surface);
+
+        expect(tracker.stateAt(5, 5, z: ZLevel.surface), VisibilityState.visible);
+        expect(tracker.stateAt(5, 5, z: ZLevel.caves), VisibilityState.unseen);
+        expect(tracker.discoveredCountAt(z: ZLevel.surface), 1);
+        expect(tracker.discoveredCountAt(z: ZLevel.caves), 0);
+      },
+    );
+
+    test(
+      'update() auf einer neuen Ebene setzt "aktuell sichtbar" alter Ebenen zurück, '
+      'lässt deren Entdecktes aber unangetastet (Spieler kann nur auf einer Ebene stehen)',
+      () {
+        final tracker = ExplorationTracker();
+        tracker.update({(x: 0, y: 0)}, z: ZLevel.surface);
+        expect(tracker.stateAt(0, 0, z: ZLevel.surface), VisibilityState.visible);
+
+        // Ebenenwechsel (z.B. Höhleneingang) — die Oberfläche bleibt
+        // entdeckt, ist aber nicht mehr "aktuell sichtbar", sobald der
+        // Spieler dort gar nicht mehr steht.
+        tracker.update({(x: 5, y: 5)}, z: ZLevel.caves);
+
+        expect(tracker.stateAt(0, 0, z: ZLevel.surface), VisibilityState.seenButNotVisible);
+        expect(tracker.stateAt(5, 5, z: ZLevel.caves), VisibilityState.visible);
+      },
+    );
   });
 
   group('computeFieldOfView (Roadmap FOW-02)', () {

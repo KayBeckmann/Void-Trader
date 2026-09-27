@@ -217,5 +217,44 @@ void main() {
         vt_world.VisibilityState.seenButNotVisible,
       );
     });
+
+    test(
+      'Sichtbarkeit ist je z-Ebene getrennt (Kays Feedback 2026-09-27): '
+      'auf der Oberfläche entdeckte Koordinaten sind in einer Höhle weiter unseen',
+      () async {
+        final game = VoidTraderGame(seed: 1);
+        await game.onLoad();
+        // Oberfläche entdecken.
+        game.update(0.2);
+        final tile = (
+          x: (game.player.position.x / VoidTraderGame.tileSize).floor(),
+          y: (game.player.position.y / VoidTraderGame.tileSize).floor(),
+        );
+        expect(
+          game.explorationTracker.stateAt(tile.x, tile.y, z: vt_world.ZLevel.surface),
+          vt_world.VisibilityState.visible,
+        );
+
+        // Dieselbe (x,y)-Koordinate in den Höhlen wurde nie besucht.
+        expect(
+          game.explorationTracker.stateAt(tile.x, tile.y, z: vt_world.ZLevel.caves),
+          vt_world.VisibilityState.unseen,
+        );
+
+        // Jetzt tatsächlich in die Höhlen wechseln und dort dieselbe Stelle
+        // entdecken — darf die Oberflächen-Sicht nicht rückwirkend ändern.
+        game.currentZLevel.value = vt_world.ZLevel.caves;
+        game.update(0.2);
+
+        expect(
+          game.explorationTracker.stateAt(tile.x, tile.y, z: vt_world.ZLevel.caves),
+          vt_world.VisibilityState.visible,
+        );
+        expect(
+          game.explorationTracker.stateAt(tile.x, tile.y, z: vt_world.ZLevel.surface),
+          vt_world.VisibilityState.seenButNotVisible,
+        );
+      },
+    );
   });
 }

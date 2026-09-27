@@ -12,6 +12,7 @@ void main() {
         explorationTracker: tracker,
         centerProvider: () => Vector2.zero(),
         viewRadiusTiles: 4,
+        zProvider: () => 0,
       );
 
       expect(component.viewRadiusTiles, 4);
@@ -26,6 +27,7 @@ void main() {
           explorationTracker: tracker,
           centerProvider: () => Vector2.zero(),
           viewRadiusTiles: 0,
+          zProvider: () => 0,
         ),
         throwsA(isA<AssertionError>()),
       );
@@ -37,6 +39,7 @@ void main() {
         explorationTracker: tracker,
         centerProvider: () => Vector2.zero(),
         viewRadiusTiles: 2,
+        zProvider: () => 0,
       );
 
       // render() ohne echtes Canvas ist in einem reinen Unit-Test nicht

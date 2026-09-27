@@ -70,7 +70,7 @@ List<List<MinimapCell>> buildMinimapGrid({
     final worldY = centerY - radiusTiles + dy;
     return List.generate(radiusTiles * 2 + 1, (dx) {
       final worldX = centerX - radiusTiles + dx;
-      final visibility = explorationTracker.stateAt(worldX, worldY);
+      final visibility = explorationTracker.stateAt(worldX, worldY, z: z);
       if (visibility == vt_world.VisibilityState.unseen) {
         return const MinimapCell(
           terrain: MinimapTerrain.unknown,

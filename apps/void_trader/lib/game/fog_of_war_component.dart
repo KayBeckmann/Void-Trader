@@ -20,10 +20,17 @@ class FogOfWarComponent extends PositionComponent {
   final int viewRadiusTiles;
   final double tileSize;
 
+  /// Aktuelle z-Ebene (Roadmap MOV-03/Kays Feedback 2026-09-27: Fog of War
+  /// getrennt je Ebene) — derselbe Provider wie bei [TileSpriteMapComponent.
+  /// zProvider]/[DebugMapComponent.zProvider], damit Rendering und
+  /// Exploration-Abfrage nie auseinanderlaufen.
+  final int Function() zProvider;
+
   FogOfWarComponent({
     required this.explorationTracker,
     required this.centerProvider,
     required this.viewRadiusTiles,
+    required this.zProvider,
     this.tileSize = 32,
   }) : assert(viewRadiusTiles > 0, 'viewRadiusTiles muss positiv sein');
 
@@ -38,12 +45,13 @@ class FogOfWarComponent extends PositionComponent {
     final originX = centerTileX - viewRadiusTiles;
     final originY = centerTileY - viewRadiusTiles;
     final span = viewRadiusTiles * 2;
+    final z = zProvider();
 
     for (var dy = 0; dy <= span; dy++) {
       for (var dx = 0; dx <= span; dx++) {
         final worldX = originX + dx;
         final worldY = originY + dy;
-        final state = explorationTracker.stateAt(worldX, worldY);
+        final state = explorationTracker.stateAt(worldX, worldY, z: z);
         if (state == vt_world.VisibilityState.visible) continue;
 
         final rect = Rect.fromLTWH(

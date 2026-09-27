@@ -276,6 +276,7 @@ class VoidTraderGame extends FlameGame
       explorationTracker: explorationTracker,
       centerProvider: () => player.position,
       viewRadiusTiles: _viewRadius,
+      zProvider: () => currentZLevel.value,
       tileSize: tileSize,
     );
 
@@ -871,7 +872,7 @@ class VoidTraderGame extends FlameGame
       facingY: player.facingDirection.y,
       viewRadius: _viewRadius,
     );
-    explorationTracker.update(visible);
+    explorationTracker.update(visible, z: currentZLevel.value);
   }
 
   /// Simuliert einen Schritt für jede platzierte Minendrohne (Roadmap
