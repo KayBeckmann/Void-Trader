@@ -560,6 +560,16 @@ class VoidTraderGame extends FlameGame
     }
   }
 
+  /// Pixel-Position des Nachbar-Tiles, dem der Spieler gerade zugewandt ist
+  /// (Roadmap-Bugfix: Abbauen per Leertaste). Abbaubare Tiles (Fels/Erz)
+  /// blockieren per Definition die Bewegung ([TileMovement.blocksMovement]),
+  /// der Spieler kann also nie selbst darauf stehen — Abbauen per Leertaste
+  /// muss deshalb auf das Tile in Blickrichtung zielen statt auf
+  /// [player.position] selbst, sonst schlägt es immer fehl, egal wie nah
+  /// man an einer Erzader steht. Klick/Tap ist davon nicht betroffen, der
+  /// zielt schon immer auf die angeklickte Position (siehe [onTapDown]).
+  Vector2 _facedTilePosition() => player.position + player.facingDirection * tileSize;
+
   /// Menschenlesbarer Hinweis, was der Spieler an seiner aktuellen Position
   /// gerade tun kann (fürs HUD) — "der Spieler muss mit der Umwelt
   /// interagieren können" heißt auch: er muss sehen, *womit* gerade.
@@ -587,21 +597,32 @@ class VoidTraderGame extends FlameGame
       return '[L] Fracht laden';
     }
 
+    // Ab hier können mehrere Hinweise gleichzeitig zutreffen (z.B. Abbauen
+    // UND Höhlenschacht, wenn der Spieler auf einem Höhleneingang steht und
+    // dabei eine Erzader anschaut) — deshalb sammeln statt beim ersten
+    // Treffer zurückzukehren, sonst würde ein Hinweis den anderen
+    // verstecken.
     final playerTile = simulationWorld.tileAt(tile.x, tile.y, z);
-    if (playerTile.type.isMinable) return '[Leertaste] Abbauen';
-    if (playerTile.waterLevel > 0) return '[R] Abdichten';
+    final hints = <String>[];
+
+    // Abbaubare Tiles prüfen wir am Nachbar-Tile in Blickrichtung, nicht am
+    // eigenen Standort (siehe [_facedTilePosition]) — der Spieler kann auf
+    // einer Erzader/Felswand nie selbst stehen.
+    final facedTile = _worldTileFor(_facedTilePosition());
+    if (simulationWorld.tileAt(facedTile.x, facedTile.y, z).type.isMinable) {
+      hints.add('[Leertaste] Abbauen');
+    }
+    if (playerTile.waterLevel > 0) hints.add('[R] Abdichten');
 
     if (playerTile.type == vt_world.TileType.caveEntrance) {
       final shaftIndex = _caveShaftLevels.indexOf(z);
-      final hints = <String>[];
       if (shaftIndex != -1 && shaftIndex < _caveShaftLevels.length - 1) {
         hints.add('[F] Hinabsteigen');
       }
       if (shaftIndex > 0) hints.add('[G] Hinaufsteigen');
-      if (hints.isNotEmpty) return hints.join(' · ');
     }
 
-    return null;
+    return hints.isEmpty ? null : hints.join(' · ');
   }
 
   /// Erzeugt einen [Npc] + zugehörige [NpcComponent] an einer Welt-Tile-
@@ -864,7 +885,10 @@ class VoidTraderGame extends FlameGame
   /// funktionierende Bauwege zu pflegen.
   void _handleAction(LogicalKeyboardKey key, Vector2 position) {
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyE) {
-      digAt(position);
+      // Bewusst NICHT `position` (== Spielerstandort): abbaubare Tiles
+      // blockieren die Bewegung, der Spieler kann dort also nie selbst
+      // stehen. Siehe [_facedTilePosition].
+      digAt(_facedTilePosition());
     } else if (key == LogicalKeyboardKey.digit1) {
       _selectBuildTool(BuildingType.wall);
     } else if (key == LogicalKeyboardKey.digit2) {

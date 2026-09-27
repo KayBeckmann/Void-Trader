@@ -442,6 +442,30 @@ void main() {
   });
 
   group('VoidTraderGame.digAt', () {
+    test(
+      'Leertaste baut das Tile in Blickrichtung ab, nicht den eigenen Standort '
+      '(Regressionstest für Kays Screenshot 2026-09-27)',
+      () async {
+        final game = VoidTraderGame(seed: 1);
+        await game.onLoad();
+        // Standardspawn (0,0), Standard-Blickrichtung nach unten (0,1).
+        game.simulationWorld.setTileAt(
+          0,
+          1,
+          vt_world.ZLevel.surface,
+          const vt_world.Tile(vt_world.TileType.ore),
+        );
+
+        game.player.onAction?.call(LogicalKeyboardKey.space, game.player.position);
+
+        expect(game.inventory.count(Resource.ore), 1);
+        expect(
+          game.simulationWorld.tileAt(0, 1, vt_world.ZLevel.surface).type,
+          vt_world.TileType.path,
+        );
+      },
+    );
+
     test('baut ein Stein-Tile ab und legt Stein ins Inventar', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
@@ -1047,9 +1071,31 @@ void main() {
       expect(game.currentInteractionHint(), isNull);
     });
 
-    test('zeigt Abbau-Hinweis auf abbaubarem Tile', () async {
+    test('zeigt Abbau-Hinweis für das Tile in Blickrichtung, nicht den eigenen Standort', () async {
+      // Regressionstest für einen echten Bug (Kays Screenshot 2026-09-27):
+      // abbaubare Tiles blockieren die Bewegung, der Spieler kann dort nie
+      // selbst stehen — der Hinweis (und Leertaste, siehe digAt-Tests
+      // unten) muss also das Nachbar-Tile in Blickrichtung prüfen.
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
+      // Standardspawn (0,0), Standard-Blickrichtung nach unten (0,1) —
+      // siehe PlayerComponent.facingDirection.
+      game.simulationWorld.setTileAt(
+        0,
+        1,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.stone),
+      );
+
+      expect(game.currentInteractionHint(), contains('Abbauen'));
+    });
+
+    test('zeigt keinen Abbau-Hinweis, wenn nur der eigene Standort abbaubar wäre', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      // Kann in echtem Gameplay nie vorkommen (Kollision verhindert es),
+      // dient hier nur als Beleg, dass wirklich das Blickrichtungs-Tile
+      // geprüft wird, nicht der eigene Standort.
       game.simulationWorld.setTileAt(
         0,
         0,
@@ -1057,7 +1103,7 @@ void main() {
         const vt_world.Tile(vt_world.TileType.stone),
       );
 
-      expect(game.currentInteractionHint(), contains('Abbauen'));
+      expect(game.currentInteractionHint(), isNot(contains('Abbauen')));
     });
 
     test('zeigt Craft-Hinweis an einer Werkbank', () async {
