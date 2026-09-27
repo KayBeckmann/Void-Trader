@@ -76,6 +76,13 @@ class VoidTraderGame extends FlameGame
   /// Designregel Phase 3) statt jeden Tick das ganze Fenster neu zu bauen.
   static const double _fluidTickInterval = 0.5;
 
+  /// Sekunden zwischen zwei Waldwachstums-Schritten (Roadmap: "Wald sollte
+  /// sich regenerieren und ausbreiten können", Kays Feedback 2026-09-27).
+  /// Deutlich seltener als der Fluid-Tick — Waldwachstum ist ein
+  /// Hintergrundprozess über Minuten/Stunden, keine Simulation, die auf
+  /// Sekunden reagieren muss.
+  static const double _forestGrowthTickInterval = 5.0;
+
   /// Sekunden zwischen zwei HUD-Aktualisierungen. Das Flutter-Overlay muss
   /// nicht jeden Frame neu bauen, nur oft genug für ein reaktionsfreudiges
   /// Interface.
@@ -145,6 +152,13 @@ class VoidTraderGame extends FlameGame
 
   double _fluidTickAccumulator = 0;
   double _hudTickAccumulator = 0;
+  double _forestGrowthTickAccumulator = 0;
+
+  /// Zählt jeden [_tickForestGrowth]-Aufruf hoch — Eingabe für
+  /// [vt_world.World.stepForestGrowth]s [tick]-Parameter, damit
+  /// aufeinanderfolgende Aufrufe unterschiedliche, aber deterministische
+  /// Zufallsmuster ziehen (siehe dortige Doc).
+  int _forestGrowthTick = 0;
 
   /// Spieler-Tile im letzten Frame (Roadmap MOV-03) — vergleicht sich jeden
   /// Frame gegen die aktuelle Position, um eine Rampe nur EINMAL beim
@@ -351,6 +365,12 @@ class VoidTraderGame extends FlameGame
       _tickPumps();
     }
 
+    _forestGrowthTickAccumulator += dt;
+    if (_forestGrowthTickAccumulator >= _forestGrowthTickInterval) {
+      _forestGrowthTickAccumulator -= _forestGrowthTickInterval;
+      _tickForestGrowth();
+    }
+
     _fluidTickAccumulator += dt;
     if (_fluidTickAccumulator < _fluidTickInterval) return;
     _fluidTickAccumulator -= _fluidTickInterval;
@@ -361,6 +381,24 @@ class VoidTraderGame extends FlameGame
       originY: playerTile.y - _viewRadius,
       width: _viewRadius * 2 + 1,
       height: _viewRadius * 2 + 1,
+    );
+  }
+
+  /// Ein Schritt Waldregeneration/-ausbreitung im sichtbaren Fenster um den
+  /// Spieler (Roadmap: "Wald sollte sich regenerieren und ausbreiten
+  /// können") — periodisch statt jeden Frame, siehe
+  /// [_forestGrowthTickInterval]. Nur auf der aktuellen z-Ebene: Wald gibt
+  /// es nur auf der Oberfläche, ein Wachstumsschritt in einer Höhle wäre
+  /// wirkungslos (kein Gras dort), aber unnötige Arbeit.
+  void _tickForestGrowth() {
+    if (currentZLevel.value != vt_world.ZLevel.surface) return;
+    final playerTile = _worldTileFor(player.position);
+    simulationWorld.stepForestGrowth(
+      originX: playerTile.x - _viewRadius,
+      originY: playerTile.y - _viewRadius,
+      width: _viewRadius * 2 + 1,
+      height: _viewRadius * 2 + 1,
+      tick: _forestGrowthTick++,
     );
   }
 

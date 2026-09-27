@@ -33,6 +33,7 @@ class World {
   static const int _caveEntranceChannel = 0x4000;
   static const int _caveOpennessChannel = 0x5000;
   static const int _oreChannel = 0x6000;
+  static const int _forestGrowthChannel = 0x7000;
 
   /// Ab diesem Noise-Wert entsteht ein Höhleneingang. Hoch angesetzt, damit
   /// Eingänge selten und kleinflächig bleiben statt große Landstriche zu
@@ -46,6 +47,14 @@ class World {
   /// Ab diesem Noise-Wert liegt in einer (nicht ausgehöhlten) Zelle eine
   /// Erzader. Hoch angesetzt, damit Erz selten bleibt.
   static const double _oreThreshold = 0.88;
+
+  /// Ab diesem Noise-Wert wächst an einer Wiesen-Zelle neuer Wald nach
+  /// (Roadmap: "Wald sollte sich regenerieren und ausbreiten können", Kays
+  /// Feedback 2026-09-27). Sehr hoch angesetzt: [stepForestGrowth] wird oft
+  /// aufgerufen (siehe VoidTraderGame._forestGrowthTickInterval), pro
+  /// Kandidat-Tile und Aufruf soll trotzdem nur eine kleine Chance
+  /// bestehen, sonst wächst gerodeter Wald unrealistisch schnell nach.
+  static const double _forestGrowthThreshold = 0.985;
 
   /// Radius (Chebyshev-Abstand, in Tiles) der sicheren Startzone um den
   /// Weltursprung. Innerhalb garantiert begehbare Wiese ohne Wasser/
@@ -88,6 +97,7 @@ class World {
   late final NoiseField _caveEntranceNoise;
   late final NoiseField _caveOpennessNoise;
   late final NoiseField _oreNoise;
+  late final NoiseField _forestGrowthNoise;
 
   World(this.seed) {
     _heightNoise = NoiseField(seed: seed ^ _heightChannel, scale: 40);
@@ -96,6 +106,11 @@ class World {
     _caveEntranceNoise = NoiseField(seed: seed ^ _caveEntranceChannel, scale: 8);
     _caveOpennessNoise = NoiseField(seed: seed ^ _caveOpennessChannel, scale: 10);
     _oreNoise = NoiseField(seed: seed ^ _oreChannel, scale: 6);
+    // scale klein (2): Wachstums-Chancen sollen sich zwischen benachbarten
+    // Kandidat-Tiles UND zwischen aufeinanderfolgenden Ticks (siehe
+    // zOffset in stepForestGrowth) deutlich unterscheiden, statt großer
+    // glatter Flächen wie bei den Biom-Karten.
+    _forestGrowthNoise = NoiseField(seed: seed ^ _forestGrowthChannel, scale: 2);
   }
 
   /// Liefert den Chunk an [coord], generiert ihn deterministisch bei Bedarf.
@@ -246,6 +261,65 @@ class World {
   /// tatsächlich eines stand.
   bool removeBuildingAt(int worldX, int worldY, int z) =>
       _buildings.remove((x: worldX, y: worldY, z: z)) != null;
+
+  /// Ein Schritt Waldregeneration/-ausbreitung (Roadmap: "Wald sollte sich
+  /// regenerieren und ausbreiten können", Kays Feedback 2026-09-27) für ein
+  /// rechteckiges Fenster ab ([originX], [originY]) — budgetiert wie
+  /// [reachableTilesFrom]/die Fluid-Simulation, nicht die gesamte Welt pro
+  /// Aufruf. Jede begehbare Wiese ([TileType.grass]) ohne Gebäude, die
+  /// mindestens ein Wald-Tile als Nachbarn hat, bekommt eine kleine Chance,
+  /// selbst zu Wald zu werden — dasselbe Muster deckt sowohl "gerodeter
+  /// Wald wächst nach" als auch "Wald breitet sich in offenes Grasland aus"
+  /// ab, ohne zwei getrennte Systeme zu brauchen.
+  ///
+  /// [tick] muss bei jedem Aufruf hochgezählt werden (siehe
+  /// VoidTraderGame._tickForestGrowth) — er wählt über [NoiseField.zOffset]
+  /// ein neues, aber deterministisches Zufallsmuster, sonst würde ein und
+  /// dasselbe Tile bei jedem Aufruf entweder immer wachsen oder nie.
+  /// Bewusst zweiphasig (erst alle Kandidaten sammeln, dann erst
+  /// schreiben): sonst könnte neu gewachsener Wald in derselben Runde schon
+  /// wieder als "Nachbar" für das nächste Kandidat-Tile zählen und eine
+  /// Kettenreaktion auslösen, die mit einem einzelnen Tick nichts mehr zu
+  /// tun hätte.
+  void stepForestGrowth({
+    required int originX,
+    required int originY,
+    required int width,
+    required int height,
+    required int tick,
+    int z = ZLevel.surface,
+  }) {
+    final candidates = <({int x, int y})>[];
+    for (var dy = 0; dy < height; dy++) {
+      for (var dx = 0; dx < width; dx++) {
+        final worldX = originX + dx;
+        final worldY = originY + dy;
+        if (_isInSpawnSafeZone(worldX, worldY)) continue;
+        if (tileAt(worldX, worldY, z).type != TileType.grass) continue;
+        if (buildingAt(worldX, worldY, z) != null) continue;
+        if (!_hasForestNeighbor(worldX, worldY, z)) continue;
+        candidates.add((x: worldX, y: worldY));
+      }
+    }
+
+    for (final candidate in candidates) {
+      final growthValue = _forestGrowthNoise.valueAt(
+        candidate.x,
+        candidate.y,
+        zOffset: tick * 991.0,
+      );
+      if (growthValue > _forestGrowthThreshold) {
+        setTileAt(candidate.x, candidate.y, z, const Tile(TileType.forest));
+      }
+    }
+  }
+
+  bool _hasForestNeighbor(int worldX, int worldY, int z) {
+    for (final neighbor in _fourNeighbors((x: worldX, y: worldY))) {
+      if (tileAt(neighbor.x, neighbor.y, z).type == TileType.forest) return true;
+    }
+    return false;
+  }
 
   static ChunkCoord chunkCoordForWorldTile(int worldX, int worldY) {
     return ChunkCoord(_floorDiv(worldX), _floorDiv(worldY));

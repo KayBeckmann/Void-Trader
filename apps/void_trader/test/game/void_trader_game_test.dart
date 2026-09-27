@@ -629,6 +629,47 @@ void main() {
     });
   });
 
+  group('VoidTraderGame Waldwachstum-Tick (Roadmap: Wald regeneriert/breitet sich aus)', () {
+    test('update() lässt über die Zeit Wald neben einer Wald-Quelle nachwachsen', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      const z = vt_world.ZLevel.surface;
+      // Wald-Quelle direkt neben dem Spieler-Standort (0,0 ist Startzone —
+      // dort wächst nie Wald, siehe World.stepForestGrowth), Wiese
+      // dazwischen als einziger Wachstumskandidat.
+      game.simulationWorld.setTileAt(10, 10, z, const vt_world.Tile(vt_world.TileType.grass));
+      game.simulationWorld.setTileAt(9, 10, z, const vt_world.Tile(vt_world.TileType.forest));
+      game.player.position = Vector2(10 * VoidTraderGame.tileSize, 10 * VoidTraderGame.tileSize);
+
+      var grew = false;
+      // Genug Zeit für viele Wachstums-Ticks (Intervall 5s) simulieren.
+      for (var i = 0; i < 400; i++) {
+        game.update(5.0);
+        if (game.simulationWorld.tileAt(10, 10, z).type == vt_world.TileType.forest) {
+          grew = true;
+          break;
+        }
+      }
+
+      expect(grew, isTrue, reason: 'Wiese neben Wald-Quelle sollte über genug Ticks nachwachsen');
+    });
+
+    test('update() unterhalb des Tick-Intervalls lässt Wald noch nicht wachsen', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+
+      const z = vt_world.ZLevel.surface;
+      game.simulationWorld.setTileAt(10, 10, z, const vt_world.Tile(vt_world.TileType.grass));
+      game.simulationWorld.setTileAt(9, 10, z, const vt_world.Tile(vt_world.TileType.forest));
+      game.player.position = Vector2(10 * VoidTraderGame.tileSize, 10 * VoidTraderGame.tileSize);
+
+      game.update(0.1);
+
+      expect(game.simulationWorld.tileAt(10, 10, z).type, vt_world.TileType.grass);
+    });
+  });
+
   group('VoidTraderGame.buildAt', () {
     test('platziert nur mit ausreichend Rohstoffen und zieht Kosten ab', () async {
       final game = VoidTraderGame(seed: 1);
