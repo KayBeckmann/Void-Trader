@@ -10,6 +10,18 @@ enum BuildingType {
   landingPad,
   storage,
 
+  /// Wohn-/Schutzgebäude aus Holz (Roadmap: "Holz als Baumaterial für
+  /// Hütten ...", Kays Feedback 2026-09-27). Funktional wie [wall]/
+  /// [storage] bisher ohne eigenes Innenleben — reiner Baustein/
+  /// Meilenstein für die Kolonie, keine Bewohner-/Komfortsimulation in V1.
+  hut,
+
+  /// Leichte Wald-Umzäunung (Roadmap: "... Zäune ...", Kays Feedback
+  /// 2026-09-27) — günstiger als [wall] (Stein/Mauer), dafür aus Holz statt
+  /// Stein. Gleiche Funktion (Bewegungshindernis/Grundstücksgrenze), andere
+  /// Ressourcenbasis.
+  fence,
+
   /// Erste automatische Arbeitsdrohne (Roadmap Phase 8: "Drohnenlogik und
   /// Automatisierung"). Anders als die übrigen Gebäude hängt an einer
   /// platzierten Minendrohne ein eigenes Innenleben (Energie,
@@ -49,7 +61,17 @@ const Map<BuildingType, BuildingDefinition> buildingDefinitions = {
   BuildingType.workbench: BuildingDefinition(
     type: BuildingType.workbench,
     name: 'Werkbank',
-    buildCost: {Resource.stone: 2, Resource.ore: 1},
+    buildCost: {Resource.stone: 2, Resource.ore: 1, Resource.wood: 2},
+  ),
+  BuildingType.hut: BuildingDefinition(
+    type: BuildingType.hut,
+    name: 'Hütte',
+    buildCost: {Resource.wood: 6, Resource.stone: 2},
+  ),
+  BuildingType.fence: BuildingDefinition(
+    type: BuildingType.fence,
+    name: 'Zaun',
+    buildCost: {Resource.wood: 2},
   ),
   BuildingType.market: BuildingDefinition(
     type: BuildingType.market,

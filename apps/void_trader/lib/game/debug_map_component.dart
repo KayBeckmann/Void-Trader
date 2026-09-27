@@ -133,6 +133,10 @@ class DebugMapComponent extends PositionComponent {
         return const Color(0xFF607D8B);
       case BuildingType.storage:
         return const Color(0xFF8D6E63);
+      case BuildingType.hut:
+        return const Color(0xFF6D4C41);
+      case BuildingType.fence:
+        return const Color(0xFFA1887F);
       case BuildingType.miningDrone:
         return const Color(0xFF00E5FF);
       case BuildingType.pump:

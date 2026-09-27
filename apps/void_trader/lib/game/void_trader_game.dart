@@ -519,6 +519,8 @@ class VoidTraderGame extends FlameGame
           );
         case BuildingType.wall:
         case BuildingType.storage:
+        case BuildingType.hut:
+        case BuildingType.fence:
           break;
         case BuildingType.miningDrone:
           final drone = drones[(x: worldX, y: worldY, z: z)];

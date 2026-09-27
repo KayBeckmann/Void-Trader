@@ -101,6 +101,7 @@ void main() {
       await game.onLoad();
       game.inventory.add(Resource.stone, 2);
       game.inventory.add(Resource.ore, 1);
+      game.inventory.add(Resource.wood, 2);
       game.buildAt(game.player.position, BuildingType.workbench);
 
       final tile = game.inspectedTile;
@@ -155,6 +156,7 @@ void main() {
       await game.onLoad();
       game.inventory.add(Resource.stone, 20);
       game.inventory.add(Resource.ore, 20);
+      game.inventory.add(Resource.wood, 20);
       // Component direkt gutgeschrieben statt mehrfach zu craften — dieser
       // Test prüft das Fortschritts-Tracking, nicht die Rezept-Balance.
       game.inventory.add(Resource.component, 10);

@@ -4,9 +4,13 @@ import 'package:vt_core/vt_core.dart';
 
 void main() {
   group('basicComponentRecipe', () {
-    test('produziert component aus stone + ore', () {
+    test('produziert component aus stone + ore + wood', () {
       expect(basicComponentRecipe.output, Resource.component);
-      expect(basicComponentRecipe.input, {Resource.stone: 2, Resource.ore: 1});
+      expect(basicComponentRecipe.input, {
+        Resource.stone: 2,
+        Resource.ore: 1,
+        Resource.wood: 1,
+      });
       expect(basicComponentRecipe.outputAmount, 1);
     });
 
@@ -14,6 +18,7 @@ void main() {
       final inventory = Inventory();
       inventory.add(Resource.stone, 2);
       inventory.add(Resource.ore, 1);
+      inventory.add(Resource.wood, 1);
 
       inventory.craft(
         basicComponentRecipe.input,
@@ -24,6 +29,7 @@ void main() {
       expect(inventory.count(Resource.component), 1);
       expect(inventory.count(Resource.stone), 0);
       expect(inventory.count(Resource.ore), 0);
+      expect(inventory.count(Resource.wood), 0);
     });
   });
 }

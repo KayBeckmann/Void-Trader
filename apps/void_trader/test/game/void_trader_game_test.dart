@@ -943,6 +943,7 @@ void main() {
       await game.onLoad();
       game.inventory.add(Resource.stone, 10);
       game.inventory.add(Resource.ore, 10);
+      game.inventory.add(Resource.wood, 10);
 
       final withoutWorkbench = game.craftAt(game.player.position);
       expect(withoutWorkbench, isFalse);
@@ -958,8 +959,8 @@ void main() {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
       // Reicht exakt für den Bau der Werkbank, danach ist nichts mehr übrig.
-      game.inventory.add(Resource.stone, 2);
-      game.inventory.add(Resource.ore, 1);
+      final workbenchCost = buildingDefinitionFor(BuildingType.workbench).buildCost;
+      workbenchCost.forEach((resource, amount) => game.inventory.add(resource, amount));
       game.buildAt(game.player.position, BuildingType.workbench);
 
       final success = game.craftAt(game.player.position);
@@ -1174,8 +1175,8 @@ void main() {
     test('zeigt Craft-Hinweis an einer Werkbank', () async {
       final game = VoidTraderGame(seed: 1);
       await game.onLoad();
-      game.inventory.add(Resource.stone, 2);
-      game.inventory.add(Resource.ore, 1);
+      final workbenchCost = buildingDefinitionFor(BuildingType.workbench).buildCost;
+      workbenchCost.forEach((resource, amount) => game.inventory.add(resource, amount));
       game.buildAt(game.player.position, BuildingType.workbench);
 
       expect(game.currentInteractionHint(), contains('Craften'));

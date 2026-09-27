@@ -16,10 +16,11 @@ class CraftingRecipe {
   });
 }
 
-/// Erstes Rezept der Produktionskette V1: Stein + Erz an der Werkbank zu
-/// einem Bauteil verarbeiten.
+/// Erstes Rezept der Produktionskette V1: Stein + Erz + Holz (Werkzeuggriff/
+/// -stiel, Kays Feedback 2026-09-27: "Holz kann man ... für ... Werkzeuge
+/// ... verwenden") an der Werkbank zu einem Bauteil verarbeiten.
 const CraftingRecipe basicComponentRecipe = CraftingRecipe(
   name: 'Bauteil',
-  input: {Resource.stone: 2, Resource.ore: 1},
+  input: {Resource.stone: 2, Resource.ore: 1, Resource.wood: 1},
   output: Resource.component,
 );
