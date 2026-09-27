@@ -265,6 +265,51 @@ class World {
     (deposit) => deposit.x == worldX && deposit.y == worldY,
   );
 
+  /// Ob an diesen Welt-Tile-Koordinaten die Oberfläche einen Höhleneingang
+  /// hätte — dieselbe Regel wie in [_generateSurfaceLayer] (Spawn-Zonen,
+  /// Puffer-Ring, Rampen-Vorrang, kein Wasser), aber als eigenständige
+  /// Funktion, damit die tieferen Ebenen ([_generateUniformLayer]
+  /// für [ZLevel.cellar], [_generateUndergroundLayer] für `caves`/
+  /// `deepCaves`) an genau denselben Koordinaten einen durchgehenden
+  /// Schacht bis [ZLevel.deepCaves] erzeugen können (Roadmap: "Höhlen und
+  /// eine Mechanik, um diese zu betreten"). Ohne diesen durchgehenden
+  /// Schacht wäre ein Höhleneingang auf der Oberfläche eine Sackgasse: der
+  /// Keller ist uniform, Höhlen/Minen sind noise-ausgehöhlt und hätten an
+  /// den meisten Koordinaten schlicht massiven Fels.
+  bool _isCaveEntranceAt(int worldX, int worldY) {
+    if (_isSpawnResourceDeposit(worldX, worldY)) return false;
+    if (_isInSpawnSafeZone(worldX, worldY)) return false;
+
+    final height = _heightNoise.valueAt(worldX, worldY);
+    var biomeType = surfaceTileForBiome(
+      height: height,
+      moisture: _moistureNoise.valueAt(worldX, worldY),
+      temperature: _temperatureNoise.valueAt(worldX, worldY),
+    );
+    if (_isInSpawnBufferZone(worldX, worldY)) {
+      if (biomeType == TileType.water) {
+        biomeType = TileType.dirt;
+      } else if (biomeType == TileType.forest) {
+        biomeType = TileType.grass;
+      }
+    }
+
+    // Rampe hat Vorrang vor Höhleneingang (siehe _generateSurfaceLayer) —
+    // beide sind an unterschiedliche Noise-Schwellen gebunden, aber eine
+    // Welt-Koordinate kann nicht beides gleichzeitig sein.
+    if ((biomeType == TileType.grass || biomeType == TileType.dirt) &&
+        height >= _slopeHeightMin) {
+      return false;
+    }
+
+    // Höhleneingänge nie auf Wasser — sonst müsste man erst tauchen, um in
+    // die erste Höhlenebene zu gelangen.
+    if (biomeType == TileType.water) return false;
+
+    final entranceValue = _caveEntranceNoise.valueAt(worldX, worldY);
+    return entranceValue > _caveEntranceThreshold;
+  }
+
   Chunk _generateChunk(ChunkCoord coord) {
     final layers = <int, ChunkLayer>{ZLevel.surface: _generateSurfaceLayer(coord)};
     for (final z in ZLevel.all) {
@@ -274,7 +319,7 @@ class World {
           ? _generateUndergroundLayer(coord, z)
           : z == ZLevel.hills
           ? _generateHillsLayer(coord)
-          : _generateUniformLayer(z);
+          : _generateUniformLayer(coord, z);
     }
     return Chunk(coord, layers);
   }
@@ -330,13 +375,8 @@ class World {
           return const Tile(TileType.slope);
         }
 
-        // Höhleneingänge nie auf Wasser platzieren — sonst müsste man erst
-        // tauchen, um in die erste Höhlenebene zu gelangen.
-        if (biomeType != TileType.water) {
-          final entranceValue = _caveEntranceNoise.valueAt(worldX, worldY);
-          if (entranceValue > _caveEntranceThreshold) {
-            return const Tile(TileType.caveEntrance);
-          }
+        if (_isCaveEntranceAt(worldX, worldY)) {
+          return const Tile(TileType.caveEntrance);
         }
 
         // Wasser-Biom-Tiles starten mit vollem Wasserstand, damit die
@@ -352,15 +392,27 @@ class World {
   /// Einfache, noch nicht durch Noise aufgelöste Ebenen: Berge sind
   /// weiterhin durchgehend Stein und unerreichbar (bewusst außerhalb des
   /// Umfangs von MOV-03 — "Generation V1"). Der Keller (erste Ebene unter
-  /// der Oberfläche) ist durchgehend Erde, also von jedem Höhleneingang aus
-  /// ohne Hindernis betretbar. Hügel haben eine eigene Generierung, siehe
+  /// der Oberfläche) ist ansonsten durchgehend Erde, also von jedem
+  /// Höhleneingang aus ohne Hindernis betretbar — mit genau einer Ausnahme:
+  /// direkt unter einem Oberflächen-Höhleneingang liegt selbst wieder ein
+  /// Höhleneingang, der den Schacht nach [ZLevel.caves] fortsetzt (siehe
+  /// [_isCaveEntranceAt]). Hügel haben eine eigene Generierung, siehe
   /// [_generateHillsLayer]. Tiefere Ebenen (Höhlen/Minen) werden separat
   /// über [_generateUndergroundLayer] ausgehöhlt.
-  ChunkLayer _generateUniformLayer(int z) {
-    final type = z == ZLevel.mountains ? TileType.stone : TileType.dirt;
+  ChunkLayer _generateUniformLayer(ChunkCoord coord, int z) {
+    final fillType = z == ZLevel.mountains ? TileType.stone : TileType.dirt;
     final tiles = List.generate(
       Chunk.size,
-      (_) => List.generate(Chunk.size, (_) => Tile(type)),
+      (y) => List.generate(Chunk.size, (x) {
+        if (z == ZLevel.cellar) {
+          final worldX = coord.x * Chunk.size + x;
+          final worldY = coord.y * Chunk.size + y;
+          if (_isCaveEntranceAt(worldX, worldY)) {
+            return const Tile(TileType.caveEntrance);
+          }
+        }
+        return Tile(fillType);
+      }),
     );
     return ChunkLayer(z, tiles);
   }
@@ -410,7 +462,12 @@ class World {
   /// noise-basiert ausgehöhlten Gängen/Kammern (begehbar) und seltenen
   /// Erzadern im verbleibenden Gestein. [zOffset] sorgt dafür, dass jede
   /// Ebene ihr eigenes Muster bekommt statt eine reine Kopie der anderen zu
-  /// sein, ohne dass echtes 3D-Noise nötig wäre.
+  /// sein, ohne dass echtes 3D-Noise nötig wäre. Direkt unter einem
+  /// Oberflächen-Höhleneingang liegt an derselben Welt-Koordinate immer ein
+  /// weiterer Höhleneingang statt zufälligem Fels/Gang — das setzt den
+  /// Schacht garantiert bis [ZLevel.deepCaves] fort, unabhängig davon, ob
+  /// der Openness-Noise an dieser Stelle zufällig einen Gang ausgehöhlt
+  /// hätte.
   ChunkLayer _generateUndergroundLayer(ChunkCoord coord, int z) {
     final zOffset = (-z).toDouble() * 137.0;
     final tiles = List.generate(
@@ -418,6 +475,10 @@ class World {
       (y) => List.generate(Chunk.size, (x) {
         final worldX = coord.x * Chunk.size + x;
         final worldY = coord.y * Chunk.size + y;
+
+        if (_isCaveEntranceAt(worldX, worldY)) {
+          return const Tile(TileType.caveEntrance);
+        }
 
         final openness = _caveOpennessNoise.valueAt(worldX, worldY, zOffset: zOffset);
         if (openness > _caveOpenThreshold) {

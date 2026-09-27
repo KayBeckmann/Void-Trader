@@ -75,6 +75,56 @@ void main() {
         }
       }
     });
+
+    test(
+      'bilden einen durchgehenden Schacht aus Höhleneingängen bis in die tiefste Höhle '
+      '(Roadmap: "Höhlen und eine Mechanik, um diese zu betreten")',
+      () {
+        final world = World(2024);
+        var checkedAtLeastOne = false;
+
+        for (var cx = -3; cx <= 3; cx++) {
+          for (var cy = -3; cy <= 3; cy++) {
+            final chunk = world.getOrCreateChunk(ChunkCoord(cx, cy));
+            final surface = chunk.layerAt(ZLevel.surface);
+            for (var y = 0; y < Chunk.size; y++) {
+              for (var x = 0; x < Chunk.size; x++) {
+                if (surface.tileAt(x, y).type != TileType.caveEntrance) continue;
+                checkedAtLeastOne = true;
+                for (final z in [ZLevel.cellar, ZLevel.caves, ZLevel.deepCaves]) {
+                  expect(
+                    chunk.layerAt(z).tileAt(x, y).type,
+                    TileType.caveEntrance,
+                    reason:
+                        'Schacht an ($x,$y) sollte auf Ebene $z fortgesetzt werden',
+                  );
+                }
+              }
+            }
+          }
+        }
+
+        expect(checkedAtLeastOne, isTrue, reason: 'Test sollte mindestens einen Höhleneingang prüfen');
+      },
+    );
+
+    test('Erzeugung des Schachts ist deterministisch über alle Ebenen', () {
+      final worldA = World(2024);
+      final worldB = World(2024);
+
+      final chunkA = worldA.getOrCreateChunk(const ChunkCoord(0, 0));
+      final chunkB = worldB.getOrCreateChunk(const ChunkCoord(0, 0));
+
+      for (final z in ZLevel.all) {
+        final layerA = chunkA.layerAt(z);
+        final layerB = chunkB.layerAt(z);
+        for (var y = 0; y < Chunk.size; y++) {
+          for (var x = 0; x < Chunk.size; x++) {
+            expect(layerA.tileAt(x, y), equals(layerB.tileAt(x, y)));
+          }
+        }
+      }
+    });
   });
 
   group('TileType.caveEntrance', () {

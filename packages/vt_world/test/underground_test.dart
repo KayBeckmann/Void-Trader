@@ -24,10 +24,12 @@ void main() {
       expect(counts[TileType.path] ?? 0, greaterThan(0));
       // Erz ist per Threshold selten, muss also nicht in jedem einzelnen
       // Chunk vorkommen — hier reicht der Nachweis, dass alle erzeugten
-      // Typen aus der erwarteten Menge stammen.
+      // Typen aus der erwarteten Menge stammen. caveEntrance zählt mit
+      // dazu, weil ein Höhlenschacht (siehe World._isCaveEntranceAt) an
+      // manchen Koordinaten den sonst zufälligen Fels/Gang überschreibt.
       for (final type in counts.keys) {
         expect(
-          {TileType.rockWall, TileType.path, TileType.ore},
+          {TileType.rockWall, TileType.path, TileType.ore, TileType.caveEntrance},
           contains(type),
         );
       }
@@ -81,10 +83,17 @@ void main() {
         }
       }
 
+      // Keller ist durchgehend Erde, außer direkt unter einem
+      // Oberflächen-Höhleneingang — dort setzt sich der Schacht als
+      // weiterer Höhleneingang fort (siehe cave_entrance_test.dart).
+      final surface = chunk.layerAt(ZLevel.surface);
       final cellar = chunk.layerAt(ZLevel.cellar);
       for (var y = 0; y < Chunk.size; y++) {
         for (var x = 0; x < Chunk.size; x++) {
-          expect(cellar.tileAt(x, y).type, TileType.dirt);
+          final expected = surface.tileAt(x, y).type == TileType.caveEntrance
+              ? TileType.caveEntrance
+              : TileType.dirt;
+          expect(cellar.tileAt(x, y).type, expected);
         }
       }
     });
