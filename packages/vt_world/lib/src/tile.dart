@@ -84,17 +84,19 @@ class Tile {
 extension TileMovement on TileType {
   /// Ob dieses Tile die normale Bewegung blockiert. Physisch festes
   /// Gestein blockierte schon vorher (nur bisher nicht durchgesetzt, siehe
-  /// [Tile.isWalkable]); neu dazugekommen sind Wasser und dichter Wald —
-  /// beide sind nicht "solide" im Sinn von [Tile.isSolid], sollen den
-  /// Spieler aber trotzdem nicht ungebremst durchlaufen lassen.
+  /// [Tile.isWalkable]); Wasser blockiert weiterhin (man kann nicht einfach
+  /// hindurchlaufen). Wald blockierte hier ursprünglich ebenfalls (Roadmap
+  /// MOV-01), wurde aber auf Kays Feedback zurückgenommen: ein Mensch kann
+  /// zwischen Bäumen hindurchgehen, dichter Wald bleibt aber weiterhin ein
+  /// [blocksSight]-Hindernis.
   bool get blocksMovement {
     switch (this) {
       case TileType.stone:
       case TileType.rockWall:
       case TileType.ore:
       case TileType.water:
-      case TileType.forest:
         return true;
+      case TileType.forest:
       case TileType.grass:
       case TileType.dirt:
       case TileType.farmland:
@@ -137,12 +139,11 @@ extension TileMovement on TileType {
     switch (this) {
       case TileType.water:
         return 'Wasser blockiert den Weg.';
-      case TileType.forest:
-        return 'Baum blockiert den Weg.';
       case TileType.stone:
       case TileType.rockWall:
       case TileType.ore:
         return 'Felswand blockiert den Weg.';
+      case TileType.forest:
       case TileType.grass:
       case TileType.dirt:
       case TileType.farmland:

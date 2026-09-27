@@ -3,11 +3,16 @@ import 'package:vt_world/vt_world.dart';
 
 void main() {
   group('TileMovement.blocksMovement', () {
-    test('Wasser und Wald blockieren Bewegung, obwohl sie nicht solide sind', () {
+    test('Wasser blockiert Bewegung, obwohl es nicht solide ist', () {
       expect(TileType.water.blocksMovement, isTrue);
-      expect(TileType.forest.blocksMovement, isTrue);
       expect(const Tile(TileType.water).isSolid, isFalse);
+    });
+
+    test('Wald blockiert Bewegung nicht (man kann zwischen Bäumen gehen), aber die Sicht', () {
+      expect(TileType.forest.blocksMovement, isFalse);
+      expect(TileType.forest.blocksSight, isTrue);
       expect(const Tile(TileType.forest).isSolid, isFalse);
+      expect(const Tile(TileType.forest).isWalkable, isTrue);
     });
 
     test('physisch festes Gestein blockiert weiterhin', () {
@@ -24,6 +29,7 @@ void main() {
         TileType.path,
         TileType.empty,
         TileType.caveEntrance,
+        TileType.forest,
       ]) {
         expect(type.blocksMovement, isFalse, reason: '$type sollte nicht blockieren');
       }
@@ -31,7 +37,6 @@ void main() {
 
     test('Tile.isWalkable spiegelt blocksMovement', () {
       expect(const Tile(TileType.water).isWalkable, isFalse);
-      expect(const Tile(TileType.forest).isWalkable, isFalse);
       expect(const Tile(TileType.grass).isWalkable, isTrue);
     });
   });
@@ -52,14 +57,14 @@ void main() {
   group('TileMovement.movementBlockedReason', () {
     test('liefert je Hindernistyp eine eigene deutsche Meldung', () {
       expect(TileType.water.movementBlockedReason, contains('Wasser'));
-      expect(TileType.forest.movementBlockedReason, contains('Baum'));
       expect(TileType.stone.movementBlockedReason, contains('Felswand'));
       expect(TileType.rockWall.movementBlockedReason, contains('Felswand'));
     });
 
-    test('ist null für begehbare Tiles', () {
+    test('ist null für begehbare Tiles, inklusive Wald', () {
       expect(TileType.grass.movementBlockedReason, isNull);
       expect(TileType.path.movementBlockedReason, isNull);
+      expect(TileType.forest.movementBlockedReason, isNull);
     });
   });
 }
