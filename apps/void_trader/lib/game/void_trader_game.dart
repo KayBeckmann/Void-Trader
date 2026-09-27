@@ -591,6 +591,16 @@ class VoidTraderGame extends FlameGame
     if (playerTile.type.isMinable) return '[Leertaste] Abbauen';
     if (playerTile.waterLevel > 0) return '[R] Abdichten';
 
+    if (playerTile.type == vt_world.TileType.caveEntrance) {
+      final shaftIndex = _caveShaftLevels.indexOf(z);
+      final hints = <String>[];
+      if (shaftIndex != -1 && shaftIndex < _caveShaftLevels.length - 1) {
+        hints.add('[F] Hinabsteigen');
+      }
+      if (shaftIndex > 0) hints.add('[G] Hinaufsteigen');
+      if (hints.isNotEmpty) return hints.join(' · ');
+    }
+
     return null;
   }
 
@@ -680,6 +690,71 @@ class VoidTraderGame extends FlameGame
     feedbackMessage.value = wasOnSurface
         ? 'Rampe erklommen — jetzt auf den Hügeln.'
         : 'Rampe hinabgestiegen — zurück auf der Oberfläche.';
+  }
+
+  /// Ebenen, die vt_world an einem Oberflächen-Höhleneingang als
+  /// durchgehenden Schacht anlegt (siehe World._isCaveEntranceAt), oben
+  /// nach unten sortiert. Bewusst als eigene Liste statt [vt_world.
+  /// ZLevel.all]: Berge/Hügel laufen weiterhin über die separate
+  /// Rampen-Mechanik ([_checkSlopeTransition]), nicht über Höhleneingänge.
+  static const List<int> _caveShaftLevels = [
+    vt_world.ZLevel.surface,
+    vt_world.ZLevel.cellar,
+    vt_world.ZLevel.caves,
+    vt_world.ZLevel.deepCaves,
+  ];
+
+  /// Steigt einen Höhleneingang eine Ebene tiefer hinab (Taste F) — vom
+  /// Höhleneingang auf der Oberfläche bis hinunter zu [vt_world.
+  /// ZLevel.deepCaves]. Anders als die automatische Rampen-Mechanik
+  /// ([_checkSlopeTransition]) bewusst eine explizite Aktion mit eigener
+  /// Taste: bei mehr als zwei verketteten Ebenen ist "hoch" vs. "runter"
+  /// keine reine Umkehrung mehr, die sich beim bloßen Betreten des Tiles
+  /// automatisch ergibt.
+  bool descendCaveShaft() => _moveAlongCaveShaft(down: true);
+
+  /// Kehrt [descendCaveShaft] um (Taste G) — steigt eine Ebene höher.
+  bool ascendCaveShaft() => _moveAlongCaveShaft(down: false);
+
+  bool _moveAlongCaveShaft({required bool down}) {
+    final currentIndex = _caveShaftLevels.indexOf(currentZLevel.value);
+    if (currentIndex == -1) {
+      feedbackMessage.value = 'Hier gibt es keinen Höhlenschacht.';
+      return false;
+    }
+
+    final tile = _worldTileFor(player.position);
+    final hereType = simulationWorld
+        .tileAt(tile.x, tile.y, currentZLevel.value)
+        .type;
+    if (hereType != vt_world.TileType.caveEntrance) {
+      feedbackMessage.value = 'Hier ist kein Höhleneingang.';
+      return false;
+    }
+
+    final targetIndex = down ? currentIndex + 1 : currentIndex - 1;
+    if (targetIndex < 0 || targetIndex >= _caveShaftLevels.length) {
+      feedbackMessage.value = down
+          ? 'Hier geht es nicht tiefer.'
+          : 'Du bist bereits an der Oberfläche.';
+      return false;
+    }
+
+    final targetZ = _caveShaftLevels[targetIndex];
+    final targetType = simulationWorld.tileAt(tile.x, tile.y, targetZ).type;
+    if (targetType != vt_world.TileType.caveEntrance) {
+      // Sollte durch die World-Generation (siehe World._isCaveEntranceAt)
+      // nie vorkommen — Sicherheitsnetz statt stillem Fehlverhalten, falls
+      // doch mal ein Schacht nicht durchgängig ist.
+      feedbackMessage.value = 'Der Schacht ist hier unterbrochen.';
+      return false;
+    }
+
+    currentZLevel.value = targetZ;
+    feedbackMessage.value = down
+        ? 'Du steigst hinab — jetzt in ${VoidTraderGame.zLevelLabel(targetZ)}.'
+        : 'Du steigst hinauf — jetzt in ${VoidTraderGame.zLevelLabel(targetZ)}.';
+    return true;
   }
 
   /// Berechnet das aktuelle Sichtfeld neu und aktualisiert
@@ -812,6 +887,10 @@ class VoidTraderGame extends FlameGame
       sealAt(position);
     } else if (key == LogicalKeyboardKey.keyM) {
       _toggleSystemMap();
+    } else if (key == LogicalKeyboardKey.keyF) {
+      descendCaveShaft();
+    } else if (key == LogicalKeyboardKey.keyG) {
+      ascendCaveShaft();
     } else if (key == LogicalKeyboardKey.f1) {
       map.enabled = !map.enabled;
     }

@@ -1107,6 +1107,115 @@ void main() {
     });
   });
 
+  group('VoidTraderGame.descendCaveShaft/ascendCaveShaft (Höhlen-Mechanik)', () {
+    /// Erzeugt ein Spiel mit einem kontrollierten Höhlenschacht bei (10,10)
+    /// über alle vier Ebenen — unabhängig von der noise-basierten
+    /// natürlichen Platzierung, damit der Test nicht von einer bestimmten
+    /// Fundstelle im Seed abhängt.
+    Future<VoidTraderGame> gameWithShaftAt(int x, int y) async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      for (final z in [
+        vt_world.ZLevel.surface,
+        vt_world.ZLevel.cellar,
+        vt_world.ZLevel.caves,
+        vt_world.ZLevel.deepCaves,
+      ]) {
+        game.simulationWorld.setTileAt(
+          x,
+          y,
+          z,
+          const vt_world.Tile(vt_world.TileType.caveEntrance),
+        );
+      }
+      game.player.position = Vector2(x * VoidTraderGame.tileSize, y * VoidTraderGame.tileSize);
+      return game;
+    }
+
+    test('steigt Ebene für Ebene bis deepCaves hinab', () async {
+      final game = await gameWithShaftAt(10, 10);
+
+      expect(game.descendCaveShaft(), isTrue);
+      expect(game.currentZLevel.value, vt_world.ZLevel.cellar);
+      expect(game.feedbackMessage.value, contains('Keller'));
+
+      expect(game.descendCaveShaft(), isTrue);
+      expect(game.currentZLevel.value, vt_world.ZLevel.caves);
+
+      expect(game.descendCaveShaft(), isTrue);
+      expect(game.currentZLevel.value, vt_world.ZLevel.deepCaves);
+    });
+
+    test('scheitert am unteren Ende des Schachts', () async {
+      final game = await gameWithShaftAt(10, 10);
+      game.currentZLevel.value = vt_world.ZLevel.deepCaves;
+
+      expect(game.descendCaveShaft(), isFalse);
+      expect(game.currentZLevel.value, vt_world.ZLevel.deepCaves);
+      expect(game.feedbackMessage.value, contains('nicht tiefer'));
+    });
+
+    test('steigt Ebene für Ebene zurück zur Oberfläche hinauf', () async {
+      final game = await gameWithShaftAt(10, 10);
+      game.currentZLevel.value = vt_world.ZLevel.deepCaves;
+
+      expect(game.ascendCaveShaft(), isTrue);
+      expect(game.currentZLevel.value, vt_world.ZLevel.caves);
+
+      expect(game.ascendCaveShaft(), isTrue);
+      expect(game.currentZLevel.value, vt_world.ZLevel.cellar);
+
+      expect(game.ascendCaveShaft(), isTrue);
+      expect(game.currentZLevel.value, vt_world.ZLevel.surface);
+      expect(game.feedbackMessage.value, contains('Oberfläche'));
+    });
+
+    test('scheitert an der Oberfläche beim Aufsteigen', () async {
+      final game = await gameWithShaftAt(10, 10);
+
+      expect(game.ascendCaveShaft(), isFalse);
+      expect(game.currentZLevel.value, vt_world.ZLevel.surface);
+      expect(game.feedbackMessage.value, contains('bereits an der Oberfläche'));
+    });
+
+    test('scheitert ohne Höhleneingang unter dem Spieler', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.player.position = Vector2.zero(); // Startzone: begehbare Wiese, kein Höhleneingang
+
+      expect(game.descendCaveShaft(), isFalse);
+      expect(game.feedbackMessage.value, contains('kein Höhleneingang'));
+    });
+
+    test('F/G-Tasten lösen dieselben Aktionen aus wie die Methoden', () async {
+      final game = await gameWithShaftAt(10, 10);
+
+      game.player.onAction?.call(LogicalKeyboardKey.keyF, game.player.position);
+      expect(game.currentZLevel.value, vt_world.ZLevel.cellar);
+
+      game.player.onAction?.call(LogicalKeyboardKey.keyG, game.player.position);
+      expect(game.currentZLevel.value, vt_world.ZLevel.surface);
+    });
+
+    test('currentInteractionHint zeigt Hinab-/Hinauf-Hinweise passend zur Ebene', () async {
+      final game = await gameWithShaftAt(10, 10);
+
+      // Oberfläche: nur hinab möglich.
+      expect(game.currentInteractionHint(), contains('Hinabsteigen'));
+      expect(game.currentInteractionHint(), isNot(contains('Hinaufsteigen')));
+
+      // Zwischenebene: beide Richtungen möglich.
+      game.currentZLevel.value = vt_world.ZLevel.caves;
+      expect(game.currentInteractionHint(), contains('Hinabsteigen'));
+      expect(game.currentInteractionHint(), contains('Hinaufsteigen'));
+
+      // Tiefste Ebene: nur hinauf möglich.
+      game.currentZLevel.value = vt_world.ZLevel.deepCaves;
+      expect(game.currentInteractionHint(), contains('Hinaufsteigen'));
+      expect(game.currentInteractionHint(), isNot(contains('Hinabsteigen')));
+    });
+  });
+
   group('VoidTraderGame.feedbackMessage', () {
     test('meldet Erfolg und Misserfolg beim Bauen', () async {
       final game = VoidTraderGame(seed: 1);
