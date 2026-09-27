@@ -670,6 +670,112 @@ void main() {
     });
   });
 
+  group('VoidTraderGame z-Ebenen-Übergänge (Rampe/Leiter)', () {
+    test('Rampe wechselt automatisch zwischen Oberfläche und Hügeln beim Betreten', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.simulationWorld.setTileAt(
+        20,
+        20,
+        vt_world.ZLevel.surface,
+        const vt_world.Tile(vt_world.TileType.slope),
+      );
+      game.player.position = Vector2(20 * VoidTraderGame.tileSize, 20 * VoidTraderGame.tileSize);
+
+      game.update(0.016);
+
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+      expect(game.feedbackMessage.value, contains('Hügeln'));
+    });
+
+    test('Leiter lässt sich nur auf Hügeln bauen (Roadmap: Klettermechanik)', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.wood, 4);
+
+      final success = game.buildAt(game.player.position, BuildingType.ladder);
+
+      expect(success, isFalse);
+      expect(game.feedbackMessage.value, contains('nur auf Hügeln'));
+      expect(game.inventory.count(Resource.wood), 4);
+    });
+
+    test(
+      'Leiter auf Hügeln bricht eine Lichtung in den Bergen und erlaubt den Aufstieg',
+      () async {
+        final game = VoidTraderGame(seed: 1);
+        await game.onLoad();
+        game.inventory.add(Resource.wood, 4);
+        game.currentZLevel.value = vt_world.ZLevel.hills;
+        game.simulationWorld.setTileAt(
+          30,
+          30,
+          vt_world.ZLevel.hills,
+          const vt_world.Tile(vt_world.TileType.dirt),
+        );
+        game.player.position = Vector2(30 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+
+        final success = game.buildAt(game.player.position, BuildingType.ladder);
+
+        expect(success, isTrue);
+        expect(
+          game.simulationWorld.buildingAt(30, 30, vt_world.ZLevel.hills),
+          BuildingType.ladder,
+        );
+        // Lichtung in den Bergen: Zielfeld + vier Nachbarn begehbar statt Stein.
+        for (final coord in [(30, 30), (31, 30), (29, 30), (30, 31), (30, 29)]) {
+          expect(
+            game.simulationWorld.tileAt(coord.$1, coord.$2, vt_world.ZLevel.mountains).isWalkable,
+            isTrue,
+            reason: '(${coord.$1},${coord.$2}) sollte in den Bergen begehbar sein',
+          );
+        }
+
+        // Spieler steht bereits "in" der frisch gebauten Leiter (siehe
+        // buildAt-Doc). Verlassen und erneutes Betreten löst den
+        // automatischen Aufstieg aus (Übergänge feuern nur beim
+        // Tile-Wechsel, siehe _checkTileTransitions).
+        game.player.position = Vector2(31 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+        game.update(0.016);
+        game.player.position = Vector2(30 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+        game.update(0.016);
+
+        expect(game.currentZLevel.value, vt_world.ZLevel.mountains);
+        expect(game.feedbackMessage.value, contains('Bergen'));
+      },
+    );
+
+    test('Leiter führt von den Bergen wieder zurück zu den Hügeln', () async {
+      final game = VoidTraderGame(seed: 1);
+      await game.onLoad();
+      game.inventory.add(Resource.wood, 4);
+      game.currentZLevel.value = vt_world.ZLevel.hills;
+      game.simulationWorld.setTileAt(
+        30,
+        30,
+        vt_world.ZLevel.hills,
+        const vt_world.Tile(vt_world.TileType.dirt),
+      );
+      game.player.position = Vector2(30 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+      game.buildAt(game.player.position, BuildingType.ladder);
+      // Einmal hoch (wie im Test zuvor).
+      game.player.position = Vector2(31 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+      game.update(0.016);
+      game.player.position = Vector2(30 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+      game.update(0.016);
+      expect(game.currentZLevel.value, vt_world.ZLevel.mountains);
+
+      // Wieder weg und zurück auf dasselbe Tile, jetzt von den Bergen aus.
+      game.player.position = Vector2(31 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+      game.update(0.016);
+      game.player.position = Vector2(30 * VoidTraderGame.tileSize, 30 * VoidTraderGame.tileSize);
+      game.update(0.016);
+
+      expect(game.currentZLevel.value, vt_world.ZLevel.hills);
+      expect(game.feedbackMessage.value, contains('Hügeln'));
+    });
+  });
+
   group('VoidTraderGame.buildAt', () {
     test('platziert nur mit ausreichend Rohstoffen und zieht Kosten ab', () async {
       final game = VoidTraderGame(seed: 1);

@@ -333,7 +333,7 @@ class VoidTraderGame extends FlameGame
   void update(double dt) {
     super.update(dt);
 
-    _checkSlopeTransition();
+    _checkTileTransitions();
 
     dayNightCycle.update(dt);
     weather.update(dt);
@@ -521,6 +521,7 @@ class VoidTraderGame extends FlameGame
         case BuildingType.storage:
         case BuildingType.hut:
         case BuildingType.fence:
+        case BuildingType.ladder:
           break;
         case BuildingType.miningDrone:
           final drone = drones[(x: worldX, y: worldY, z: z)];
@@ -728,17 +729,26 @@ class VoidTraderGame extends FlameGame
     return null;
   }
 
-  /// Wechselt die z-Ebene, sobald der Spieler ein neues Tile betritt, das
-  /// eine Rampe ist (Roadmap MOV-03). Löst nur beim TILE-WECHSEL aus (nicht
-  /// jeden Frame) — sonst würde ein auf der Rampe stehender Spieler jeden
-  /// Frame zwischen Oberfläche und Hügeln hin- und herspringen.
-  void _checkSlopeTransition() {
+  /// Prüft beim TILE-WECHSEL (nicht jeden Frame, sonst würde ein auf der
+  /// Stelle stehender Spieler jeden Frame hin- und herspringen) beide
+  /// automatischen z-Ebenen-Übergänge: Rampen (Oberfläche↔Hügel, Roadmap
+  /// MOV-03) und Leitern (Hügel↔Berge, Roadmap: Klettermechanik). Eine
+  /// gemeinsame Methode statt zwei unabhängiger, weil beide denselben
+  /// "neues Tile betreten"-Zustand ([_lastPlayerTile]) brauchen — getrennte
+  /// Tracker würden sich gegenseitig den Wechsel wegschnappen, je nachdem
+  /// welche zuerst aufgerufen wird.
+  void _checkTileTransitions() {
     final tile = _worldTileFor(player.position);
     final last = _lastPlayerTile;
     final enteredNewTile = last == null || last.x != tile.x || last.y != tile.y;
     _lastPlayerTile = tile;
     if (!enteredNewTile) return;
 
+    _checkSlopeTransition(tile);
+    _checkLadderTransition(tile);
+  }
+
+  void _checkSlopeTransition(({int x, int y}) tile) {
     final type = simulationWorld
         .tileAt(tile.x, tile.y, currentZLevel.value)
         .type;
@@ -751,6 +761,32 @@ class VoidTraderGame extends FlameGame
     feedbackMessage.value = wasOnSurface
         ? 'Rampe erklommen — jetzt auf den Hügeln.'
         : 'Rampe hinabgestiegen — zurück auf der Oberfläche.';
+  }
+
+  /// Wechselt zwischen [vt_world.ZLevel.hills] und [vt_world.ZLevel.
+  /// mountains], sobald der Spieler ein Tile mit einer platzierten
+  /// [BuildingType.ladder] betritt (Roadmap: "Leitern, um auf Berge zu
+  /// klettern"). Die Leiter existiert als Gebäude nur auf der Hügel-Ebene
+  /// (siehe [buildAt]), deshalb wird hier unabhängig von der aktuellen
+  /// z-Ebene immer explizit dort nachgeschaut — anders als bei der Rampe
+  /// (ein Tile-*Typ*, der auf beiden Ebenen existiert) gibt es keinen
+  /// entsprechenden Gebäude-Eintrag auf der Berge-Ebene, den man
+  /// stattdessen prüfen könnte.
+  void _checkLadderTransition(({int x, int y}) tile) {
+    if (currentZLevel.value != vt_world.ZLevel.hills &&
+        currentZLevel.value != vt_world.ZLevel.mountains) {
+      return;
+    }
+    final hasLadder =
+        simulationWorld.buildingAt(tile.x, tile.y, vt_world.ZLevel.hills) ==
+        BuildingType.ladder;
+    if (!hasLadder) return;
+
+    final wasOnHills = currentZLevel.value == vt_world.ZLevel.hills;
+    currentZLevel.value = wasOnHills ? vt_world.ZLevel.mountains : vt_world.ZLevel.hills;
+    feedbackMessage.value = wasOnHills
+        ? 'Leiter erklommen — jetzt in den Bergen.'
+        : 'Leiter hinabgestiegen — zurück auf den Hügeln.';
   }
 
   /// Ebenen, die vt_world an einem Oberflächen-Höhleneingang als
@@ -1225,6 +1261,15 @@ class VoidTraderGame extends FlameGame
       return false;
     }
 
+    // Leitern verbinden gezielt Hügel und Berge (Roadmap: Klettermechanik)
+    // — auf jeder anderen Ebene gebaut, hätten sie keine Berge-Ebene
+    // darüber, in die [_carveMountainClearingAt] eine Lichtung schlagen
+    // könnte.
+    if (type == BuildingType.ladder && currentZLevel.value != vt_world.ZLevel.hills) {
+      feedbackMessage.value = 'Leitern lassen sich nur auf Hügeln bauen.';
+      return false;
+    }
+
     final placed = simulationWorld.placeBuildingAt(
       tile.x,
       tile.y,
@@ -1246,8 +1291,34 @@ class VoidTraderGame extends FlameGame
     if (type == BuildingType.pump) {
       pumps.add((x: tile.x, y: tile.y, z: currentZLevel.value));
     }
+    if (type == BuildingType.ladder) {
+      _carveMountainClearingAt(tile.x, tile.y);
+    }
 
     return true;
+  }
+
+  /// Bricht rund um (worldX, worldY) auf der Berge-Ebene eine kleine
+  /// begehbare Lichtung aus dem sonst durchgehend massiven Fels (siehe
+  /// vt_world `_generateUniformLayer`) — sonst würde eine frisch gebaute
+  /// Leiter oben auf einem isolierten Ein-Tile-Fleck enden, umzingelt von
+  /// unpassierbarem Stein. Plus-förmig (Zielfeld + die vier Nachbarn) statt
+  /// nur das eine Tile, damit oben ein winziger Spielraum zum Umschauen
+  /// bleibt. Bewusst nur eine kleine Lichtung, keine echte Berg-Terrain-
+  /// Generierung — die bleibt wie in der ursprünglichen Roadmap-Notiz
+  /// "Generation V1" für später.
+  void _carveMountainClearingAt(int worldX, int worldY) {
+    const z = vt_world.ZLevel.mountains;
+    const clearedTile = vt_world.Tile(vt_world.TileType.path);
+    simulationWorld.setTileAt(worldX, worldY, z, clearedTile);
+    for (final neighbor in [
+      (x: worldX + 1, y: worldY),
+      (x: worldX - 1, y: worldY),
+      (x: worldX, y: worldY + 1),
+      (x: worldX, y: worldY - 1),
+    ]) {
+      simulationWorld.setTileAt(neighbor.x, neighbor.y, z, clearedTile);
+    }
   }
 
   /// Craftet [basicComponentRecipe], falls unter [worldPosition] eine

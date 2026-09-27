@@ -24,10 +24,18 @@ void main() {
   });
 
   group('BuildingMovement', () {
-    test('jedes Gebäude blockiert die Bewegung (Roadmap MOV-01)', () {
+    test('jedes Gebäude blockiert die Bewegung, außer der Leiter (Roadmap MOV-01)', () {
       for (final type in BuildingType.values) {
+        if (type == BuildingType.ladder) continue;
         expect(type.blocksMovement, isTrue, reason: '$type sollte blockieren');
       }
     });
+
+    test(
+      'Leiter blockiert bewusst nicht (Roadmap: Klettermechanik Hügel↔Berge)',
+      () {
+        expect(BuildingType.ladder.blocksMovement, isFalse);
+      },
+    );
   });
 }

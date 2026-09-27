@@ -22,6 +22,16 @@ enum BuildingType {
   /// Ressourcenbasis.
   fence,
 
+  /// Klettermechanik von den Hügeln zu den Bergen (Roadmap: "... Leitern,
+  /// um auf Berge zu klettern", Kays Feedback 2026-09-27) — nur auf der
+  /// Hügel-Ebene baubar, siehe VoidTraderGame.buildAt. Anders als jedes
+  /// andere Gebäude bewusst NICHT bewegungsblockierend (siehe
+  /// [BuildingMovement]): man muss auf ihr stehen können, damit
+  /// VoidTraderGame den automatischen Ebenenwechsel Hügel↔Berge auslösen
+  /// kann (analog zur begehbaren Rampen-Tile für Oberfläche↔Hügel in
+  /// vt_world).
+  ladder,
+
   /// Erste automatische Arbeitsdrohne (Roadmap Phase 8: "Drohnenlogik und
   /// Automatisierung"). Anders als die übrigen Gebäude hängt an einer
   /// platzierten Minendrohne ein eigenes Innenleben (Energie,
@@ -73,6 +83,11 @@ const Map<BuildingType, BuildingDefinition> buildingDefinitions = {
     name: 'Zaun',
     buildCost: {Resource.wood: 2},
   ),
+  BuildingType.ladder: BuildingDefinition(
+    type: BuildingType.ladder,
+    name: 'Leiter',
+    buildCost: {Resource.wood: 4},
+  ),
   BuildingType.market: BuildingDefinition(
     type: BuildingType.market,
     name: 'Marktkiosk',
@@ -114,7 +129,10 @@ BuildingDefinition buildingDefinitionFor(BuildingType type) {
 /// steht neben seiner Werkbank, nicht in ihr. Als Erweiterung statt
 /// festem `true` in [World.placeBuildingAt] modelliert, damit ein
 /// zukünftiger begehbarer Gebäudetyp (z.B. ein Bodenpanel) die Regel
-/// gezielt überschreiben kann, ohne die Aufrufer anzufassen.
+/// gezielt überschreiben kann, ohne die Aufrufer anzufassen — [ladder] ist
+/// seit der Höhen-Klettermechanik (Kays Feedback 2026-09-27) genau dieser
+/// Fall: man muss auf ihr stehen können, damit der automatische
+/// Ebenenwechsel Hügel↔Berge sie überhaupt erreicht.
 extension BuildingMovement on BuildingType {
-  bool get blocksMovement => true;
+  bool get blocksMovement => this != BuildingType.ladder;
 }
